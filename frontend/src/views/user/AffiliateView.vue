@@ -115,7 +115,7 @@
                 <tr class="border-b border-gray-200 text-gray-500 dark:border-dark-700 dark:text-dark-400">
                   <th class="px-3 py-2 font-medium">{{ t('affiliate.invitees.columns.email') }}</th>
                   <th class="px-3 py-2 font-medium">{{ t('affiliate.invitees.columns.username') }}</th>
-                  <th class="px-3 py-2 font-medium text-right">{{ t('affiliate.invitees.columns.rebate') }}</th>
+                  <th class="px-3 py-2 font-medium text-right">{{ t('affiliate.invitees.columns.recharge') }}</th>
                   <th class="px-3 py-2 font-medium">{{ t('affiliate.invitees.columns.joinedAt') }}</th>
                 </tr>
               </thead>
@@ -127,7 +127,12 @@
                 >
                   <td class="px-3 py-3 text-gray-900 dark:text-white">{{ item.email || '-' }}</td>
                   <td class="px-3 py-3 text-gray-700 dark:text-gray-300">{{ item.username || '-' }}</td>
-                  <td class="px-3 py-3 text-right font-medium text-emerald-600 dark:text-emerald-400">{{ formatCurrency(item.total_rebate) }}</td>
+                  <td class="px-3 py-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
+                    <div v-if="inviteeRechargeParts(item).length" class="flex flex-col items-end gap-1 sm:flex-row sm:justify-end">
+                      <span v-for="part in inviteeRechargeParts(item)" :key="part">{{ part }}</span>
+                    </div>
+                    <span v-else class="text-gray-400 dark:text-dark-500">-</span>
+                  </td>
                   <td class="px-3 py-3 text-gray-700 dark:text-gray-300">{{ formatDateTime(item.created_at) || '-' }}</td>
                 </tr>
               </tbody>
@@ -177,6 +182,14 @@ const formattedRebateRate = computed(() => {
 
 function formatCount(value: number): string {
   return value.toLocaleString()
+}
+
+function inviteeRechargeParts(item: UserAffiliateDetail['invitees'][number]): string[] {
+  const parts: string[] = []
+  if (item.recharge_amount_cny > 0) parts.push(`¥${item.recharge_amount_cny.toFixed(2)}`)
+  if (item.recharge_amount_usdt > 0) parts.push(`$${item.recharge_amount_usdt.toFixed(2)}`)
+  if (parts.length === 0 && item.recharge_amount > 0) parts.push(formatCurrency(item.recharge_amount))
+  return parts
 }
 
 async function loadAffiliateDetail(silent = false): Promise<void> {

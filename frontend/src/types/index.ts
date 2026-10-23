@@ -150,6 +150,9 @@ export interface AffiliateInvitee {
   email: string
   username: string
   created_at?: string
+  recharge_amount: number
+  recharge_amount_cny: number
+  recharge_amount_usdt: number
   total_rebate: number
 }
 

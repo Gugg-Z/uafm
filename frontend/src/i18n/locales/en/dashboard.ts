@@ -746,6 +746,7 @@ export default {
         email: 'Email',
         username: 'Username',
         rebate: 'Rebate',
+        recharge: 'Recharge',
         joinedAt: 'Joined At'
       }
     },

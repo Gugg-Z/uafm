@@ -59,6 +59,22 @@ type affiliateRepository struct {
 	client *dbent.Client
 }
 
+const affiliateInviteeRechargeCTE = `
+WITH exchange_rate AS (
+    SELECT COALESCE(NULLIF((SELECT value::double precision FROM settings
+                            WHERE key = 'USDT_CNY_EXCHANGE_RATE' LIMIT 1), 0), 7)::double precision AS usd_cny_rate
+), recharge_by_user AS (
+    SELECT po.user_id,
+           COALESCE(SUM(po.pay_amount / NULLIF(1 + (COALESCE(po.fee_rate, 0) / 100), 0)), 0)::double precision AS recharge_amount,
+           COALESCE(SUM(CASE WHEN UPPER(COALESCE(po.provider_snapshot->>'currency', '')) = 'CNY'
+                             THEN po.pay_amount / NULLIF(1 + (COALESCE(po.fee_rate, 0) / 100), 0) ELSE 0 END), 0)::double precision AS recharge_amount_cny,
+           COALESCE(SUM(CASE WHEN UPPER(COALESCE(po.provider_snapshot->>'currency', '')) = 'USDT'
+                             THEN po.pay_amount / NULLIF(1 + (COALESCE(po.fee_rate, 0) / 100), 0) ELSE 0 END), 0)::double precision AS recharge_amount_usdt
+    FROM payment_orders po
+    WHERE po.status = 'COMPLETED' AND po.order_type = 'balance' AND po.paid_at IS NOT NULL
+    GROUP BY po.user_id
+)`
+
 func NewAffiliateRepository(client *dbent.Client, _ *sql.DB) service.AffiliateRepository {
 	return &affiliateRepository{client: client}
 }
@@ -511,22 +527,28 @@ func (r *affiliateRepository) ListInvitees(ctx context.Context, inviterID int64,
 		limit = 100
 	}
 	client := clientFromContext(ctx, r.client)
-	rows, err := client.QueryContext(ctx, `
+	query := affiliateInviteeRechargeCTE + `
 SELECT ua.user_id,
        COALESCE(u.email, ''),
        COALESCE(u.username, ''),
        ua.created_at,
+       COALESCE(rb.recharge_amount, 0)::double precision,
+       COALESCE(rb.recharge_amount_cny, 0)::double precision,
+       COALESCE(rb.recharge_amount_usdt, 0)::double precision,
        COALESCE(SUM(ual.amount), 0)::double precision AS total_rebate
 FROM user_affiliates ua
 LEFT JOIN users u ON u.id = ua.user_id
+LEFT JOIN recharge_by_user rb ON rb.user_id = ua.user_id
 LEFT JOIN user_affiliate_ledger ual
        ON ual.user_id = $1
       AND ual.source_user_id = ua.user_id
       AND ual.action = 'accrue'
 WHERE ua.inviter_id = $1
-GROUP BY ua.user_id, u.email, u.username, ua.created_at
+GROUP BY ua.user_id, u.email, u.username, ua.created_at,
+         rb.recharge_amount, rb.recharge_amount_cny, rb.recharge_amount_usdt
 ORDER BY ua.created_at DESC
-LIMIT $2`, inviterID, limit)
+LIMIT $2`
+	rows, err := client.QueryContext(ctx, query, inviterID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +558,8 @@ LIMIT $2`, inviterID, limit)
 	for rows.Next() {
 		var item service.AffiliateInvitee
 		var createdAt time.Time
-		if err := rows.Scan(&item.UserID, &item.Email, &item.Username, &createdAt, &item.TotalRebate); err != nil {
+		if err := rows.Scan(&item.UserID, &item.Email, &item.Username, &createdAt,
+			&item.RechargeAmount, &item.RechargeAmountCNY, &item.RechargeAmountUSDT, &item.TotalRebate); err != nil {
 			return nil, err
 		}
 		item.CreatedAt = &createdAt

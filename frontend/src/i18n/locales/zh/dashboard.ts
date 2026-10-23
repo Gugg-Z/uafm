@@ -750,6 +750,7 @@ export default {
         email: '邮箱',
         username: '用户名',
         rebate: '返利明细',
+        recharge: '充值金额',
         joinedAt: '注册时间'
       }
     },
