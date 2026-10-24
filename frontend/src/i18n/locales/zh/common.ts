@@ -163,6 +163,8 @@ export default {
 
   // Navigation
   nav: {
+    downloadResources: '资源下载',
+ downloads: '资源下载',
  visitorAnalytics: '访问分析',
     helpCenter: '帮助中心',
     dashboard: '仪表盘',

@@ -95,6 +95,8 @@ func adminMenuKeyForAPIPath(path string) string {
 	switch {
 	case strings.HasPrefix(p, "/visitor-analytics"):
 		return "admin_visitor_analytics"
+	case strings.HasPrefix(p, "/download-resources"):
+		return "admin_download_resources"
 	case strings.HasPrefix(p, "/dashboard"):
 		return "admin_dashboard"
 	case strings.HasPrefix(p, "/ops/requests"):

@@ -469,6 +469,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/downloads',
+    name: 'Downloads',
+    component: () => import('@/views/public/DownloadsView.vue'),
+    meta: { requiresAuth: false, title: 'Downloads', titleKey: 'downloads.title' }
+  },
+  {
+    path: '/admin/download-resources',
+    name: 'AdminDownloadResources',
+    component: () => import('@/views/admin/DownloadResourcesView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, adminMenuKey: 'admin_download_resources', title: 'Download Resources', titleKey: 'admin.downloadResources.title', descriptionKey: 'admin.downloadResources.description' }
+  },
+  {
     path: '/admin/ops',
     name: 'AdminOps',
     component: () => import('@/views/admin/ops/OpsDashboard.vue'),

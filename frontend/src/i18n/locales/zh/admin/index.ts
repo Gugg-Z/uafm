@@ -1,4 +1,5 @@
 import visitorAnalytics from './visitorAnalytics'
+import downloadResources from './downloadResources'
 import overview from './overview'
 import channels from './channels'
 import accounts from './accounts'
@@ -12,6 +13,7 @@ import plugins from './plugins'
 export default {
   ...overview,
  ...visitorAnalytics,
+  ...downloadResources,
   ...channels,
   ...accounts,
   ...resources,

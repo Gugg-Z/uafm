@@ -5,6 +5,7 @@
 
 // Re-export the HTTP client
 export { apiClient } from './client'
+export { default as downloadResourcesAPI } from './downloadResources'
 export { helpCenterAPI } from './helpCenter'
 
 // Auth API

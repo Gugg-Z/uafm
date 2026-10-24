@@ -4,6 +4,7 @@
  */
 
 import visitorAnalytics from './visitorAnalytics'
+import downloadResourcesAPI from './downloadResources'
 import helpCenter from './helpCenter'
 import dashboardAPI from './dashboard'
 import usersAPI from './users'
@@ -44,6 +45,7 @@ import pluginsAPI from './plugins'
  */
 export const adminAPI = {
  visitorAnalytics,
+ downloadResources: downloadResourcesAPI,
  helpCenter,
   dashboard: dashboardAPI,
   users: usersAPI,

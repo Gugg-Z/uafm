@@ -163,6 +163,8 @@ export default {
 
   // Navigation
   nav: {
+    downloadResources: 'Downloads',
+ downloads: 'Downloads',
  visitorAnalytics: 'Visitor Analytics',
     helpCenter: 'Help Center',
     dashboard: 'Dashboard',

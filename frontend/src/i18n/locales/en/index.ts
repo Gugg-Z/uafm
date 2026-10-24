@@ -5,6 +5,7 @@ import channelMonitorV2 from './channelMonitorV2'
 import batchImage from './batchImage'
 import imageGeneration from './imageGeneration'
 import helpCenter from './helpCenter'
+import downloads from './downloads'
 import supportContact from './supportContact'
 import admin from './admin'
 import misc from './misc'
@@ -18,6 +19,7 @@ export default {
   ...imageGeneration,
   ...supportContact,
   ...helpCenter,
+  ...downloads,
   admin,
   ...misc,
 }

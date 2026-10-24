@@ -48,13 +48,20 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	visitorAnalyticsService := service.NewVisitorAnalyticsService(db)
 	visitorAnalyticsHandler := handler.NewVisitorAnalyticsHandler(visitorAnalyticsService)
 	settingRepository := repository.NewSettingRepository(client)
+	downloadResourceObjectStoreFactory := repository.NewS3DownloadResourceStoreFactory()
+	redisClient := repository.ProvideRedis(configConfig)
+	secretEncryptor, err := repository.NewAESEncryptor(configConfig)
+	if err != nil {
+		return nil, err
+	}
+	downloadResourceService := service.NewDownloadResourceService(db, settingRepository, downloadResourceObjectStoreFactory, redisClient, secretEncryptor)
+	downloadResourcesHandler := handler.NewDownloadResourcesHandler(downloadResourceService)
 	helpCenterService := service.NewHelpCenterService(settingRepository)
 	userRepository := repository.NewUserRepository(client, db)
 	apiKeyRepository := repository.NewAPIKeyRepository(client, db)
 	groupRepository := repository.NewGroupRepository(client, db)
 	userSubscriptionRepository := repository.NewUserSubscriptionRepository(client)
 	userGroupRateRepository := repository.NewUserGroupRateRepository(db)
-	redisClient := repository.ProvideRedis(configConfig)
 	apiKeyCache := repository.NewAPIKeyCache(redisClient)
 	billingCache := repository.NewBillingCache(redisClient)
 	userRPMCache := repository.NewUserRPMCache(redisClient)
@@ -90,10 +97,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	authService := service.ProvideAuthService(client, userRepository, redeemCodeRepository, refreshTokenCache, configConfig, settingService, emailService, turnstileService, tencentCaptchaService, aliyunCaptchaService, emailQueueService, promoService, subscriptionService, affiliateService, serviceUserPlatformQuotaRepository)
 	redeemCache := repository.NewRedeemCache(redisClient)
 	redeemService := service.NewRedeemService(redeemCodeRepository, userRepository, subscriptionService, redeemCache, billingCacheService, client, apiKeyAuthCacheInvalidator, affiliateService)
-	secretEncryptor, err := repository.NewAESEncryptor(configConfig)
-	if err != nil {
-		return nil, err
-	}
 	totpCache := repository.NewTotpCache(redisClient)
 	totpService := service.NewTotpService(userRepository, secretEncryptor, totpCache, settingService, emailService, emailQueueService)
 	userAttributeDefinitionRepository := repository.NewUserAttributeDefinitionRepository(client)
@@ -332,7 +335,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	batchImageHandler := handler.ProvideBatchImageHandler(batchImagePublicService, batchImageDownloadService, batchImageCleanupService, openAIGatewayHandler)
 	idempotencyCleanupService := service.ProvideIdempotencyCleanupService(idempotencyRepository, configConfig)
 	openAIQuotaAutoResetService := service.ProvideOpenAIQuotaAutoResetService(accountRepository, openAIQuotaService, rateLimitService, idempotencyCoordinator, auditLogService, settingService, leaderLockCache)
-	handlers := handler.ProvideHandlers(visitorAnalyticsHandler, helpCenterHandler, authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, announcementHandler, channelMonitorUserHandler, channelMonitorV2Handler, adminHandlers, gatewayHandler, openAIGatewayHandler, handlerSettingHandler, totpHandler, passkeyHandler, handlerPaymentHandler, paymentWebhookHandler, availableChannelHandler, modelPlazaHandler, asyncImageHandler, batchImageHandler, idempotencyCoordinator, idempotencyCleanupService, openAIQuotaAutoResetService)
+	handlers := handler.ProvideHandlers(visitorAnalyticsHandler, downloadResourcesHandler, helpCenterHandler, authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, announcementHandler, channelMonitorUserHandler, channelMonitorV2Handler, adminHandlers, gatewayHandler, openAIGatewayHandler, handlerSettingHandler, totpHandler, passkeyHandler, handlerPaymentHandler, paymentWebhookHandler, availableChannelHandler, modelPlazaHandler, asyncImageHandler, batchImageHandler, idempotencyCoordinator, idempotencyCleanupService, openAIQuotaAutoResetService)
 	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(authService, userService, settingService, auditLogService)
 	optionalJWTAuthMiddleware := middleware.NewOptionalJWTAuthMiddleware(authService, userService, settingService, auditLogService)
 	adminAuthMiddleware := middleware.NewAdminAuthMiddleware(authService, userService, settingService, auditLogService)
