@@ -153,22 +153,23 @@ type UpdateSettingsRequest struct {
 	GoogleOAuthFrontendRedirectURL string `json:"google_oauth_frontend_redirect_url"`
 
 	// OEM设置
-	SiteName                    string                `json:"site_name"`
-	SiteLogo                    string                `json:"site_logo"`
-	SiteSubtitle                string                `json:"site_subtitle"`
-	APIBaseURL                  string                `json:"api_base_url"`
-	ContactInfo                 string                `json:"contact_info"`
-	DocURL                      string                `json:"doc_url"`
-	HomeContent                 string                `json:"home_content"`
-	CompactHomeEnabled          bool                  `json:"compact_home_enabled"`
-	HideCcsImportButton         bool                  `json:"hide_ccs_import_button"`
-	PurchaseSubscriptionEnabled *bool                 `json:"purchase_subscription_enabled"`
-	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
-	TableDefaultPageSize        int                   `json:"table_default_page_size"`
-	TablePageSizeOptions        []int                 `json:"table_page_size_options"`
-	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
-	UserMenuItems               *[]string             `json:"user_menu_items"`
-	CustomEndpoints             *[]dto.CustomEndpoint `json:"custom_endpoints"`
+	SiteName                    string                        `json:"site_name"`
+	SiteLogo                    string                        `json:"site_logo"`
+	SiteSubtitle                string                        `json:"site_subtitle"`
+	APIBaseURL                  string                        `json:"api_base_url"`
+	ContactInfo                 string                        `json:"contact_info"`
+	DocURL                      string                        `json:"doc_url"`
+	HomeContent                 string                        `json:"home_content"`
+	CompactHomeEnabled          bool                          `json:"compact_home_enabled"`
+	HideCcsImportButton         bool                          `json:"hide_ccs_import_button"`
+	PurchaseSubscriptionEnabled *bool                         `json:"purchase_subscription_enabled"`
+	PurchaseSubscriptionURL     *string                       `json:"purchase_subscription_url"`
+	TableDefaultPageSize        int                           `json:"table_default_page_size"`
+	TablePageSizeOptions        []int                         `json:"table_page_size_options"`
+	CustomMenuItems             *[]dto.CustomMenuItem         `json:"custom_menu_items"`
+	SupportContactConfig        *service.SupportContactConfig `json:"support_contact_config"`
+	UserMenuItems               *[]string                     `json:"user_menu_items"`
+	CustomEndpoints             *[]dto.CustomEndpoint         `json:"custom_endpoints"`
 
 	// 默认配置
 	DefaultConcurrency                        int                               `json:"default_concurrency"`
@@ -1286,9 +1287,18 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	)
 
 	customMenuJSON := previousSettings.CustomMenuItems
+	supportContactJSON := previousSettings.SupportContactConfig
+	if req.SupportContactConfig != nil {
+		payload, err := json.Marshal(req.SupportContactConfig)
+		if err != nil {
+			response.BadRequest(c, "Invalid support contact configuration")
+			return
+		}
+		supportContactJSON = service.NormalizeSupportContactConfigJSON(string(payload))
+	}
 	userMenuJSON := previousSettings.UserMenuItems
 	if req.UserMenuItems != nil {
-		allowed := map[string]bool{"dashboard": true, "api_keys": true, "batch_image": true, "image_generation": true, "usage": true, "available_channels": true, "channel_status": true, "subscriptions": true, "purchase": true, "orders": true, "redeem": true, "affiliate": true, "affiliate_usage": true, "profile": true}
+		allowed := map[string]bool{"dashboard": true, "api_keys": true, "batch_image": true, "image_generation": true, "support_contact": true, "usage": true, "available_channels": true, "channel_status": true, "subscriptions": true, "purchase": true, "orders": true, "redeem": true, "affiliate": true, "affiliate_usage": true, "profile": true}
 		seen := make(map[string]bool)
 		items := make([]string, 0, len(*req.UserMenuItems))
 		for _, key := range *req.UserMenuItems {
@@ -1684,6 +1694,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		TableDefaultPageSize:                   req.TableDefaultPageSize,
 		TablePageSizeOptions:                   req.TablePageSizeOptions,
 		CustomMenuItems:                        customMenuJSON,
+		SupportContactConfig:                   supportContactJSON,
 		UserMenuItems:                          userMenuJSON,
 		CustomEndpoints:                        customEndpointsJSON,
 		DefaultConcurrency:                     req.DefaultConcurrency,

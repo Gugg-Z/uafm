@@ -678,6 +678,11 @@ export async function exchangePendingOAuthCompletion(
   return completePendingOAuthBindLogin(decision)
 }
 
+export async function getSupportContactConfig(): Promise<import('@/types').SupportContactConfig> {
+ const { data } = await apiClient.get<import('@/types').SupportContactConfig>('/settings/support-contact')
+ return data
+}
+
 export const authAPI = {
   login,
   login2FA,

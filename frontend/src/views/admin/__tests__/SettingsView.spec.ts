@@ -749,6 +749,17 @@ describe("admin SettingsView payment visible method controls", () => {
     wrapper.unmount();
   });
 
+  it("preserves support contact QR configuration when saving settings", async () => {
+    const support = { enabled: true, title: "Support", description: "Help", contacts: [{ name: "Agent", work_hours: "09-18", qr_image: "data:image/png;base64,dGVzdA==" }] };
+    getSettings.mockResolvedValue({ ...baseSettingsResponse, support_contact_config: support });
+    const wrapper = mountView();
+    await flushPromises();
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+    expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ support_contact_config: support }));
+    wrapper.unmount();
+  });
+
   it("submits the compact home page toggle", async () => {
     const wrapper = mountView();
     await flushPromises();

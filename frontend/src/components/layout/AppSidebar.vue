@@ -247,7 +247,7 @@ function applyUserMenuSettings(items: NavItem[]): NavItem[] {
   if (!Array.isArray(configured) || configured.length === 0) return items
   const enabled = new Set(configured)
   const keyByPath: Record<string, string> = {
-    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/image-generation': 'image_generation', '/usage': 'usage',
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/support-contact': 'support_contact', '/image-generation': 'image_generation', '/usage': 'usage',
     '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
     '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
     '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',
@@ -776,6 +776,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/affiliate', label: t('nav.affiliate'), icon: UsersIcon, hideInSimpleMode: true, featureFlag: flagAffiliate },
     { path: '/affiliate/usage', label: t('nav.affiliateUsage'), icon: ChartIcon, hideInSimpleMode: true, featureFlag: flagAffiliate },
+    { path: '/support-contact', label: t('nav.supportContact'), icon: UsersIcon },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,

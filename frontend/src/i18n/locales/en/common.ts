@@ -167,6 +167,7 @@ export default {
     announcements: 'Announcements',
     apiKeys: 'API Keys',
     batchImage: 'Batch Images',
+    supportContact: 'Support',
     imageGeneration: 'AI Images',
     usage: 'Usage',
     requests: 'Requests',

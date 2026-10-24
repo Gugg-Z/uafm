@@ -391,8 +391,9 @@ const (
 	SettingKeyTableDefaultPageSize        = "table_default_page_size"       // 表格默认每页条数
 	SettingKeyTablePageSizeOptions        = "table_page_size_options"       // 表格可选每页条数（JSON 数组）
 	SettingKeyCustomMenuItems             = "custom_menu_items"             // 自定义菜单项（JSON 数组）
-	SettingKeyUserMenuItems               = "user_menu_items"               // 用户侧内置菜单开关（JSON 数组，空/缺省表示全部开启）
-	SettingKeyCustomEndpoints             = "custom_endpoints"              // 自定义端点列表（JSON 数组）
+	SettingKeySupportContactConfig        = "support_contact_config"
+	SettingKeyUserMenuItems               = "user_menu_items"  // 用户侧内置菜单开关（JSON 数组，空/缺省表示全部开启）
+	SettingKeyCustomEndpoints             = "custom_endpoints" // 自定义端点列表（JSON 数组）
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"    // 新用户默认并发量

@@ -240,6 +240,12 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/support-contact',
+    name: 'SupportContact',
+    component: () => import('@/views/user/SupportContactView.vue'),
+    meta: { requiresAuth: true, title: 'Support', titleKey: 'supportContact.title', descriptionKey: 'supportContact.description' }
+  },
+  {
     path: '/image-generation',
     name: 'ImageGeneration',
     component: () => import('@/views/user/ImageGenerationView.vue'),
@@ -1028,7 +1034,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   const menuKeyByPath: Record<string, string> = {
-    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/image-generation': 'image_generation', '/usage': 'usage',
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/support-contact': 'support_contact', '/image-generation': 'image_generation', '/usage': 'usage',
     '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
     '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
     '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',

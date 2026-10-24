@@ -498,6 +498,7 @@ export interface SystemSettings {
   backend_mode_enabled: boolean;
   custom_menu_items: CustomMenuItem[];
   user_menu_items: string[];
+  support_contact_config: import("@/types").SupportContactConfig;
   custom_endpoints: CustomEndpoint[];
   // SMTP settings
   smtp_host: string;
@@ -853,6 +854,7 @@ export interface UpdateSettingsRequest {
   backend_mode_enabled?: boolean;
   custom_menu_items?: CustomMenuItem[];
   user_menu_items?: string[];
+  support_contact_config?: import("@/types").SupportContactConfig;
   custom_endpoints?: CustomEndpoint[];
   smtp_host?: string;
   smtp_port?: number;

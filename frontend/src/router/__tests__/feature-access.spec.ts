@@ -129,6 +129,14 @@ describe('feature route guard', () => {
     expect(next).toHaveBeenCalledWith('/keys')
   })
 
+  it('blocks direct support access when its menu is disabled', async () => {
+    appStore.publicSettingsLoaded = true
+    appStore.cachedPublicSettings = { user_menu_items: ['api_keys'] }
+    const { navigation, next } = runGuard({}, '/support-contact')
+    await navigation
+    expect(next).toHaveBeenCalledWith('/keys')
+  })
+
   it.each([[], ['image_generation']])('allows the studio with default or explicit menu configuration %j', async (menus) => {
     appStore.publicSettingsLoaded = true
     appStore.cachedPublicSettings = { user_menu_items: menus }

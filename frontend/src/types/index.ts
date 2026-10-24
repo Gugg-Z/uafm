@@ -262,6 +262,19 @@ export interface LoginAgreementDocument {
   content_md: string
 }
 
+export interface SupportContactItem {
+  name: string
+  work_hours: string
+  qr_image: string
+}
+
+export interface SupportContactConfig {
+  enabled: boolean
+  title: string
+  description: string
+  contacts: SupportContactItem[]
+}
+
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean

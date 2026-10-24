@@ -163,6 +163,7 @@ type SystemSettings struct {
 	TableDefaultPageSize        int
 	TablePageSizeOptions        []int
 	CustomMenuItems             string // JSON array of custom menu items
+	SupportContactConfig        string
 	UserMenuItems               string // JSON array of enabled user menu keys
 	CustomEndpoints             string // JSON array of custom endpoints
 
@@ -330,6 +331,7 @@ type DefaultSubscriptionSetting struct {
 }
 
 type PublicSettings struct {
+	SupportContactConfig                string
 	UserMenuItems                       string
 	RegistrationEnabled                 bool
 	EmailVerifyEnabled                  bool
