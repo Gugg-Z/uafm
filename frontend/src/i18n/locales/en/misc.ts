@@ -287,6 +287,8 @@ export default {
 
   // Payment System
   payment: {
+    limitedOffer: { price: 'Limited offer price', expiresAt: 'Offer ends', label: 'Limited offer', invalid: 'Set an expiry and an offer price below the regular price.' },
+    balanceSubscription: { allowUser: 'Allow balance-funded subscriptions', cost: 'Balance cost: USD {amount}', target: 'Recipient email (optional)', targetHint: 'Leave empty to purchase for yourself', buy: 'Purchase with balance', success: 'Subscription purchased', failed: 'Balance purchase failed' },
     title: 'Recharge / Subscription',
     amountLabel: 'Amount',
     paymentAmount: 'Payment Amount',

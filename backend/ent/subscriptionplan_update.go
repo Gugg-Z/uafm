@@ -125,6 +125,53 @@ func (_u *SubscriptionPlanUpdate) ClearOriginalPrice() *SubscriptionPlanUpdate {
 	return _u
 }
 
+// SetLimitedOfferPrice sets the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdate) SetLimitedOfferPrice(v float64) *SubscriptionPlanUpdate {
+	_u.mutation.ResetLimitedOfferPrice()
+	_u.mutation.SetLimitedOfferPrice(v)
+	return _u
+}
+
+// SetNillableLimitedOfferPrice sets the "limited_offer_price" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdate) SetNillableLimitedOfferPrice(v *float64) *SubscriptionPlanUpdate {
+	if v != nil {
+		_u.SetLimitedOfferPrice(*v)
+	}
+	return _u
+}
+
+// AddLimitedOfferPrice adds value to the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdate) AddLimitedOfferPrice(v float64) *SubscriptionPlanUpdate {
+	_u.mutation.AddLimitedOfferPrice(v)
+	return _u
+}
+
+// ClearLimitedOfferPrice clears the value of the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdate) ClearLimitedOfferPrice() *SubscriptionPlanUpdate {
+	_u.mutation.ClearLimitedOfferPrice()
+	return _u
+}
+
+// SetLimitedOfferExpiresAt sets the "limited_offer_expires_at" field.
+func (_u *SubscriptionPlanUpdate) SetLimitedOfferExpiresAt(v time.Time) *SubscriptionPlanUpdate {
+	_u.mutation.SetLimitedOfferExpiresAt(v)
+	return _u
+}
+
+// SetNillableLimitedOfferExpiresAt sets the "limited_offer_expires_at" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdate) SetNillableLimitedOfferExpiresAt(v *time.Time) *SubscriptionPlanUpdate {
+	if v != nil {
+		_u.SetLimitedOfferExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearLimitedOfferExpiresAt clears the value of the "limited_offer_expires_at" field.
+func (_u *SubscriptionPlanUpdate) ClearLimitedOfferExpiresAt() *SubscriptionPlanUpdate {
+	_u.mutation.ClearLimitedOfferExpiresAt()
+	return _u
+}
+
 // SetCurrency sets the "currency" field.
 func (_u *SubscriptionPlanUpdate) SetCurrency(v string) *SubscriptionPlanUpdate {
 	_u.mutation.SetCurrency(v)
@@ -348,6 +395,21 @@ func (_u *SubscriptionPlanUpdate) sqlSave(ctx context.Context) (_node int, err e
 	if _u.mutation.OriginalPriceCleared() {
 		_spec.ClearField(subscriptionplan.FieldOriginalPrice, field.TypeFloat64)
 	}
+	if value, ok := _u.mutation.LimitedOfferPrice(); ok {
+		_spec.SetField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLimitedOfferPrice(); ok {
+		_spec.AddField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.LimitedOfferPriceCleared() {
+		_spec.ClearField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.LimitedOfferExpiresAt(); ok {
+		_spec.SetField(subscriptionplan.FieldLimitedOfferExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.LimitedOfferExpiresAtCleared() {
+		_spec.ClearField(subscriptionplan.FieldLimitedOfferExpiresAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(subscriptionplan.FieldCurrency, field.TypeString, value)
 	}
@@ -492,6 +554,53 @@ func (_u *SubscriptionPlanUpdateOne) AddOriginalPrice(v float64) *SubscriptionPl
 // ClearOriginalPrice clears the value of the "original_price" field.
 func (_u *SubscriptionPlanUpdateOne) ClearOriginalPrice() *SubscriptionPlanUpdateOne {
 	_u.mutation.ClearOriginalPrice()
+	return _u
+}
+
+// SetLimitedOfferPrice sets the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdateOne) SetLimitedOfferPrice(v float64) *SubscriptionPlanUpdateOne {
+	_u.mutation.ResetLimitedOfferPrice()
+	_u.mutation.SetLimitedOfferPrice(v)
+	return _u
+}
+
+// SetNillableLimitedOfferPrice sets the "limited_offer_price" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdateOne) SetNillableLimitedOfferPrice(v *float64) *SubscriptionPlanUpdateOne {
+	if v != nil {
+		_u.SetLimitedOfferPrice(*v)
+	}
+	return _u
+}
+
+// AddLimitedOfferPrice adds value to the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdateOne) AddLimitedOfferPrice(v float64) *SubscriptionPlanUpdateOne {
+	_u.mutation.AddLimitedOfferPrice(v)
+	return _u
+}
+
+// ClearLimitedOfferPrice clears the value of the "limited_offer_price" field.
+func (_u *SubscriptionPlanUpdateOne) ClearLimitedOfferPrice() *SubscriptionPlanUpdateOne {
+	_u.mutation.ClearLimitedOfferPrice()
+	return _u
+}
+
+// SetLimitedOfferExpiresAt sets the "limited_offer_expires_at" field.
+func (_u *SubscriptionPlanUpdateOne) SetLimitedOfferExpiresAt(v time.Time) *SubscriptionPlanUpdateOne {
+	_u.mutation.SetLimitedOfferExpiresAt(v)
+	return _u
+}
+
+// SetNillableLimitedOfferExpiresAt sets the "limited_offer_expires_at" field if the given value is not nil.
+func (_u *SubscriptionPlanUpdateOne) SetNillableLimitedOfferExpiresAt(v *time.Time) *SubscriptionPlanUpdateOne {
+	if v != nil {
+		_u.SetLimitedOfferExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearLimitedOfferExpiresAt clears the value of the "limited_offer_expires_at" field.
+func (_u *SubscriptionPlanUpdateOne) ClearLimitedOfferExpiresAt() *SubscriptionPlanUpdateOne {
+	_u.mutation.ClearLimitedOfferExpiresAt()
 	return _u
 }
 
@@ -747,6 +856,21 @@ func (_u *SubscriptionPlanUpdateOne) sqlSave(ctx context.Context) (_node *Subscr
 	}
 	if _u.mutation.OriginalPriceCleared() {
 		_spec.ClearField(subscriptionplan.FieldOriginalPrice, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.LimitedOfferPrice(); ok {
+		_spec.SetField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedLimitedOfferPrice(); ok {
+		_spec.AddField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.LimitedOfferPriceCleared() {
+		_spec.ClearField(subscriptionplan.FieldLimitedOfferPrice, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.LimitedOfferExpiresAt(); ok {
+		_spec.SetField(subscriptionplan.FieldLimitedOfferExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.LimitedOfferExpiresAtCleared() {
+		_spec.ClearField(subscriptionplan.FieldLimitedOfferExpiresAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(subscriptionplan.FieldCurrency, field.TypeString, value)

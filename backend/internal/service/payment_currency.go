@@ -19,6 +19,9 @@ func paymentProviderConfigCurrency(providerKey string, cfg map[string]string) st
 }
 
 func PaymentOrderCurrency(order *dbent.PaymentOrder) string {
+	if order != nil && order.PaymentType == payment.TypeBalance {
+		return "USD"
+	}
 	if snapshot := psOrderProviderSnapshot(order); snapshot != nil {
 		if currency, err := payment.NormalizePaymentCurrency(snapshot.Currency); err == nil {
 			return currency

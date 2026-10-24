@@ -330,6 +330,7 @@ type DefaultSubscriptionSetting struct {
 }
 
 type PublicSettings struct {
+	UserMenuItems                       string
 	RegistrationEnabled                 bool
 	EmailVerifyEnabled                  bool
 	ForceEmailOnThirdPartySignup        bool

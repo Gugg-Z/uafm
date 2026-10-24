@@ -37,6 +37,7 @@
           :searchable="false"
         />
       </div>
+      <label class="flex items-center gap-2 text-sm"><input v-model="form.allow_balance_subscription_purchase" type="checkbox" />{{ t('payment.balanceSubscription.allowUser') }}</label>
       <AdminMenuPermissionPicker v-if="form.role === 'sub_admin'" v-model="form.admin_menu_permissions" />
       <div>
         <label class="input-label">{{ t('admin.users.notes') }}</label>
@@ -124,7 +125,7 @@ const form = reactive({
   username: '',
   notes: '',
   role: 'user' as AdminUser['role'],
-  admin_menu_permissions: [] as string[],
+  allow_balance_subscription_purchase: false, admin_menu_permissions: [] as string[],
   partner_level: 'none' as AffiliatePartnerLevel,
   concurrency: 1,
   rpm_limit: 0,
@@ -133,7 +134,7 @@ const form = reactive({
 
 watch(() => props.user, async (u) => {
   if (u) {
-    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', admin_menu_permissions: [...(u.admin_menu_permissions ?? [])], concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
+    Object.assign(form, { allow_balance_subscription_purchase: u.allow_balance_subscription_purchase === true, email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', admin_menu_permissions: [...(u.admin_menu_permissions ?? [])], concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
     form.partner_level = 'none'
     loadedPartnerLevel.value = 'none'
     passwordCopied.value = false
@@ -175,7 +176,7 @@ const handleUpdateUser = async () => {
   const userId = props.user.id
   submitting.value = true
   try {
-    const data: any = { email: form.email, username: form.username, notes: form.notes, role: form.role, admin_menu_permissions: form.admin_menu_permissions, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
+    const data: any = { allow_balance_subscription_purchase: form.allow_balance_subscription_purchase, email: form.email, username: form.username, notes: form.notes, role: form.role, admin_menu_permissions: form.admin_menu_permissions, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
     if (form.password.trim()) data.password = form.password.trim()
     // 提升为管理员属敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 验证并重试
     await stepUp.run(() => adminAPI.users.update(userId, data))

@@ -40992,32 +40992,35 @@ func (m *SettingMutation) ResetEdge(name string) error {
 // SubscriptionPlanMutation represents an operation that mutates the SubscriptionPlan nodes in the graph.
 type SubscriptionPlanMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int64
-	group_id          *int64
-	addgroup_id       *int64
-	name              *string
-	description       *string
-	price             *float64
-	addprice          *float64
-	original_price    *float64
-	addoriginal_price *float64
-	currency          *string
-	validity_days     *int
-	addvalidity_days  *int
-	validity_unit     *string
-	features          *string
-	product_name      *string
-	for_sale          *bool
-	sort_order        *int
-	addsort_order     *int
-	created_at        *time.Time
-	updated_at        *time.Time
-	clearedFields     map[string]struct{}
-	done              bool
-	oldValue          func(context.Context) (*SubscriptionPlan, error)
-	predicates        []predicate.SubscriptionPlan
+	op                       Op
+	typ                      string
+	id                       *int64
+	group_id                 *int64
+	addgroup_id              *int64
+	name                     *string
+	description              *string
+	price                    *float64
+	addprice                 *float64
+	original_price           *float64
+	addoriginal_price        *float64
+	limited_offer_price      *float64
+	addlimited_offer_price   *float64
+	limited_offer_expires_at *time.Time
+	currency                 *string
+	validity_days            *int
+	addvalidity_days         *int
+	validity_unit            *string
+	features                 *string
+	product_name             *string
+	for_sale                 *bool
+	sort_order               *int
+	addsort_order            *int
+	created_at               *time.Time
+	updated_at               *time.Time
+	clearedFields            map[string]struct{}
+	done                     bool
+	oldValue                 func(context.Context) (*SubscriptionPlan, error)
+	predicates               []predicate.SubscriptionPlan
 }
 
 var _ ent.Mutation = (*SubscriptionPlanMutation)(nil)
@@ -41370,6 +41373,125 @@ func (m *SubscriptionPlanMutation) ResetOriginalPrice() {
 	m.original_price = nil
 	m.addoriginal_price = nil
 	delete(m.clearedFields, subscriptionplan.FieldOriginalPrice)
+}
+
+// SetLimitedOfferPrice sets the "limited_offer_price" field.
+func (m *SubscriptionPlanMutation) SetLimitedOfferPrice(f float64) {
+	m.limited_offer_price = &f
+	m.addlimited_offer_price = nil
+}
+
+// LimitedOfferPrice returns the value of the "limited_offer_price" field in the mutation.
+func (m *SubscriptionPlanMutation) LimitedOfferPrice() (r float64, exists bool) {
+	v := m.limited_offer_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLimitedOfferPrice returns the old "limited_offer_price" field's value of the SubscriptionPlan entity.
+// If the SubscriptionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionPlanMutation) OldLimitedOfferPrice(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLimitedOfferPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLimitedOfferPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLimitedOfferPrice: %w", err)
+	}
+	return oldValue.LimitedOfferPrice, nil
+}
+
+// AddLimitedOfferPrice adds f to the "limited_offer_price" field.
+func (m *SubscriptionPlanMutation) AddLimitedOfferPrice(f float64) {
+	if m.addlimited_offer_price != nil {
+		*m.addlimited_offer_price += f
+	} else {
+		m.addlimited_offer_price = &f
+	}
+}
+
+// AddedLimitedOfferPrice returns the value that was added to the "limited_offer_price" field in this mutation.
+func (m *SubscriptionPlanMutation) AddedLimitedOfferPrice() (r float64, exists bool) {
+	v := m.addlimited_offer_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearLimitedOfferPrice clears the value of the "limited_offer_price" field.
+func (m *SubscriptionPlanMutation) ClearLimitedOfferPrice() {
+	m.limited_offer_price = nil
+	m.addlimited_offer_price = nil
+	m.clearedFields[subscriptionplan.FieldLimitedOfferPrice] = struct{}{}
+}
+
+// LimitedOfferPriceCleared returns if the "limited_offer_price" field was cleared in this mutation.
+func (m *SubscriptionPlanMutation) LimitedOfferPriceCleared() bool {
+	_, ok := m.clearedFields[subscriptionplan.FieldLimitedOfferPrice]
+	return ok
+}
+
+// ResetLimitedOfferPrice resets all changes to the "limited_offer_price" field.
+func (m *SubscriptionPlanMutation) ResetLimitedOfferPrice() {
+	m.limited_offer_price = nil
+	m.addlimited_offer_price = nil
+	delete(m.clearedFields, subscriptionplan.FieldLimitedOfferPrice)
+}
+
+// SetLimitedOfferExpiresAt sets the "limited_offer_expires_at" field.
+func (m *SubscriptionPlanMutation) SetLimitedOfferExpiresAt(t time.Time) {
+	m.limited_offer_expires_at = &t
+}
+
+// LimitedOfferExpiresAt returns the value of the "limited_offer_expires_at" field in the mutation.
+func (m *SubscriptionPlanMutation) LimitedOfferExpiresAt() (r time.Time, exists bool) {
+	v := m.limited_offer_expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLimitedOfferExpiresAt returns the old "limited_offer_expires_at" field's value of the SubscriptionPlan entity.
+// If the SubscriptionPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionPlanMutation) OldLimitedOfferExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLimitedOfferExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLimitedOfferExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLimitedOfferExpiresAt: %w", err)
+	}
+	return oldValue.LimitedOfferExpiresAt, nil
+}
+
+// ClearLimitedOfferExpiresAt clears the value of the "limited_offer_expires_at" field.
+func (m *SubscriptionPlanMutation) ClearLimitedOfferExpiresAt() {
+	m.limited_offer_expires_at = nil
+	m.clearedFields[subscriptionplan.FieldLimitedOfferExpiresAt] = struct{}{}
+}
+
+// LimitedOfferExpiresAtCleared returns if the "limited_offer_expires_at" field was cleared in this mutation.
+func (m *SubscriptionPlanMutation) LimitedOfferExpiresAtCleared() bool {
+	_, ok := m.clearedFields[subscriptionplan.FieldLimitedOfferExpiresAt]
+	return ok
+}
+
+// ResetLimitedOfferExpiresAt resets all changes to the "limited_offer_expires_at" field.
+func (m *SubscriptionPlanMutation) ResetLimitedOfferExpiresAt() {
+	m.limited_offer_expires_at = nil
+	delete(m.clearedFields, subscriptionplan.FieldLimitedOfferExpiresAt)
 }
 
 // SetCurrency sets the "currency" field.
@@ -41770,7 +41892,7 @@ func (m *SubscriptionPlanMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionPlanMutation) Fields() []string {
-	fields := make([]string, 0, 14)
+	fields := make([]string, 0, 16)
 	if m.group_id != nil {
 		fields = append(fields, subscriptionplan.FieldGroupID)
 	}
@@ -41785,6 +41907,12 @@ func (m *SubscriptionPlanMutation) Fields() []string {
 	}
 	if m.original_price != nil {
 		fields = append(fields, subscriptionplan.FieldOriginalPrice)
+	}
+	if m.limited_offer_price != nil {
+		fields = append(fields, subscriptionplan.FieldLimitedOfferPrice)
+	}
+	if m.limited_offer_expires_at != nil {
+		fields = append(fields, subscriptionplan.FieldLimitedOfferExpiresAt)
 	}
 	if m.currency != nil {
 		fields = append(fields, subscriptionplan.FieldCurrency)
@@ -41831,6 +41959,10 @@ func (m *SubscriptionPlanMutation) Field(name string) (ent.Value, bool) {
 		return m.Price()
 	case subscriptionplan.FieldOriginalPrice:
 		return m.OriginalPrice()
+	case subscriptionplan.FieldLimitedOfferPrice:
+		return m.LimitedOfferPrice()
+	case subscriptionplan.FieldLimitedOfferExpiresAt:
+		return m.LimitedOfferExpiresAt()
 	case subscriptionplan.FieldCurrency:
 		return m.Currency()
 	case subscriptionplan.FieldValidityDays:
@@ -41868,6 +42000,10 @@ func (m *SubscriptionPlanMutation) OldField(ctx context.Context, name string) (e
 		return m.OldPrice(ctx)
 	case subscriptionplan.FieldOriginalPrice:
 		return m.OldOriginalPrice(ctx)
+	case subscriptionplan.FieldLimitedOfferPrice:
+		return m.OldLimitedOfferPrice(ctx)
+	case subscriptionplan.FieldLimitedOfferExpiresAt:
+		return m.OldLimitedOfferExpiresAt(ctx)
 	case subscriptionplan.FieldCurrency:
 		return m.OldCurrency(ctx)
 	case subscriptionplan.FieldValidityDays:
@@ -41929,6 +42065,20 @@ func (m *SubscriptionPlanMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOriginalPrice(v)
+		return nil
+	case subscriptionplan.FieldLimitedOfferPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLimitedOfferPrice(v)
+		return nil
+	case subscriptionplan.FieldLimitedOfferExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLimitedOfferExpiresAt(v)
 		return nil
 	case subscriptionplan.FieldCurrency:
 		v, ok := value.(string)
@@ -42010,6 +42160,9 @@ func (m *SubscriptionPlanMutation) AddedFields() []string {
 	if m.addoriginal_price != nil {
 		fields = append(fields, subscriptionplan.FieldOriginalPrice)
 	}
+	if m.addlimited_offer_price != nil {
+		fields = append(fields, subscriptionplan.FieldLimitedOfferPrice)
+	}
 	if m.addvalidity_days != nil {
 		fields = append(fields, subscriptionplan.FieldValidityDays)
 	}
@@ -42030,6 +42183,8 @@ func (m *SubscriptionPlanMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedPrice()
 	case subscriptionplan.FieldOriginalPrice:
 		return m.AddedOriginalPrice()
+	case subscriptionplan.FieldLimitedOfferPrice:
+		return m.AddedLimitedOfferPrice()
 	case subscriptionplan.FieldValidityDays:
 		return m.AddedValidityDays()
 	case subscriptionplan.FieldSortOrder:
@@ -42064,6 +42219,13 @@ func (m *SubscriptionPlanMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddOriginalPrice(v)
 		return nil
+	case subscriptionplan.FieldLimitedOfferPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLimitedOfferPrice(v)
+		return nil
 	case subscriptionplan.FieldValidityDays:
 		v, ok := value.(int)
 		if !ok {
@@ -42089,6 +42251,12 @@ func (m *SubscriptionPlanMutation) ClearedFields() []string {
 	if m.FieldCleared(subscriptionplan.FieldOriginalPrice) {
 		fields = append(fields, subscriptionplan.FieldOriginalPrice)
 	}
+	if m.FieldCleared(subscriptionplan.FieldLimitedOfferPrice) {
+		fields = append(fields, subscriptionplan.FieldLimitedOfferPrice)
+	}
+	if m.FieldCleared(subscriptionplan.FieldLimitedOfferExpiresAt) {
+		fields = append(fields, subscriptionplan.FieldLimitedOfferExpiresAt)
+	}
 	return fields
 }
 
@@ -42105,6 +42273,12 @@ func (m *SubscriptionPlanMutation) ClearField(name string) error {
 	switch name {
 	case subscriptionplan.FieldOriginalPrice:
 		m.ClearOriginalPrice()
+		return nil
+	case subscriptionplan.FieldLimitedOfferPrice:
+		m.ClearLimitedOfferPrice()
+		return nil
+	case subscriptionplan.FieldLimitedOfferExpiresAt:
+		m.ClearLimitedOfferExpiresAt()
 		return nil
 	}
 	return fmt.Errorf("unknown SubscriptionPlan nullable field %s", name)
@@ -42128,6 +42302,12 @@ func (m *SubscriptionPlanMutation) ResetField(name string) error {
 		return nil
 	case subscriptionplan.FieldOriginalPrice:
 		m.ResetOriginalPrice()
+		return nil
+	case subscriptionplan.FieldLimitedOfferPrice:
+		m.ResetLimitedOfferPrice()
+		return nil
+	case subscriptionplan.FieldLimitedOfferExpiresAt:
+		m.ResetLimitedOfferExpiresAt()
 		return nil
 	case subscriptionplan.FieldCurrency:
 		m.ResetCurrency()
@@ -48838,84 +49018,85 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                            Op
-	typ                           string
-	id                            *int64
-	created_at                    *time.Time
-	updated_at                    *time.Time
-	deleted_at                    *time.Time
-	email                         *string
-	password_hash                 *string
-	role                          *string
-	admin_menu_permissions        *string
-	balance                       *float64
-	addbalance                    *float64
-	frozen_balance                *float64
-	addfrozen_balance             *float64
-	concurrency                   *int
-	addconcurrency                *int
-	status                        *string
-	username                      *string
-	notes                         *string
-	totp_secret_encrypted         *string
-	totp_enabled                  *bool
-	totp_enabled_at               *time.Time
-	signup_source                 *string
-	last_login_at                 *time.Time
-	last_active_at                *time.Time
-	restrict_public_groups        *bool
-	balance_notify_enabled        *bool
-	balance_notify_threshold_type *string
-	balance_notify_threshold      *float64
-	addbalance_notify_threshold   *float64
-	balance_notify_extra_emails   *string
-	total_recharged               *float64
-	addtotal_recharged            *float64
-	rpm_limit                     *int
-	addrpm_limit                  *int
-	clearedFields                 map[string]struct{}
-	api_keys                      map[int64]struct{}
-	removedapi_keys               map[int64]struct{}
-	clearedapi_keys               bool
-	redeem_codes                  map[int64]struct{}
-	removedredeem_codes           map[int64]struct{}
-	clearedredeem_codes           bool
-	subscriptions                 map[int64]struct{}
-	removedsubscriptions          map[int64]struct{}
-	clearedsubscriptions          bool
-	assigned_subscriptions        map[int64]struct{}
-	removedassigned_subscriptions map[int64]struct{}
-	clearedassigned_subscriptions bool
-	announcement_reads            map[int64]struct{}
-	removedannouncement_reads     map[int64]struct{}
-	clearedannouncement_reads     bool
-	allowed_groups                map[int64]struct{}
-	removedallowed_groups         map[int64]struct{}
-	clearedallowed_groups         bool
-	usage_logs                    map[int64]struct{}
-	removedusage_logs             map[int64]struct{}
-	clearedusage_logs             bool
-	attribute_values              map[int64]struct{}
-	removedattribute_values       map[int64]struct{}
-	clearedattribute_values       bool
-	promo_code_usages             map[int64]struct{}
-	removedpromo_code_usages      map[int64]struct{}
-	clearedpromo_code_usages      bool
-	payment_orders                map[int64]struct{}
-	removedpayment_orders         map[int64]struct{}
-	clearedpayment_orders         bool
-	auth_identities               map[int64]struct{}
-	removedauth_identities        map[int64]struct{}
-	clearedauth_identities        bool
-	pending_auth_sessions         map[int64]struct{}
-	removedpending_auth_sessions  map[int64]struct{}
-	clearedpending_auth_sessions  bool
-	platform_quotas               map[int64]struct{}
-	removedplatform_quotas        map[int64]struct{}
-	clearedplatform_quotas        bool
-	done                          bool
-	oldValue                      func(context.Context) (*User, error)
-	predicates                    []predicate.User
+	op                                  Op
+	typ                                 string
+	id                                  *int64
+	created_at                          *time.Time
+	updated_at                          *time.Time
+	deleted_at                          *time.Time
+	email                               *string
+	password_hash                       *string
+	role                                *string
+	admin_menu_permissions              *string
+	balance                             *float64
+	addbalance                          *float64
+	frozen_balance                      *float64
+	addfrozen_balance                   *float64
+	concurrency                         *int
+	addconcurrency                      *int
+	status                              *string
+	username                            *string
+	notes                               *string
+	totp_secret_encrypted               *string
+	totp_enabled                        *bool
+	totp_enabled_at                     *time.Time
+	signup_source                       *string
+	last_login_at                       *time.Time
+	last_active_at                      *time.Time
+	restrict_public_groups              *bool
+	balance_notify_enabled              *bool
+	balance_notify_threshold_type       *string
+	balance_notify_threshold            *float64
+	addbalance_notify_threshold         *float64
+	balance_notify_extra_emails         *string
+	total_recharged                     *float64
+	addtotal_recharged                  *float64
+	allow_balance_subscription_purchase *bool
+	rpm_limit                           *int
+	addrpm_limit                        *int
+	clearedFields                       map[string]struct{}
+	api_keys                            map[int64]struct{}
+	removedapi_keys                     map[int64]struct{}
+	clearedapi_keys                     bool
+	redeem_codes                        map[int64]struct{}
+	removedredeem_codes                 map[int64]struct{}
+	clearedredeem_codes                 bool
+	subscriptions                       map[int64]struct{}
+	removedsubscriptions                map[int64]struct{}
+	clearedsubscriptions                bool
+	assigned_subscriptions              map[int64]struct{}
+	removedassigned_subscriptions       map[int64]struct{}
+	clearedassigned_subscriptions       bool
+	announcement_reads                  map[int64]struct{}
+	removedannouncement_reads           map[int64]struct{}
+	clearedannouncement_reads           bool
+	allowed_groups                      map[int64]struct{}
+	removedallowed_groups               map[int64]struct{}
+	clearedallowed_groups               bool
+	usage_logs                          map[int64]struct{}
+	removedusage_logs                   map[int64]struct{}
+	clearedusage_logs                   bool
+	attribute_values                    map[int64]struct{}
+	removedattribute_values             map[int64]struct{}
+	clearedattribute_values             bool
+	promo_code_usages                   map[int64]struct{}
+	removedpromo_code_usages            map[int64]struct{}
+	clearedpromo_code_usages            bool
+	payment_orders                      map[int64]struct{}
+	removedpayment_orders               map[int64]struct{}
+	clearedpayment_orders               bool
+	auth_identities                     map[int64]struct{}
+	removedauth_identities              map[int64]struct{}
+	clearedauth_identities              bool
+	pending_auth_sessions               map[int64]struct{}
+	removedpending_auth_sessions        map[int64]struct{}
+	clearedpending_auth_sessions        bool
+	platform_quotas                     map[int64]struct{}
+	removedplatform_quotas              map[int64]struct{}
+	clearedplatform_quotas              bool
+	done                                bool
+	oldValue                            func(context.Context) (*User, error)
+	predicates                          []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -50095,6 +50276,42 @@ func (m *UserMutation) ResetTotalRecharged() {
 	m.addtotal_recharged = nil
 }
 
+// SetAllowBalanceSubscriptionPurchase sets the "allow_balance_subscription_purchase" field.
+func (m *UserMutation) SetAllowBalanceSubscriptionPurchase(b bool) {
+	m.allow_balance_subscription_purchase = &b
+}
+
+// AllowBalanceSubscriptionPurchase returns the value of the "allow_balance_subscription_purchase" field in the mutation.
+func (m *UserMutation) AllowBalanceSubscriptionPurchase() (r bool, exists bool) {
+	v := m.allow_balance_subscription_purchase
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowBalanceSubscriptionPurchase returns the old "allow_balance_subscription_purchase" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldAllowBalanceSubscriptionPurchase(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowBalanceSubscriptionPurchase is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowBalanceSubscriptionPurchase requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowBalanceSubscriptionPurchase: %w", err)
+	}
+	return oldValue.AllowBalanceSubscriptionPurchase, nil
+}
+
+// ResetAllowBalanceSubscriptionPurchase resets all changes to the "allow_balance_subscription_purchase" field.
+func (m *UserMutation) ResetAllowBalanceSubscriptionPurchase() {
+	m.allow_balance_subscription_purchase = nil
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (m *UserMutation) SetRpmLimit(i int) {
 	m.rpm_limit = &i
@@ -50887,7 +51104,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 26)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -50963,6 +51180,9 @@ func (m *UserMutation) Fields() []string {
 	if m.total_recharged != nil {
 		fields = append(fields, user.FieldTotalRecharged)
 	}
+	if m.allow_balance_subscription_purchase != nil {
+		fields = append(fields, user.FieldAllowBalanceSubscriptionPurchase)
+	}
 	if m.rpm_limit != nil {
 		fields = append(fields, user.FieldRpmLimit)
 	}
@@ -51024,6 +51244,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.BalanceNotifyExtraEmails()
 	case user.FieldTotalRecharged:
 		return m.TotalRecharged()
+	case user.FieldAllowBalanceSubscriptionPurchase:
+		return m.AllowBalanceSubscriptionPurchase()
 	case user.FieldRpmLimit:
 		return m.RpmLimit()
 	}
@@ -51085,6 +51307,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldBalanceNotifyExtraEmails(ctx)
 	case user.FieldTotalRecharged:
 		return m.OldTotalRecharged(ctx)
+	case user.FieldAllowBalanceSubscriptionPurchase:
+		return m.OldAllowBalanceSubscriptionPurchase(ctx)
 	case user.FieldRpmLimit:
 		return m.OldRpmLimit(ctx)
 	}
@@ -51270,6 +51494,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTotalRecharged(v)
+		return nil
+	case user.FieldAllowBalanceSubscriptionPurchase:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowBalanceSubscriptionPurchase(v)
 		return nil
 	case user.FieldRpmLimit:
 		v, ok := value.(int)
@@ -51515,6 +51746,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldTotalRecharged:
 		m.ResetTotalRecharged()
+		return nil
+	case user.FieldAllowBalanceSubscriptionPurchase:
+		m.ResetAllowBalanceSubscriptionPurchase()
 		return nil
 	case user.FieldRpmLimit:
 		m.ResetRpmLimit()

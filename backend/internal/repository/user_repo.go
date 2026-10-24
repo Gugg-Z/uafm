@@ -148,6 +148,7 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		SetPasswordHash(userIn.PasswordHash).
 		SetRole(userIn.Role).
 		SetAdminMenuPermissions(marshalAdminMenuPermissions(userIn.AdminMenuPermissions)).
+		SetAllowBalanceSubscriptionPurchase(userIn.AllowBalanceSubscriptionPurchase).
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
@@ -309,6 +310,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User, field
 	}
 	if fields.Role {
 		updateOp = updateOp.SetRole(userIn.Role)
+	}
+	if fields.AllowBalanceSubscriptionPurchase {
+		updateOp.SetAllowBalanceSubscriptionPurchase(userIn.AllowBalanceSubscriptionPurchase)
 	}
 	if fields.AdminMenuPermissions {
 		updateOp = updateOp.SetAdminMenuPermissions(marshalAdminMenuPermissions(userIn.AdminMenuPermissions))

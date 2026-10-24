@@ -136,16 +136,17 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 	}
 
 	user := &User{
-		Email:                input.Email,
-		Username:             input.Username,
-		Notes:                input.Notes,
-		Role:                 role,
-		AdminMenuPermissions: permissions,
-		Balance:              balance,
-		Concurrency:          input.Concurrency,
-		RPMLimit:             input.RPMLimit,
-		Status:               StatusActive,
-		AllowedGroups:        input.AllowedGroups,
+		Email:                            input.Email,
+		Username:                         input.Username,
+		Notes:                            input.Notes,
+		Role:                             role,
+		AdminMenuPermissions:             permissions,
+		AllowBalanceSubscriptionPurchase: input.AllowBalanceSubscriptionPurchase,
+		Balance:                          balance,
+		Concurrency:                      input.Concurrency,
+		RPMLimit:                         input.RPMLimit,
+		Status:                           StatusActive,
+		AllowedGroups:                    input.AllowedGroups,
 
 		RestrictPublicGroups: input.RestrictPublicGroups,
 	}
@@ -287,6 +288,10 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		fields.AllowedGroups = true
 	}
 
+	if input.AllowBalanceSubscriptionPurchase != nil {
+		user.AllowBalanceSubscriptionPurchase = *input.AllowBalanceSubscriptionPurchase
+		fields.AllowBalanceSubscriptionPurchase = true
+	}
 	if input.AdminMenuPermissions != nil {
 		user.AdminMenuPermissions = NormalizeAdminMenuPermissions(*input.AdminMenuPermissions)
 	}

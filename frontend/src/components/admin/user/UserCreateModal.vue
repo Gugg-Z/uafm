@@ -33,6 +33,7 @@
           <option value="admin">{{ t('admin.users.roles.admin') }}</option>
         </select>
       </div>
+      <label class="flex items-center gap-2 text-sm"><input v-model="form.allow_balance_subscription_purchase" type="checkbox" />{{ t('payment.balanceSubscription.allowUser') }}</label>
       <AdminMenuPermissionPicker v-if="form.role === 'sub_admin'" v-model="form.admin_menu_permissions" />
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -85,7 +86,7 @@ const props = defineProps<{ show: boolean }>()
 const emit = defineEmits(['close', 'success']); const { t } = useI18n()
 const appStore = useAppStore()
 
-const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'sub_admin' | 'admin', balance: '', concurrency: 1, rpm_limit: 0, admin_menu_permissions: [] as string[] })
+const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'sub_admin' | 'admin', balance: '', concurrency: 1, rpm_limit: 0, allow_balance_subscription_purchase: false, admin_menu_permissions: [] as string[] })
 
 const stepUp = useStepUp()
 const loading = ref(false)
@@ -119,7 +120,7 @@ const submit = async () => {
   } finally { loading.value = false }
 }
 
-watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, rpm_limit: 0, admin_menu_permissions: [] }) })
+watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, rpm_limit: 0, admin_menu_permissions: [], allow_balance_subscription_purchase: false }) })
 
 const generateRandomPassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*'

@@ -68,6 +68,7 @@ export interface MethodLimitsResponse {
 
 /** Response from /payment/checkout-info API — single call for the payment page */
 export interface CheckoutInfoResponse {
+  allow_balance_subscription_purchase?: boolean
   methods: Record<string, MethodLimit>
   global_min: number
   global_max: number
@@ -95,6 +96,7 @@ export interface CheckoutInfoResponse {
 // ==================== Orders ====================
 
 export interface PaymentOrder {
+  subscription_target?: { user_id: number; email?: string; username?: string }
   id: number
   user_id: number
   amount: number
@@ -123,6 +125,10 @@ export interface PaymentOrder {
 // ==================== Plans & Channels ====================
 
 export interface SubscriptionPlan {
+  regular_price?: number
+  limited_offer_price?: number
+  limited_offer_expires_at?: string
+  limited_offer_active?: boolean
   id: number
   group_id: number
   group_platform?: string
@@ -181,6 +187,8 @@ export interface ProviderInstance {
 // ==================== Request / Response ====================
 
 export interface CreateOrderRequest {
+  target_user_email?: string
+  target_user_id?: number
   amount: number
   payment_type: string
   order_type: string
@@ -213,6 +221,7 @@ export interface WechatJSAPIPayload {
 }
 
 export interface CreateOrderResult {
+  status?: OrderStatus
   order_id: number
   amount: number
   pay_url?: string

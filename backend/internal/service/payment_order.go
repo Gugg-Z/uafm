@@ -23,6 +23,12 @@ import (
 // --- Order Creation ---
 
 func (s *PaymentService) CreateOrder(ctx context.Context, req CreateOrderRequest) (*CreateOrderResponse, error) {
+	if strings.EqualFold(strings.TrimSpace(req.PaymentType), payment.TypeBalance) {
+		if req.OrderType != payment.OrderTypeSubscription {
+			return nil, infraerrors.BadRequest("INVALID_ORDER_TYPE", "balance payment is only available for subscriptions")
+		}
+		return s.CreateBalanceSubscriptionOrder(ctx, req)
+	}
 	if req.OrderType == "" {
 		req.OrderType = payment.OrderTypeBalance
 	}
@@ -65,8 +71,8 @@ func (s *PaymentService) CreateOrder(ctx context.Context, req CreateOrderRequest
 	limitAmount := req.Amount
 	bonusAmount := 0.0
 	if plan != nil {
-		orderAmount = plan.Price
-		limitAmount = plan.Price
+		orderAmount = EffectivePlanPrice(plan, time.Now())
+		limitAmount = orderAmount
 	} else if req.OrderType == payment.OrderTypeBalance {
 		// 阈值按支付金额命中。赠金模式：到账 = 基数 + 赠送；折扣模式：到账 = 基数，实付基数按折扣减少。
 		quote := quoteRechargeBonus(cfg, req.Amount, methodCurrency)
@@ -176,6 +182,9 @@ func (s *PaymentService) createOrderInTx(ctx context.Context, req CreateOrderReq
 		tm = defaultOrderTimeoutMin
 	}
 	exp := time.Now().Add(time.Duration(tm) * time.Minute)
+	if IsPlanLimitedOfferActive(plan, time.Now()) && plan.LimitedOfferExpiresAt.Before(exp) {
+		exp = *plan.LimitedOfferExpiresAt
+	}
 	outTradeNo, err := s.allocateOutTradeNo(ctx, tx)
 	if err != nil {
 		return nil, err

@@ -311,6 +311,8 @@ export default {
 
   // Payment System
   payment: {
+    limitedOffer: { price: '限时优惠价', expiresAt: '优惠截止时间', label: '限时优惠', invalid: '请设置截止时间，优惠价须低于常规价。' },
+    balanceSubscription: { allowUser: '允许余额购买订阅', cost: '扣除余额：USD {amount}', target: '接收用户邮箱（可选）', targetHint: '留空表示为自己购买', buy: '使用余额购买', success: '订阅购买成功', failed: '余额购买失败' },
     title: '充值/订阅',
     amountLabel: '充值金额',
     paymentAmount: '支付金额',

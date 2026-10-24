@@ -202,6 +202,12 @@
                 </span>
                 <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(subTotalAmount) }}</span>
               </button>
+              <div v-if="checkout.allow_balance_subscription_purchase" class="card space-y-3 p-4">
+                <p class="text-sm">{{ t('payment.balanceSubscription.cost', { amount: selectedPlan.price.toFixed(2) }) }}</p>
+                <label for="subscription-target-email" class="input-label">{{ t('payment.balanceSubscription.target') }}</label>
+                <input id="subscription-target-email" v-model="balanceTargetEmail" type="email" class="input" :placeholder="t('payment.balanceSubscription.targetHint')" />
+                <button class="btn btn-primary w-full" :disabled="submitting || (user?.balance || 0) < selectedPlan.price" @click="buyWithBalance">{{ t('payment.balanceSubscription.buy') }}</button>
+              </div>
               <button class="btn btn-secondary w-full" @click="selectedPlan = null">{{ t('common.cancel') }}</button>
             </template>
             <!-- Plan list -->
@@ -825,6 +831,33 @@ function closeRenewalModal() {
 async function handleSubmitRecharge() {
   if (!canSubmit.value || submitting.value) return
   await createOrder(validAmount.value, 'balance')
+}
+
+const balanceTargetEmail = ref('')
+async function buyWithBalance() {
+  if (!selectedPlan.value || submitting.value || !checkout.value.allow_balance_subscription_purchase) return
+  submitting.value = true
+  try {
+    const order = await paymentStore.createOrder({
+      amount: selectedPlan.value.price,
+      payment_type: 'balance',
+      order_type: 'subscription',
+      plan_id: selectedPlan.value.id,
+      target_user_email: balanceTargetEmail.value.trim() || undefined,
+    })
+    if (order.status !== 'COMPLETED') {
+      await router.push('/orders')
+      return
+    }
+    appStore.showSuccess(t('payment.balanceSubscription.success'))
+    await Promise.all([authStore.refreshUser(), subscriptionStore.fetchActiveSubscriptions()])
+    selectedPlan.value = null
+    balanceTargetEmail.value = ''
+  } catch (error) {
+    appStore.showError(extractApiErrorMessage(error, t('payment.balanceSubscription.failed')))
+  } finally {
+    submitting.value = false
+  }
 }
 
 async function confirmSubscribe() {

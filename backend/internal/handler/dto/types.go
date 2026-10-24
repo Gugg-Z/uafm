@@ -10,10 +10,11 @@ import (
 )
 
 type User struct {
-	ID       int64  `json:"id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	AllowBalanceSubscriptionPurchase bool   `json:"allow_balance_subscription_purchase"`
+	ID                               int64  `json:"id"`
+	Email                            string `json:"email"`
+	Username                         string `json:"username"`
+	Role                             string `json:"role"`
 	// AdminMenuPermissions 仅 role=sub_admin 时非空：后台只读菜单 key 列表。
 	AdminMenuPermissions []string   `json:"admin_menu_permissions"`
 	Balance              float64    `json:"balance"`

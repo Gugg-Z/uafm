@@ -21,6 +21,16 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="input-label">{{ t('payment.limitedOffer.price') }}</label>
+          <input v-model.number="offerPrice" type="number" min="0" step="0.01" class="input" />
+        </div>
+        <div>
+          <label class="input-label">{{ t('payment.limitedOffer.expiresAt') }}</label>
+          <input v-model="offerExpiry" type="datetime-local" class="input" />
+        </div>
+      </div>
       <!-- Group Info Preview -->
       <div v-if="selectedGroupInfo" class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-dark-600 dark:bg-dark-800">
         <div class="mb-2 flex items-center gap-2">
@@ -124,6 +134,8 @@ const appStore = useAppStore()
 const saving = ref(false)
 const planForm = reactive({ name: '', group_id: null as number | null, description: '', price: 0, original_price: 0, currency: '', validity_days: 30, validity_unit: 'days', sort_order: 0, for_sale: true })
 const planFeaturesText = ref('')
+const offerPrice = ref(0)
+const offerExpiry = ref('')
 
 const validityUnitOptions = computed(() => [
   { value: 'days', label: t('payment.admin.days') },
@@ -174,6 +186,9 @@ const subscriptionCnyPreview = computed(() => {
 // Reset form when dialog opens
 watch(() => props.show, (visible) => {
   if (!visible) return
+  offerPrice.value = props.plan?.limited_offer_price || 0
+  const expiry = props.plan?.limited_offer_expires_at
+  offerExpiry.value = expiry ? new Date(new Date(expiry).getTime() - new Date(expiry).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''
   if (props.plan) {
     Object.assign(planForm, { name: props.plan.name, group_id: props.plan.group_id, description: props.plan.description, price: props.plan.price, original_price: props.plan.original_price || 0, currency: props.plan.currency || '', validity_days: props.plan.validity_days, validity_unit: props.plan.validity_unit || 'days', sort_order: props.plan.sort_order || 0, for_sale: props.plan.for_sale })
     planFeaturesText.value = (props.plan.features || []).join('\n')
@@ -192,6 +207,8 @@ function buildPlanPayload() {
     description: planForm.description,
     price: planForm.price,
     original_price: planForm.original_price || 0,
+    limited_offer_price: offerPrice.value > 0 ? offerPrice.value : (props.plan ? 0 : undefined),
+    limited_offer_expires_at: offerPrice.value > 0 && offerExpiry.value ? new Date(offerExpiry.value).toISOString() : undefined,
     currency: planForm.currency.trim().toUpperCase(),
     validity_days: planForm.validity_days,
     validity_unit: planForm.validity_unit,
@@ -214,6 +231,7 @@ async function handleSavePlan() {
     appStore.showError(t('payment.admin.validityRequired'))
     return
   }
+  if (offerPrice.value > 0 && (!offerExpiry.value || offerPrice.value >= planForm.price)) { appStore.showError(t('payment.limitedOffer.invalid')); return }
   saving.value = true
   try {
     const data = buildPlanPayload()

@@ -8,17 +8,18 @@ import (
 )
 
 type User struct {
-	ID             int64
-	Email          string
-	Username       string
-	Notes          string
-	AvatarURL      string
-	AvatarSource   string
-	AvatarMIME     string
-	AvatarByteSize int
-	AvatarSHA256   string
-	PasswordHash   string
-	Role           string
+	AllowBalanceSubscriptionPurchase bool
+	ID                               int64
+	Email                            string
+	Username                         string
+	Notes                            string
+	AvatarURL                        string
+	AvatarSource                     string
+	AvatarMIME                       string
+	AvatarByteSize                   int
+	AvatarSHA256                     string
+	PasswordHash                     string
+	Role                             string
 	// AdminMenuPermissions 子管理员(role=sub_admin)被授予的后台菜单 key 列表。
 	// 非 sub_admin 角色始终为空。持久化为 users.admin_menu_permissions 的 JSON 文本。
 	AdminMenuPermissions []string

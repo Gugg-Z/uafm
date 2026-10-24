@@ -3,8 +3,11 @@
     <template #cell-id="{ value }">
       <span class="font-mono text-sm">#{{ value }}</span>
     </template>
-    <template #cell-out_trade_no="{ value }">
+    <template #cell-out_trade_no="{ value, row }">
       <span class="text-sm text-gray-900 dark:text-white">{{ value }}</span>
+      <div v-if="row.subscription_target && row.subscription_target.user_id !== row.user_id" class="text-xs text-gray-500">
+        {{ t('payment.balanceSubscription.target') }}: {{ row.subscription_target.email || '#' + row.subscription_target.user_id }}
+      </div>
     </template>
     <template v-if="showUser" #cell-user_email="{ value, row }">
       <div class="text-sm">

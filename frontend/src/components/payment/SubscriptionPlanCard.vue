@@ -43,6 +43,10 @@
         </div>
       </div>
 
+      <p v-if="plan.limited_offer_active" class="mb-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+        {{ t('payment.limitedOffer.label') }} · {{ t('payment.limitedOffer.expiresAt') }}: {{ plan.limited_offer_expires_at ? new Date(plan.limited_offer_expires_at).toLocaleString() : '' }}
+        <span class="line-through">{{ planCurrencySymbol }}{{ plan.regular_price }}</span>
+      </p>
       <!-- Group quota info (compact) -->
       <div class="mb-3 grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg bg-gray-50 px-3 py-2 text-xs dark:bg-dark-700/50">
         <div class="flex items-center justify-between">

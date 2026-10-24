@@ -160,27 +160,29 @@ func ValidateSimpleModeGroupOperation(cfg *config.Config, operation AdminGroupOp
 
 // CreateUserInput represents input for creating a new user via admin operations.
 type CreateUserInput struct {
-	Email                string
-	Password             string
-	Username             string
-	Notes                string
-	Role                 string // 空字符串表示使用默认角色(user);合法值 admin/sub_admin/user
-	AdminMenuPermissions []string
-	Balance              *float64
-	Concurrency          int
-	RPMLimit             int
-	AllowedGroups        []int64
-	RestrictPublicGroups bool
+	AllowBalanceSubscriptionPurchase bool
+	Email                            string
+	Password                         string
+	Username                         string
+	Notes                            string
+	Role                             string // 空字符串表示使用默认角色(user);合法值 admin/sub_admin/user
+	AdminMenuPermissions             []string
+	Balance                          *float64
+	Concurrency                      int
+	RPMLimit                         int
+	AllowedGroups                    []int64
+	RestrictPublicGroups             bool
 	// ActorAdminID 执行本次操作的管理员ID(来自JWT)，仅用于权限敏感操作的审计日志。
 	ActorAdminID int64
 }
 
 type UpdateUserInput struct {
-	Email    string
-	Password string
-	Username *string
-	Notes    *string
-	Role     string // 空字符串表示"未提供"(不修改);合法值 admin/sub_admin/user
+	AllowBalanceSubscriptionPurchase *bool
+	Email                            string
+	Password                         string
+	Username                         *string
+	Notes                            *string
+	Role                             string // 空字符串表示"未提供"(不修改);合法值 admin/sub_admin/user
 	// AdminMenuPermissions 指针区分"未提供"和"显式设置为空"；仅 sub_admin 生效。
 	AdminMenuPermissions *[]string
 	Balance              *float64 // 使用指针区分"未提供"和"设置为0"

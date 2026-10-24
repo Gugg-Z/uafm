@@ -19,8 +19,10 @@ const routerPush = vi.hoisted(() => vi.fn())
 const routerResolve = vi.hoisted(() => vi.fn(() => ({ href: '/payment/stripe?mock=1' })))
 const createOrder = vi.hoisted(() => vi.fn())
 const refreshUser = vi.hoisted(() => vi.fn())
+const testUser = vi.hoisted(() => ({ username: 'demo-user', balance: 0 }))
 const fetchActiveSubscriptions = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 const showError = vi.hoisted(() => vi.fn())
+const showSuccess = vi.hoisted(() => vi.fn())
 const showInfo = vi.hoisted(() => vi.fn())
 const showWarning = vi.hoisted(() => vi.fn())
 const getCheckoutInfo = vi.hoisted(() => vi.fn())
@@ -57,10 +59,7 @@ vi.mock('vue-i18n', async () => {
 
 vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({
-    user: {
-      username: 'demo-user',
-      balance: 0,
-    },
+    user: testUser,
     refreshUser,
   }),
 }))
@@ -86,6 +85,7 @@ vi.mock('@/stores', async () => {
   }
   return {
     useAppStore: () => ({
+      showSuccess,
       showError,
       showInfo,
       showWarning,
@@ -817,6 +817,54 @@ describe('PaymentView WeChat JSAPI flow', () => {
     expect(showWarning).toHaveBeenCalledWith('payment.errors.mobilePaymentFallbackToQr')
     expect(showError).not.toHaveBeenCalled()
     expect(window.localStorage.getItem(PAYMENT_RECOVERY_STORAGE_KEY)).toContain('weixin://wxpay/bizpayurl?pr=fallback-native')
+  })
+})
+
+describe('PaymentView balance subscription purchase', () => {
+  afterEach(() => { testUser.balance = 0 })
+
+  it('hides balance purchase unless permission is enabled', async () => {
+    const wrapper = await mountSubscriptionConfirm()
+    expect(wrapper.text()).not.toContain('payment.balanceSubscription.buy')
+    wrapper.unmount()
+  })
+
+  it('disables purchase when balance is insufficient', async () => {
+    const wrapper = await mountSubscriptionConfirm({ checkout: { allow_balance_subscription_purchase: true } })
+    const button = wrapper.findAll('button').find(button => button.text() === 'payment.balanceSubscription.buy')!
+    expect(button.attributes('disabled')).toBeDefined()
+    wrapper.unmount()
+  })
+
+  it('refreshes user and subscriptions after completed payment', async () => {
+    testUser.balance = 200
+    const wrapper = await mountSubscriptionConfirm({ checkout: { allow_balance_subscription_purchase: true } })
+    refreshUser.mockClear()
+    fetchActiveSubscriptions.mockClear()
+    createOrder.mockResolvedValue({ order_id: 42, status: 'COMPLETED' })
+    await wrapper.findAll('button').find(button => button.text() === 'payment.balanceSubscription.buy')!.trigger('click')
+    await flushPromises()
+    expect(showSuccess).toHaveBeenCalledWith('payment.balanceSubscription.success')
+    expect(refreshUser).toHaveBeenCalledOnce()
+    expect(fetchActiveSubscriptions).toHaveBeenCalledOnce()
+    expect(routerPush).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('submits the selected plan and recipient email and opens orders when fulfillment is pending', async () => {
+    testUser.balance = 200
+    const wrapper = await mountSubscriptionConfirm({ checkout: { allow_balance_subscription_purchase: true } })
+    createOrder.mockResolvedValue({ order_id: 42, status: 'PAID' })
+    await wrapper.get('#subscription-target-email').setValue('recipient@example.com')
+    const button = wrapper.findAll('button').find(button => button.text() === 'payment.balanceSubscription.buy')!
+    await button.trigger('click')
+    await flushPromises()
+    expect(createOrder).toHaveBeenCalledWith({
+      amount: 128, payment_type: 'balance', order_type: 'subscription', plan_id: 7,
+      target_user_email: 'recipient@example.com',
+    })
+    expect(routerPush).toHaveBeenCalledWith('/orders')
+    wrapper.unmount()
   })
 })
 

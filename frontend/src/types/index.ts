@@ -64,6 +64,7 @@ export interface UserProfileSourceContext {
 }
 
 export interface User {
+ allow_balance_subscription_purchase?: boolean
   id: number
   username: string
   email: string

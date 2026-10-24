@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
+	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/group"
@@ -46,6 +48,29 @@ func validatePlanRequired(name string, groupID int64, price float64, validityDay
 		return infraerrors.BadRequest("PLAN_ORIGINAL_PRICE_INVALID", "original price must be >= 0")
 	}
 	return nil
+}
+
+func validatePlanLimitedOffer(price float64, offerPrice *float64, expiresAt *time.Time) error {
+	if offerPrice == nil && expiresAt == nil {
+		return nil
+	}
+	if offerPrice == nil || expiresAt == nil || expiresAt.IsZero() || math.IsNaN(*offerPrice) || math.IsInf(*offerPrice, 0) || *offerPrice <= 0 || *offerPrice >= price {
+		return infraerrors.BadRequest("PLAN_LIMITED_OFFER_INVALID", "limited offer price must be positive and lower than regular price, with a valid expiry")
+	}
+	return nil
+}
+
+func IsPlanLimitedOfferActive(plan *dbent.SubscriptionPlan, now time.Time) bool {
+	return plan != nil && plan.LimitedOfferPrice != nil && *plan.LimitedOfferPrice > 0 && *plan.LimitedOfferPrice < plan.Price && plan.LimitedOfferExpiresAt != nil && now.Before(*plan.LimitedOfferExpiresAt)
+}
+func EffectivePlanPrice(plan *dbent.SubscriptionPlan, now time.Time) float64 {
+	if plan == nil {
+		return 0
+	}
+	if IsPlanLimitedOfferActive(plan, now) {
+		return *plan.LimitedOfferPrice
+	}
+	return plan.Price
 }
 
 // validatePlanPatch validates only the non-nil fields in a patch update.
@@ -140,6 +165,9 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 	if err := validatePlanRequired(req.Name, req.GroupID, req.Price, req.ValidityDays, req.ValidityUnit, req.OriginalPrice); err != nil {
 		return nil, err
 	}
+	if err := validatePlanLimitedOffer(req.Price, req.LimitedOfferPrice, req.LimitedOfferExpiresAt); err != nil {
+		return nil, err
+	}
 	currency, err := normalizePlanCurrency(req.Currency)
 	if err != nil {
 		return nil, err
@@ -152,6 +180,9 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 	if req.OriginalPrice != nil {
 		b.SetOriginalPrice(*req.OriginalPrice)
 	}
+	if req.LimitedOfferPrice != nil && *req.LimitedOfferPrice > 0 && req.LimitedOfferExpiresAt != nil {
+		b.SetLimitedOfferPrice(*req.LimitedOfferPrice).SetLimitedOfferExpiresAt(*req.LimitedOfferExpiresAt)
+	}
 	return b.Save(ctx)
 }
 
@@ -161,6 +192,29 @@ func (s *PaymentConfigService) CreatePlan(ctx context.Context, req CreatePlanReq
 func (s *PaymentConfigService) UpdatePlan(ctx context.Context, id int64, req UpdatePlanRequest) (*dbent.SubscriptionPlan, error) {
 	if err := validatePlanPatch(req); err != nil {
 		return nil, err
+	}
+	if req.Price != nil || req.LimitedOfferPrice != nil || req.LimitedOfferExpiresAt != nil {
+		current, err := s.GetPlan(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		price, offer, expiry := current.Price, current.LimitedOfferPrice, current.LimitedOfferExpiresAt
+		if req.Price != nil {
+			price = *req.Price
+		}
+		if req.LimitedOfferPrice != nil {
+			offer = req.LimitedOfferPrice
+		}
+		if req.LimitedOfferExpiresAt != nil {
+			expiry = req.LimitedOfferExpiresAt
+		}
+		if req.LimitedOfferPrice != nil && *req.LimitedOfferPrice == 0 {
+			offer, expiry = nil, nil
+			req.LimitedOfferExpiresAt = nil
+		}
+		if err := validatePlanLimitedOffer(price, offer, expiry); err != nil {
+			return nil, err
+		}
 	}
 	u := s.entClient.SubscriptionPlan.UpdateOneID(id)
 	if req.GroupID != nil {
@@ -177,6 +231,16 @@ func (s *PaymentConfigService) UpdatePlan(ctx context.Context, id int64, req Upd
 	}
 	if req.OriginalPrice != nil {
 		u.SetOriginalPrice(*req.OriginalPrice)
+	}
+	if req.LimitedOfferPrice != nil {
+		if *req.LimitedOfferPrice <= 0 {
+			u.ClearLimitedOfferPrice().ClearLimitedOfferExpiresAt()
+		} else {
+			u.SetLimitedOfferPrice(*req.LimitedOfferPrice)
+		}
+	}
+	if req.LimitedOfferExpiresAt != nil {
+		u.SetLimitedOfferExpiresAt(*req.LimitedOfferExpiresAt)
 	}
 	if req.Currency != nil {
 		currency, err := normalizePlanCurrency(*req.Currency)

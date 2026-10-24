@@ -52,6 +52,16 @@ const mountPlanCard = (groupPlatform: string, overrides: Partial<SubscriptionPla
   });
 
 describe("SubscriptionPlanCard", () => {
+  it("shows the regular price and expiry only for an active offer", () => {
+    const wrapper = mountPlanCard("openai", {
+      price: 8, regular_price: 10, limited_offer_active: true,
+      limited_offer_expires_at: "2099-01-01T00:00:00Z",
+    });
+    expect(wrapper.text()).toContain("payment.limitedOffer.label");
+    expect(wrapper.text()).toContain("2099");
+    expect(wrapper.get(".line-through").text()).toBe("$10");
+    expect(mountPlanCard("openai", { limited_offer_active: false }).text()).not.toContain("payment.limitedOffer.label");
+  });
   it("does not show Antigravity model scopes for OpenAI plans", () => {
     const text = mountPlanCard("openai").text();
 
