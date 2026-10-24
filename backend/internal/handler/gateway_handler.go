@@ -159,6 +159,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Request body is empty")
 		return
 	}
+	setOpsRequestParamsFromBody(c, body)
 
 	setOpsRequestContext(c, "", false)
 
@@ -599,6 +600,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 			forceCacheBilling := fs.ForceCacheBilling
 			quotaPlatform := service.QuotaPlatform(c.Request.Context(), apiKey)
 			sessionID := service.ExtractClientSessionID(c)
+			requestParams := getOpsRequestParamsWithTTFTObservation(c, account, result)
 			h.submitUsageRecordTask(c.Request.Context(), func(ctx context.Context) {
 				if err := h.gatewayService.RecordUsage(ctx, &service.RecordUsageInput{
 					Result:             result,
@@ -614,6 +616,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					IPAddress:          clientIP,
 					SessionID:          sessionID,
 					RequestPayloadHash: requestPayloadHash,
+					RequestParams:      requestParams,
 					ForceCacheBilling:  forceCacheBilling,
 					APIKeyService:      h.apiKeyService,
 					ChannelUsageFields: clientRequestedUsageFields(c, channelMapping, reqModel, result.UpstreamModel),
@@ -962,6 +965,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 				forceCacheBilling := fs.ForceCacheBilling
 				quotaPlatform := service.QuotaPlatform(c.Request.Context(), currentAPIKey)
 				sessionID := service.ExtractClientSessionID(c)
+				requestParams := getOpsRequestParamsWithTTFTObservation(c, account, result)
 				h.submitUsageRecordTask(c.Request.Context(), func(ctx context.Context) {
 					if err := h.gatewayService.RecordUsage(ctx, &service.RecordUsageInput{
 						Result:             result,
@@ -977,6 +981,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 						IPAddress:          clientIP,
 						SessionID:          sessionID,
 						RequestPayloadHash: requestPayloadHash,
+						RequestParams:      requestParams,
 						ForceCacheBilling:  forceCacheBilling,
 						APIKeyService:      h.apiKeyService,
 						ChannelUsageFields: clientRequestedUsageFields(c, channelMapping, reqModel, result.UpstreamModel),
@@ -2170,6 +2175,7 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Request body is empty")
 		return
 	}
+	setOpsRequestParamsFromBody(c, body)
 
 	setOpsRequestContext(c, "", false)
 

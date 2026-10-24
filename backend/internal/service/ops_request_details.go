@@ -38,7 +38,19 @@ type OpsRequestDetail struct {
 	AccountID *int64 `json:"account_id,omitempty"`
 	GroupID   *int64 `json:"group_id,omitempty"`
 
-	Stream bool `json:"stream"`
+	UserEmail   string `json:"user_email,omitempty"`
+	Username    string `json:"username,omitempty"`
+	APIKeyName  string `json:"api_key_name,omitempty"`
+	AccountName string `json:"account_name,omitempty"`
+	GroupName   string `json:"group_name,omitempty"`
+
+	Stream           bool           `json:"stream"`
+	RequestType      string         `json:"request_type,omitempty"`
+	InboundEndpoint  string         `json:"inbound_endpoint,omitempty"`
+	UpstreamEndpoint string         `json:"upstream_endpoint,omitempty"`
+	RequestedModel   string         `json:"requested_model,omitempty"`
+	UpstreamModel    string         `json:"upstream_model,omitempty"`
+	RequestParams    map[string]any `json:"request_params,omitempty"`
 }
 
 type OpsRequestDetailFilter struct {
@@ -112,6 +124,20 @@ type OpsRequestDetailList struct {
 	PageSize int                 `json:"page_size"`
 }
 
+type OpsRequestFilterOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+type OpsRequestFilterOptions struct {
+	Platforms []OpsRequestFilterOption `json:"platforms"`
+	Models    []OpsRequestFilterOption `json:"models"`
+	Users     []OpsRequestFilterOption `json:"users"`
+	APIKeys   []OpsRequestFilterOption `json:"api_keys"`
+	Accounts  []OpsRequestFilterOption `json:"accounts"`
+	Groups    []OpsRequestFilterOption `json:"groups"`
+}
+
 func (s *OpsService) ListRequestDetails(ctx context.Context, filter *OpsRequestDetailFilter) (*OpsRequestDetailList, error) {
 	if err := s.RequireMonitoringEnabled(ctx); err != nil {
 		return nil, err
@@ -149,4 +175,65 @@ func (s *OpsService) ListRequestDetails(ctx context.Context, filter *OpsRequestD
 		Page:     page,
 		PageSize: pageSize,
 	}, nil
+}
+
+// ListRequestFilterOptions returns the distinct filter values present in the
+// requested time window, so the admin drilldown can offer real dropdown options.
+func (s *OpsService) ListRequestFilterOptions(ctx context.Context, filter *OpsRequestDetailFilter) (*OpsRequestFilterOptions, error) {
+	if err := s.RequireMonitoringEnabled(ctx); err != nil {
+		return nil, err
+	}
+	if s.opsRepo == nil {
+		return emptyOpsRequestFilterOptions(), nil
+	}
+
+	_, _, startTime, endTime := filter.Normalize()
+	filterCopy := &OpsRequestDetailFilter{}
+	if filter != nil {
+		*filterCopy = *filter
+	}
+	filterCopy.StartTime = &startTime
+	filterCopy.EndTime = &endTime
+
+	out, err := s.opsRepo.ListRequestFilterOptions(ctx, filterCopy)
+	if err != nil {
+		return nil, err
+	}
+	if out == nil {
+		return emptyOpsRequestFilterOptions(), nil
+	}
+	normalizeOpsRequestFilterOptions(out)
+	return out, nil
+}
+
+func emptyOpsRequestFilterOptions() *OpsRequestFilterOptions {
+	return &OpsRequestFilterOptions{
+		Platforms: []OpsRequestFilterOption{},
+		Models:    []OpsRequestFilterOption{},
+		Users:     []OpsRequestFilterOption{},
+		APIKeys:   []OpsRequestFilterOption{},
+		Accounts:  []OpsRequestFilterOption{},
+		Groups:    []OpsRequestFilterOption{},
+	}
+}
+
+func normalizeOpsRequestFilterOptions(out *OpsRequestFilterOptions) {
+	if out.Platforms == nil {
+		out.Platforms = []OpsRequestFilterOption{}
+	}
+	if out.Models == nil {
+		out.Models = []OpsRequestFilterOption{}
+	}
+	if out.Users == nil {
+		out.Users = []OpsRequestFilterOption{}
+	}
+	if out.APIKeys == nil {
+		out.APIKeys = []OpsRequestFilterOption{}
+	}
+	if out.Accounts == nil {
+		out.Accounts = []OpsRequestFilterOption{}
+	}
+	if out.Groups == nil {
+		out.Groups = []OpsRequestFilterOption{}
+	}
 }

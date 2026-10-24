@@ -59,6 +59,7 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 		h.chatCompletionsErrorResponse(c, http.StatusBadRequest, "invalid_request_error", "Request body is empty")
 		return
 	}
+	setOpsRequestParamsFromBody(c, body)
 
 	setOpsRequestContext(c, "", false)
 
@@ -332,6 +333,7 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 
 			quotaPlatform := service.QuotaPlatform(c.Request.Context(), apiKey)
 			sessionID := service.ExtractClientSessionID(c)
+			requestParams := getOpsRequestParamsWithTTFTObservation(c, account, result)
 			stampForwardRequestedReasoningEffort(result, service.RequestedReasoningEffortFromContext(c.Request.Context()))
 			h.submitUsageRecordTask(c.Request.Context(), func(ctx context.Context) {
 				if err := h.gatewayService.RecordUsage(ctx, &service.RecordUsageInput{
@@ -347,6 +349,7 @@ func (h *GatewayHandler) ChatCompletions(c *gin.Context) {
 					UserAgent:          userAgent,
 					IPAddress:          clientIP,
 					RequestPayloadHash: requestPayloadHash,
+					RequestParams:      requestParams,
 					APIKeyService:      h.apiKeyService,
 					SessionID:          sessionID,
 					ChannelUsageFields: clientRequestedUsageFields(c, channelMapping, reqModel, result.UpstreamModel),

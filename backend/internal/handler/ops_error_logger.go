@@ -1212,6 +1212,7 @@ func OpsErrorLoggerMiddleware(ops *service.OpsService) gin.HandlerFunc {
 			InboundEndpoint:  GetInboundEndpoint(c),
 			UpstreamEndpoint: GetUpstreamEndpoint(c, platform),
 			RequestedModel:   modelName,
+			RequestParams:    getOpsRequestParams(c),
 			UpstreamModel: func() string {
 				if v, ok := c.Get(opsUpstreamModelKey); ok {
 					if s, ok := v.(string); ok {
@@ -1527,6 +1528,7 @@ func logOpsStreamErrorValue(c *gin.Context, ops *service.OpsService, wireStatus 
 		InboundEndpoint:  GetInboundEndpoint(c),
 		UpstreamEndpoint: GetUpstreamEndpoint(c, platform),
 		RequestedModel:   modelName,
+		RequestParams:    getOpsRequestParams(c),
 		UpstreamModel: func() string {
 			if v, ok := c.Get(opsUpstreamModelKey); ok {
 				if s, ok := v.(string); ok {

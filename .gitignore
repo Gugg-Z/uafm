@@ -57,6 +57,11 @@ pnpm-debug.log*
 docker-compose.override.yml
 
 # ===================
+# 源码编译的本机部署目录（sub2api.exe + PGDATA/Redis 数据）
+# ===================
+.deploy/
+
+# ===================
 # IDE / 编辑器
 # ===================
 .idea/

@@ -779,6 +779,7 @@ func UsageLogFromServiceAdmin(l *service.UsageLog) *AdminUsageLog {
 		AccountStatsCost:        l.AccountStatsCost,
 		IPAddress:               l.IPAddress,
 		Account:                 AccountSummaryFromService(l.Account),
+		RequestParams:           service.SanitizeRequestParamsForResponse(l.RequestParams),
 	}
 }
 

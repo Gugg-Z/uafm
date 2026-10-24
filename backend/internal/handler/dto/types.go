@@ -707,6 +707,9 @@ type AdminUsageLog struct {
 
 	// Account 最小账号信息（避免泄露敏感字段）
 	Account *AccountSummary `json:"account,omitempty"`
+
+	// RequestParams 是脱敏后的入参摘要，仅管理员可见。
+	RequestParams map[string]any `json:"request_params,omitempty"`
 }
 
 type UsageCleanupFilters struct {
