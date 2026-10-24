@@ -1861,6 +1861,9 @@ export interface AdminUsageLog extends UsageLog {
 
   // 最小账号信息（仅管理员接口返回）
   account?: UsageLogAccountSummary
+
+  // 脱敏后的入参摘要（仅管理员接口返回）
+  request_params?: Record<string, unknown> | null
 }
 
 export interface UsageCleanupFilters {
