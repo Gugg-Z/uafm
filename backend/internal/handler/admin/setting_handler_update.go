@@ -167,6 +167,7 @@ type UpdateSettingsRequest struct {
 	TableDefaultPageSize        int                   `json:"table_default_page_size"`
 	TablePageSizeOptions        []int                 `json:"table_page_size_options"`
 	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
+	UserMenuItems               *[]string             `json:"user_menu_items"`
 	CustomEndpoints             *[]dto.CustomEndpoint `json:"custom_endpoints"`
 
 	// 默认配置
@@ -1285,6 +1286,25 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	)
 
 	customMenuJSON := previousSettings.CustomMenuItems
+	userMenuJSON := previousSettings.UserMenuItems
+	if req.UserMenuItems != nil {
+		allowed := map[string]bool{"dashboard": true, "api_keys": true, "batch_image": true, "usage": true, "available_channels": true, "channel_status": true, "subscriptions": true, "purchase": true, "orders": true, "redeem": true, "affiliate": true, "affiliate_usage": true, "profile": true}
+		seen := make(map[string]bool)
+		items := make([]string, 0, len(*req.UserMenuItems))
+		for _, key := range *req.UserMenuItems {
+			key = strings.TrimSpace(key)
+			if key != "" && allowed[key] && !seen[key] {
+				seen[key] = true
+				items = append(items, key)
+			}
+		}
+		bytes, err := json.Marshal(items)
+		if err != nil {
+			response.BadRequest(c, "Invalid user menu items")
+			return
+		}
+		userMenuJSON = string(bytes)
+	}
 	if req.CustomMenuItems != nil {
 		items := *req.CustomMenuItems
 		if len(items) > maxCustomMenuItems {
@@ -1664,6 +1684,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		TableDefaultPageSize:                   req.TableDefaultPageSize,
 		TablePageSizeOptions:                   req.TablePageSizeOptions,
 		CustomMenuItems:                        customMenuJSON,
+		UserMenuItems:                          userMenuJSON,
 		CustomEndpoints:                        customEndpointsJSON,
 		DefaultConcurrency:                     req.DefaultConcurrency,
 		DefaultBalance:                         req.DefaultBalance,

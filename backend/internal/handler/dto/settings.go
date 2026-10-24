@@ -163,19 +163,20 @@ type SystemSettings struct {
 	TableDefaultPageSize        int              `json:"table_default_page_size"`
 	TablePageSizeOptions        []int            `json:"table_page_size_options"`
 	CustomMenuItems             []CustomMenuItem `json:"custom_menu_items"`
+	UserMenuItems               []string         `json:"user_menu_items"`
 	CustomEndpoints             []CustomEndpoint `json:"custom_endpoints"`
 
-	DefaultConcurrency           int                          `json:"default_concurrency"`
-	DefaultBalance               float64                      `json:"default_balance"`
-	AffiliateRebateRate          float64                      `json:"affiliate_rebate_rate"`
-	AffiliateRebateFreezeHours   int                          `json:"affiliate_rebate_freeze_hours"`
-	AffiliateRebateDurationDays  int                          `json:"affiliate_rebate_duration_days"`
-	AffiliateRebatePerInviteeCap float64                      `json:"affiliate_rebate_per_invitee_cap"`
-	AffiliateGroupProfitRates    map[string]float64           `json:"affiliate_group_profit_rates"`
+	DefaultConcurrency           int                            `json:"default_concurrency"`
+	DefaultBalance               float64                        `json:"default_balance"`
+	AffiliateRebateRate          float64                        `json:"affiliate_rebate_rate"`
+	AffiliateRebateFreezeHours   int                            `json:"affiliate_rebate_freeze_hours"`
+	AffiliateRebateDurationDays  int                            `json:"affiliate_rebate_duration_days"`
+	AffiliateRebatePerInviteeCap float64                        `json:"affiliate_rebate_per_invitee_cap"`
+	AffiliateGroupProfitRates    map[string]float64             `json:"affiliate_group_profit_rates"`
 	AffiliatePartnerTiers        []service.AffiliatePartnerTier `json:"affiliate_partner_tiers"`
-	AdminRechargeRebateEnabled   bool                         `json:"affiliate_admin_recharge_enabled"`
-	DefaultUserRPMLimit          int                          `json:"default_user_rpm_limit"`
-	DefaultSubscriptions         []DefaultSubscriptionSetting `json:"default_subscriptions"`
+	AdminRechargeRebateEnabled   bool                           `json:"affiliate_admin_recharge_enabled"`
+	DefaultUserRPMLimit          int                            `json:"default_user_rpm_limit"`
+	DefaultSubscriptions         []DefaultSubscriptionSetting   `json:"default_subscriptions"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
@@ -405,6 +406,7 @@ type PublicSettings struct {
 	TableDefaultPageSize                int                      `json:"table_default_page_size"`
 	TablePageSizeOptions                []int                    `json:"table_page_size_options"`
 	CustomMenuItems                     []CustomMenuItem         `json:"custom_menu_items"`
+	UserMenuItems                       []string                 `json:"user_menu_items"`
 	CustomEndpoints                     []CustomEndpoint         `json:"custom_endpoints"`
 	DingTalkOAuthEnabled                bool                     `json:"dingtalk_oauth_enabled"`
 	LinuxDoOAuthEnabled                 bool                     `json:"linuxdo_oauth_enabled"`
@@ -604,6 +606,15 @@ func ParseCustomMenuItems(raw string) []CustomMenuItem {
 	var items []CustomMenuItem
 	if err := json.Unmarshal([]byte(raw), &items); err != nil {
 		return []CustomMenuItem{}
+	}
+	return items
+}
+
+// ParseStringArray parses a JSON string array, returning an empty slice for invalid input.
+func ParseStringArray(raw string) []string {
+	var items []string
+	if err := json.Unmarshal([]byte(raw), &items); err != nil || items == nil {
+		return []string{}
 	}
 	return items
 }

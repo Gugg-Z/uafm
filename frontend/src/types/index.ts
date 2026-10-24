@@ -299,6 +299,7 @@ export interface PublicSettings {
   table_default_page_size: number
   table_page_size_options: number[]
   custom_menu_items: CustomMenuItem[]
+  user_menu_items: string[]
   custom_endpoints: CustomEndpoint[]
   linuxdo_oauth_enabled: boolean
   dingtalk_oauth_enabled?: boolean

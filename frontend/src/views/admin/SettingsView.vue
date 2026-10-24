@@ -6755,6 +6755,20 @@
 
           <!-- Custom Menu Items -->
           <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">用户侧内置菜单</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">关闭后普通用户不会看到对应入口，也无法直接访问页面。未选择表示全部开启。</p>
+            </div>
+            <div class="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-3">
+              <label v-for="item in userMenuOptions" :key="item.key" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input v-model="form.user_menu_items" type="checkbox" :value="item.key" class="rounded border-gray-300 text-primary-600" />
+                {{ item.label }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Custom Menu Items -->
+          <div class="card">
             <div
               class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
             >
@@ -10087,6 +10101,16 @@ type SettingsForm = Omit<
   account_scheduling_thresholds: ReturnType<typeof normalizeAccountSchedulingThresholdsMap>;
 };
 
+const userMenuOptions = [
+  { key: 'dashboard', label: '仪表盘' }, { key: 'api_keys', label: 'API 密钥' },
+  { key: 'batch_image', label: '批量生图' }, { key: 'usage', label: '用量' },
+  { key: 'available_channels', label: '可用渠道' }, { key: 'channel_status', label: '渠道状态' },
+  { key: 'subscriptions', label: '我的订阅' }, { key: 'purchase', label: '充值/订阅' },
+  { key: 'orders', label: '我的订单' }, { key: 'redeem', label: '兑换码' },
+  { key: 'affiliate', label: '联盟中心' }, { key: 'affiliate_usage', label: '联盟用量' },
+  { key: 'profile', label: '个人资料' },
+]
+
 const schedulingThresholdPlatforms = SCHEDULING_THRESHOLD_PLATFORMS;
 
 // 平台限额表格的行：平台清单顺序中、已在归一化 map 里的平台（清单晚于设置加载时
@@ -10183,6 +10207,7 @@ const form = reactive<SettingsForm>({
     sort_order: number;
     hide_open_button?: boolean;
   }>,
+  user_menu_items: [] as string[],
   custom_endpoints: [] as Array<{
     name: string;
     endpoint: string;
@@ -11865,6 +11890,7 @@ async function saveSettings() {
       table_default_page_size: form.table_default_page_size,
       table_page_size_options: form.table_page_size_options,
       custom_menu_items: form.custom_menu_items,
+      user_menu_items: form.user_menu_items,
       custom_endpoints: form.custom_endpoints,
       frontend_url: form.frontend_url,
       smtp_host: form.smtp_host,
@@ -12184,6 +12210,10 @@ async function saveSettings() {
     const updated = await settingsStepUp.run(() =>
       adminAPI.settings.updateSettings(payload),
     );
+    // The public shell is cached independently from the admin settings form.
+    // Refresh it after saving so menu visibility changes take effect immediately
+    // in this session as well as after a normal page reload.
+    await appStore.fetchPublicSettings(true);
     for (const [key, value] of Object.entries(updated)) {
       if (key === "openai_fast_policy_settings") continue;
       if (value !== null && value !== undefined) {

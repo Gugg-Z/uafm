@@ -242,6 +242,19 @@ function applyFeatureFlags(items: NavItem[]): NavItem[] {
   return out
 }
 
+function applyUserMenuSettings(items: NavItem[]): NavItem[] {
+  const configured = appStore.cachedPublicSettings?.user_menu_items
+  if (!Array.isArray(configured) || configured.length === 0) return items
+  const enabled = new Set(configured)
+  const keyByPath: Record<string, string> = {
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/usage': 'usage',
+    '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
+    '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
+    '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',
+  }
+  return items.filter(item => !keyByPath[item.path] || enabled.has(keyByPath[item.path]))
+}
+
 // applyReadonlyAdminPermissions 递归过滤子管理员未获授权的菜单项（permissionKey 未授予则隐藏；
 // 父项在全部子项被过滤后隐藏）。无 permissionKey 的项（用户自服务/自定义菜单）不受影响。
 function applyReadonlyAdminPermissions(items: NavItem[]): NavItem[] {
@@ -775,7 +788,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
 
 // finalizeNav 合并三重过滤：featureFlag 过滤 + simple 模式过滤。
 function finalizeNav(items: NavItem[]): NavItem[] {
-  const visible = applyFeatureFlags(items)
+  const visible = applyUserMenuSettings(applyFeatureFlags(items))
   return authStore.isSimpleMode ? visible.filter(item => !item.hideInSimpleMode) : visible
 }
 

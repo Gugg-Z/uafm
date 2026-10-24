@@ -1015,6 +1015,26 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
+  const menuKeyByPath: Record<string, string> = {
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/usage': 'usage',
+    '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
+    '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
+    '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',
+  }
+  const userMenuKey = menuKeyByPath[to.path]
+  if (userMenuKey && !appStore.publicSettingsLoaded) {
+    try { await appStore.fetchPublicSettings() } catch (error) { console.warn('Failed to load public settings in route guard', error) }
+  }
+  const enabledUserMenus = appStore.cachedPublicSettings?.user_menu_items
+  if (!authStore.isAdmin && userMenuKey && Array.isArray(enabledUserMenus) && enabledUserMenus.length > 0 && !enabledUserMenus.includes(userMenuKey)) {
+    const fallback = ['/dashboard', '/keys', '/usage', '/profile'].find(path => {
+      const key = menuKeyByPath[path]
+      return !key || enabledUserMenus.includes(key)
+    }) || '/login'
+    next(fallback)
+    return
+  }
+
   // Only an explicit value from successfully loaded settings can disable a route.
   // A transient settings failure is unknown state, not a confirmed feature toggle.
   if (

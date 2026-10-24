@@ -163,6 +163,7 @@ type SystemSettings struct {
 	TableDefaultPageSize        int
 	TablePageSizeOptions        []int
 	CustomMenuItems             string // JSON array of custom menu items
+	UserMenuItems               string // JSON array of enabled user menu keys
 	CustomEndpoints             string // JSON array of custom endpoints
 
 	DefaultConcurrency           int
