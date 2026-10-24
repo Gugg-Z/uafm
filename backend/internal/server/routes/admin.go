@@ -38,6 +38,7 @@ func RegisterAdminRoutes(
 
 		// 仪表盘
 		registerDashboardRoutes(admin, h)
+		registerVisitorAnalyticsRoutes(admin, h)
 
 		// 用户管理
 		registerUserManagementRoutes(admin, h)
@@ -924,5 +925,22 @@ func registerHelpCenterRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		settingsHelpCenter.PUT("/draft", h.Admin.HelpCenter.SaveDraft)
 		settingsHelpCenter.POST("/publish", h.Admin.HelpCenter.PublishDraft)
 		settingsHelpCenter.POST("/attachments", h.Admin.HelpCenter.UploadAttachment)
+	}
+}
+
+func registerVisitorAnalyticsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	analytics := admin.Group("/visitor-analytics")
+	{
+		analytics.GET("/overview", h.VisitorAnalytics.Overview)
+		analytics.GET("/trend", h.VisitorAnalytics.Trend)
+		analytics.GET("/channel-stats", h.VisitorAnalytics.ChannelStats)
+		analytics.GET("/events", h.VisitorAnalytics.ListEvents)
+		analytics.GET("/channels", h.VisitorAnalytics.ListChannels)
+		analytics.POST("/channels", h.VisitorAnalytics.CreateChannel)
+		analytics.PUT("/channels/:id", h.VisitorAnalytics.UpdateChannel)
+		analytics.DELETE("/channels/:id", h.VisitorAnalytics.DeleteChannel)
+		analytics.POST("/ip-lookup", h.VisitorAnalytics.LookupIP)
+		analytics.GET("/settings", h.VisitorAnalytics.GetSettings)
+		analytics.PUT("/settings", h.VisitorAnalytics.UpdateSettings)
 	}
 }

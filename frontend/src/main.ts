@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { installVisitorTracking } from '@/utils/visitorTracking'
 import App from './App.vue'
 import router from './router'
 import i18n, { initI18n } from './i18n'
@@ -58,6 +59,7 @@ async function bootstrap() {
   // 等待路由器完成初始导航后再挂载，避免竞态条件导致的空白渲染
   await router.isReady()
   app.mount('#app')
+ installVisitorTracking(router)
 }
 
 bootstrap()

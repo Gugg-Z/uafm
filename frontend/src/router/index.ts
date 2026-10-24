@@ -450,7 +450,13 @@ const routes: RouteRecordRaw[] = [
     redirect: '/admin/dashboard'
   },
   {
-    path: '/admin/dashboard',
+    path: '/admin/visitor-analytics',
+ name: 'AdminVisitorAnalytics',
+ component: () => import('@/views/admin/VisitorAnalyticsView.vue'),
+ meta: { requiresAuth: true, requiresAdmin: true, adminMenuKey: 'admin_visitor_analytics', title: 'Visitor Analytics', titleKey: 'admin.visitorAnalytics.title', descriptionKey: 'admin.visitorAnalytics.description' }
+ },
+ {
+ path: '/admin/dashboard',
     name: 'AdminDashboard',
     component: () => import('@/views/admin/DashboardView.vue'),
     meta: {

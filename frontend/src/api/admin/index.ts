@@ -3,6 +3,7 @@
  * Centralized exports for all admin API modules
  */
 
+import visitorAnalytics from './visitorAnalytics'
 import helpCenter from './helpCenter'
 import dashboardAPI from './dashboard'
 import usersAPI from './users'
@@ -42,6 +43,7 @@ import pluginsAPI from './plugins'
  * Unified admin API object for convenient access
  */
 export const adminAPI = {
+ visitorAnalytics,
  helpCenter,
   dashboard: dashboardAPI,
   users: usersAPI,

@@ -163,6 +163,7 @@ export default {
 
   // Navigation
   nav: {
+ visitorAnalytics: 'Visitor Analytics',
     helpCenter: 'Help Center',
     dashboard: 'Dashboard',
     announcements: 'Announcements',

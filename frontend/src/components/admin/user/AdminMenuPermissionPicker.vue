@@ -48,6 +48,7 @@ const { t } = useI18n()
 
 const adminLabelKeys: Record<AdminMenuItem, string> = {
   admin_dashboard: 'nav.dashboard',
+ admin_visitor_analytics: 'nav.visitorAnalytics',
   admin_ops: 'nav.ops',
   admin_requests: 'nav.requests',
   admin_users: 'nav.users',

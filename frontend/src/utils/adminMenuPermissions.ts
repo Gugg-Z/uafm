@@ -5,6 +5,7 @@
  */
 export const ADMIN_MENU_ITEMS = [
   'admin_dashboard',
+ 'admin_visitor_analytics',
   'admin_ops',
   'admin_requests',
   'admin_users',
@@ -39,6 +40,7 @@ export type AdminPermissionKey = AdminMenuItem
 /** 每个菜单 key 对应的侧栏/路由路径，用于无权限时重定向回落到首个有权限的页面。 */
 export const ADMIN_MENU_PATHS: Record<AdminMenuItem, string> = {
   admin_dashboard: '/admin/dashboard',
+ admin_visitor_analytics: '/admin/visitor-analytics',
   admin_ops: '/admin/ops',
   admin_requests: '/admin/requests',
   admin_users: '/admin/users',

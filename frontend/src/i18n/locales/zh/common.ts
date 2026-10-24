@@ -163,6 +163,7 @@ export default {
 
   // Navigation
   nav: {
+ visitorAnalytics: '访问分析',
     helpCenter: '帮助中心',
     dashboard: '仪表盘',
     announcements: '公告',

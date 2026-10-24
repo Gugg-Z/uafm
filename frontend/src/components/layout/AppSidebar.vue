@@ -821,6 +821,7 @@ const customMenuItemsForAdmin = computed(() => {
 const adminNavItems = computed((): NavItem[] => {
   const baseItems: NavItem[] = [
     { path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon, permissionKey: 'admin_dashboard' },
+    { path: '/admin/visitor-analytics', label: t('nav.visitorAnalytics'), icon: ChartIcon, permissionKey: 'admin_visitor_analytics' },
     { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring, permissionKey: 'admin_ops' },
     { path: '/admin/requests', label: t('nav.requests'), icon: OrderListIcon, featureFlag: flagOpsMonitoring, permissionKey: 'admin_requests' },
     { path: '/admin/users', label: t('nav.users'), icon: UsersIcon, hideInSimpleMode: true, permissionKey: 'admin_users' },
