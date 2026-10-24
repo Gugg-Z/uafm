@@ -662,6 +662,8 @@ export default {
         passwordPlaceholder: 'Enter password (leave empty to keep unchanged)',
         roleLabel: 'Role',
         selectRole: 'Select role',
+        adminMenuPermissions: 'Accessible menus',
+        adminMenuPermissionsHint: 'Select which admin menus this read-only administrator can view. All write operations are still blocked by the backend.',
         balanceLabel: 'Balance',
         concurrencyLabel: 'Concurrency',
         statusLabel: 'Status',
@@ -827,7 +829,8 @@ export default {
       createdAt: 'Created',
       totalRecharged: 'Total Recharged',
       roles: {
-        admin: 'Admin',
+        admin: 'Super Admin',
+        sub_admin: 'Read-only Admin',
         user: 'User'
       },
       // Settings Dropdowns

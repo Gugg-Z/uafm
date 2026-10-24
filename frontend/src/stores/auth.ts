@@ -13,6 +13,7 @@ import type {
   AuthResponse,
   ActionCaptchaRequestProof
 } from '@/types'
+import { hasAdminMenuPermission } from '@/utils/adminMenuPermissions'
 
 const AUTH_TOKEN_KEY = 'auth_token'
 const AUTH_USER_KEY = 'auth_user'
@@ -93,8 +94,10 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const isAdmin = computed(() => {
-    return user.value?.role === 'admin'
+    return user.value?.role === 'admin' || user.value?.role === 'sub_admin'
   })
+  const isSuperAdmin = computed(() => user.value?.role === 'admin')
+  const isReadonlyAdmin = computed(() => user.value?.role === 'sub_admin')
 
   const isSimpleMode = computed(() => runMode.value === 'simple')
   const hasPendingAuthSession = computed(() => pendingAuthSession.value !== null)
@@ -498,8 +501,13 @@ export const useAuthStore = defineStore('auth', () => {
     // Computed
     isAuthenticated,
     isAdmin,
+    isSuperAdmin,
+    isReadonlyAdmin,
     isSimpleMode,
     hasPendingAuthSession,
+
+    // 子管理员菜单权限检查（其他模块直接调用）
+    hasAdminMenuPermission: (key?: string) => hasAdminMenuPermission(user.value?.admin_menu_permissions, key),
 
     // Actions
     login,

@@ -84,7 +84,9 @@ export interface User {
   linuxdo_bound?: boolean
   oidc_bound?: boolean
   wechat_bound?: boolean
-  role: 'admin' | 'user' // User role for authorization
+  role: 'admin' | 'sub_admin' | 'user' // User role for authorization
+  // 子管理员(role=sub_admin)的后台只读菜单 key 列表（与后端菜单权限映射一致）
+  admin_menu_permissions?: string[]
   balance: number // User balance for API usage
   frozen_balance?: number // Balance currently held by async batch jobs
   concurrency: number // Allowed concurrent requests
@@ -2159,7 +2161,8 @@ export interface UpdateUserRequest {
   password?: string
   username?: string
   notes?: string
-  role?: 'admin' | 'user'
+  role?: 'admin' | 'sub_admin' | 'user'
+  admin_menu_permissions?: string[]
   balance?: number
   concurrency?: number
   rpm_limit?: number

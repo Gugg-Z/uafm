@@ -198,6 +198,7 @@ import { sanitizeSvg } from '@/utils/sanitize'
 import { sanitizeUrl } from '@/utils/url'
 import { FeatureFlags, makeSidebarFlag } from '@/utils/featureFlags'
 import { resolveSiteBillingMode } from '@/utils/siteBillingMode'
+import { hasAdminMenuPermission, type AdminPermissionKey } from '@/utils/adminMenuPermissions'
 import { useBatchImageAccess } from '@/composables/useBatchImageAccess'
 
 interface NavItem {
@@ -206,6 +207,11 @@ interface NavItem {
   icon: unknown
   iconSvg?: string
   hideInSimpleMode?: boolean
+  /**
+   * 子管理员(sub_admin)菜单权限 key。带该字段的菜单项对只读管理员按授权过滤；
+   * 不带则视为任何登录用户都可见（用户自服务项、自定义菜单）。
+   */
+  permissionKey?: AdminPermissionKey
   children?: NavItem[]
   /**
    * When true, the parent item only toggles the expand/collapse state and
@@ -230,6 +236,28 @@ function applyFeatureFlags(items: NavItem[]): NavItem[] {
     if (item.children) {
       out.push({ ...item, children: applyFeatureFlags(item.children) })
     } else {
+      out.push(item)
+    }
+  }
+  return out
+}
+
+// applyReadonlyAdminPermissions 递归过滤子管理员未获授权的菜单项（permissionKey 未授予则隐藏；
+// 父项在全部子项被过滤后隐藏）。无 permissionKey 的项（用户自服务/自定义菜单）不受影响。
+function applyReadonlyAdminPermissions(items: NavItem[]): NavItem[] {
+  if (!authStore.isReadonlyAdmin) {
+    return items
+  }
+  const out: NavItem[] = []
+  for (const item of items) {
+    const children = item.children ? applyReadonlyAdminPermissions(item.children) : undefined
+    if (item.children) {
+      if (children && children.length > 0) out.push({ ...item, children })
+      continue
+    }
+    const allowed = !item.permissionKey
+      || hasAdminMenuPermission(authStore.user?.admin_menu_permissions, item.permissionKey)
+    if (allowed) {
       out.push(item)
     }
   }
@@ -776,11 +804,11 @@ const customMenuItemsForAdmin = computed(() => {
 // Admin navigation items
 const adminNavItems = computed((): NavItem[] => {
   const baseItems: NavItem[] = [
-    { path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon },
-    { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring },
-    { path: '/admin/requests', label: t('nav.requests'), icon: OrderListIcon, featureFlag: flagOpsMonitoring },
-    { path: '/admin/users', label: t('nav.users'), icon: UsersIcon, hideInSimpleMode: true },
-    { path: '/admin/groups', label: t('nav.groups'), icon: FolderIcon },
+    { path: '/admin/dashboard', label: t('nav.dashboard'), icon: DashboardIcon, permissionKey: 'admin_dashboard' },
+    { path: '/admin/ops', label: t('nav.ops'), icon: ChartIcon, featureFlag: flagOpsMonitoring, permissionKey: 'admin_ops' },
+    { path: '/admin/requests', label: t('nav.requests'), icon: OrderListIcon, featureFlag: flagOpsMonitoring, permissionKey: 'admin_requests' },
+    { path: '/admin/users', label: t('nav.users'), icon: UsersIcon, hideInSimpleMode: true, permissionKey: 'admin_users' },
+    { path: '/admin/groups', label: t('nav.groups'), icon: FolderIcon, permissionKey: 'admin_groups' },
     {
       path: '/admin/channels',
       label: t('nav.channelManagement'),
@@ -788,16 +816,16 @@ const adminNavItems = computed((): NavItem[] => {
       hideInSimpleMode: true,
       expandOnly: true,
       children: [
-        { path: '/admin/channels/pricing', label: t('nav.channelPricing'), icon: PriceTagIcon },
-        { path: '/admin/channels/monitor', label: t('nav.channelMonitor'), icon: SignalIcon, featureFlag: flagChannelMonitor },
+        { path: '/admin/channels/pricing', label: t('nav.channelPricing'), icon: PriceTagIcon, permissionKey: 'admin_channel_pricing' },
+        { path: '/admin/channels/monitor', label: t('nav.channelMonitor'), icon: SignalIcon, featureFlag: flagChannelMonitor, permissionKey: 'admin_channel_monitor' },
       ],
     },
     // 「仅充值」站点连管理端的「订阅管理」入口也一并收起（路由本身不拦截）。
-    { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
-    { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
-    { path: '/admin/plugins', label: t('nav.plugins'), icon: PluginIcon, featureFlag: flagPluginManagement },
-    { path: '/admin/announcements', label: t('nav.announcements'), icon: BellIcon },
-    { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon },
+    { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription, permissionKey: 'admin_subscriptions' },
+    { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon, permissionKey: 'admin_accounts' },
+    { path: '/admin/plugins', label: t('nav.plugins'), icon: PluginIcon, featureFlag: flagPluginManagement, permissionKey: 'admin_plugins' },
+    { path: '/admin/announcements', label: t('nav.announcements'), icon: BellIcon, permissionKey: 'admin_announcements' },
+    { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon, permissionKey: 'admin_proxies' },
     {
       path: '/admin/security-audit',
       label: t('nav.securityAudit'),
@@ -805,12 +833,12 @@ const adminNavItems = computed((): NavItem[] => {
       expandOnly: true,
       featureFlag: flagRiskControl,
       children: [
-        { path: '/admin/risk-control', label: t('nav.contentModeration'), icon: ShieldIcon },
-        { path: '/admin/prompt-audit', label: t('nav.promptAudit'), icon: ShieldIcon },
+        { path: '/admin/risk-control', label: t('nav.contentModeration'), icon: ShieldIcon, permissionKey: 'admin_risk_control' },
+        { path: '/admin/prompt-audit', label: t('nav.promptAudit'), icon: ShieldIcon, permissionKey: 'admin_prompt_audit' },
       ],
     },
-    { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
-    { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true, permissionKey: 'admin_redeem' },
+    { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true, permissionKey: 'admin_promo_codes' },
     {
       path: '/admin/affiliates',
       label: t('nav.affiliateManagement'),
@@ -819,11 +847,11 @@ const adminNavItems = computed((): NavItem[] => {
       expandOnly: true,
       featureFlag: flagAffiliate,
       children: [
-        { path: '/admin/affiliates/usage', label: t('nav.affiliateUsage'), icon: ChartIcon },
-        { path: '/admin/affiliates/applications', label: t('nav.affiliateApplications'), icon: UserIcon },
-        { path: '/admin/affiliates/invites', label: t('nav.affiliateInviteRecords'), icon: UsersIcon },
-        { path: '/admin/affiliates/rebates', label: t('nav.affiliateRebateRecords'), icon: OrderIcon },
-        { path: '/admin/affiliates/transfers', label: t('nav.affiliateTransferRecords'), icon: CreditCardIcon },
+        { path: '/admin/affiliates/usage', label: t('nav.affiliateUsage'), icon: ChartIcon, permissionKey: 'admin_affiliate_usage' },
+        { path: '/admin/affiliates/applications', label: t('nav.affiliateApplications'), icon: UserIcon, permissionKey: 'admin_affiliate_applications' },
+        { path: '/admin/affiliates/invites', label: t('nav.affiliateInviteRecords'), icon: UsersIcon, permissionKey: 'admin_affiliate_invites' },
+        { path: '/admin/affiliates/rebates', label: t('nav.affiliateRebateRecords'), icon: OrderIcon, permissionKey: 'admin_affiliate_rebates' },
+        { path: '/admin/affiliates/transfers', label: t('nav.affiliateTransferRecords'), icon: CreditCardIcon, permissionKey: 'admin_affiliate_transfers' },
       ],
     },
     {
@@ -834,13 +862,13 @@ const adminNavItems = computed((): NavItem[] => {
       expandOnly: true,
       featureFlag: flagAdminPayment,
       children: [
-        { path: '/admin/orders/dashboard', label: t('nav.paymentDashboard'), icon: ChartIcon },
-        { path: '/admin/orders', label: t('nav.orderManagement'), icon: OrderIcon },
-        { path: '/admin/orders/plans', label: t('nav.paymentPlans'), icon: CreditCardIcon },
+        { path: '/admin/orders/dashboard', label: t('nav.paymentDashboard'), icon: ChartIcon, permissionKey: 'admin_order_dashboard' },
+        { path: '/admin/orders', label: t('nav.orderManagement'), icon: OrderIcon, permissionKey: 'admin_orders' },
+        { path: '/admin/orders/plans', label: t('nav.paymentPlans'), icon: CreditCardIcon, permissionKey: 'admin_order_plans' },
       ],
     },
-    { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
-    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true }
+    { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon, permissionKey: 'admin_usage' },
+    { path: '/admin/audit-logs', label: t('nav.auditLogs'), icon: ShieldIcon, hideInSimpleMode: true, permissionKey: 'admin_audit_logs' }
   ]
 
   const visible = applyFeatureFlags(baseItems)
@@ -849,18 +877,18 @@ const adminNavItems = computed((): NavItem[] => {
   if (authStore.isSimpleMode) {
     const filtered = visible.filter(item => !item.hideInSimpleMode)
     filtered.push({ path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon })
-    filtered.push({ path: '/admin/settings', label: t('nav.settings'), icon: CogIcon })
+    filtered.push({ path: '/admin/settings', label: t('nav.settings'), icon: CogIcon, permissionKey: 'admin_settings' })
     for (const cm of customMenuItemsForAdmin.value) {
       filtered.push({ path: `/custom/${cm.id}`, label: cm.label, icon: null, iconSvg: cm.icon_svg })
     }
-    return filtered
+    return applyReadonlyAdminPermissions(filtered)
   }
 
-  visible.push({ path: '/admin/settings', label: t('nav.settings'), icon: CogIcon })
+  visible.push({ path: '/admin/settings', label: t('nav.settings'), icon: CogIcon, permissionKey: 'admin_settings' })
   for (const cm of customMenuItemsForAdmin.value) {
     visible.push({ path: `/custom/${cm.id}`, label: cm.label, icon: null, iconSvg: cm.icon_svg })
   }
-  return visible
+  return applyReadonlyAdminPermissions(visible)
 })
 
 function toggleSidebar() {

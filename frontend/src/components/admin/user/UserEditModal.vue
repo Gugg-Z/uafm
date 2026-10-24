@@ -37,6 +37,7 @@
           :searchable="false"
         />
       </div>
+      <AdminMenuPermissionPicker v-if="form.role === 'sub_admin'" v-model="form.admin_menu_permissions" />
       <div>
         <label class="input-label">{{ t('admin.users.notes') }}</label>
         <textarea v-model="form.notes" rows="3" class="input"></textarea>
@@ -101,6 +102,7 @@ import BaseDialog from '@/components/common/BaseDialog.vue'
 import Select from '@/components/common/Select.vue'
 import UserAttributeForm from '@/components/user/UserAttributeForm.vue'
 import Icon from '@/components/icons/Icon.vue'
+import AdminMenuPermissionPicker from './AdminMenuPermissionPicker.vue'
 import { useStepUp, isStepUpBlocked, isStepUpCancelled, stepUpBlockReason } from '@/composables/useStepUp'
 import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 
@@ -113,6 +115,7 @@ const partnerLevelOptions: AffiliatePartnerLevel[] = ['none', 'spark', 'voyage',
 const loadedPartnerLevel = ref<AffiliatePartnerLevel>('none')
 const roleOptions = computed(() => [
   { value: 'user', label: t('admin.users.roles.user') },
+  { value: 'sub_admin', label: t('admin.users.roles.sub_admin') },
   { value: 'admin', label: t('admin.users.roles.admin') }
 ])
 const form = reactive({
@@ -121,6 +124,7 @@ const form = reactive({
   username: '',
   notes: '',
   role: 'user' as AdminUser['role'],
+  admin_menu_permissions: [] as string[],
   partner_level: 'none' as AffiliatePartnerLevel,
   concurrency: 1,
   rpm_limit: 0,
@@ -129,7 +133,7 @@ const form = reactive({
 
 watch(() => props.user, async (u) => {
   if (u) {
-    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
+    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', admin_menu_permissions: [...(u.admin_menu_permissions ?? [])], concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
     form.partner_level = 'none'
     loadedPartnerLevel.value = 'none'
     passwordCopied.value = false
@@ -171,7 +175,7 @@ const handleUpdateUser = async () => {
   const userId = props.user.id
   submitting.value = true
   try {
-    const data: any = { email: form.email, username: form.username, notes: form.notes, role: form.role, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
+    const data: any = { email: form.email, username: form.username, notes: form.notes, role: form.role, admin_menu_permissions: form.admin_menu_permissions, concurrency: form.concurrency, rpm_limit: form.rpm_limit }
     if (form.password.trim()) data.password = form.password.trim()
     // 提升为管理员属敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 验证并重试
     await stepUp.run(() => adminAPI.users.update(userId, data))

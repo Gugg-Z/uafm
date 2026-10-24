@@ -712,7 +712,8 @@ export default {
       failedToLoadApiKeys: '加载用户 API 密钥失败',
       deleteConfirm: "确定要删除用户 '{email}' 吗？此操作无法撤销。",
       roles: {
-        admin: '管理员',
+        admin: '超级管理员',
+        sub_admin: '管理员（只读）',
         user: '用户'
       },
       form: {
@@ -727,6 +728,8 @@ export default {
         passwordPlaceholder: '请输入密码（留空则不修改）',
         roleLabel: '角色',
         selectRole: '选择角色',
+        adminMenuPermissions: '可访问菜单',
+        adminMenuPermissionsHint: '勾选该只读管理员可查看的后台菜单。所有写操作仍会被后端拒绝。',
         balanceLabel: '余额',
         concurrencyLabel: '并发数',
         statusLabel: '状态',

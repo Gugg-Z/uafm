@@ -4,6 +4,7 @@
  */
 
 import 'vue-router'
+import type { AdminMenuItem } from '@/utils/adminMenuPermissions'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -18,6 +19,11 @@ declare module 'vue-router' {
      * @default false
      */
     requiresAdmin?: boolean
+
+    /**
+     * 该管理页对应的菜单权限 key（role=sub_admin 时据此做只读访问过滤）
+     */
+    adminMenuKey?: AdminMenuItem
 
     /**
      * Page title for this route
