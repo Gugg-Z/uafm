@@ -168,7 +168,7 @@
           </div>
           <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
             <span>{{ ui.pageSize }}</span>
-            <select v-model.number="pageSize" class="input h-9 w-24">
+            <select v-model.number="pageSize" class="input w-24">
               <option :value="10">10</option>
               <option :value="20">20</option>
               <option :value="50">50</option>
