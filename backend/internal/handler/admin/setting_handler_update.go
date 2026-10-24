@@ -1288,7 +1288,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	customMenuJSON := previousSettings.CustomMenuItems
 	userMenuJSON := previousSettings.UserMenuItems
 	if req.UserMenuItems != nil {
-		allowed := map[string]bool{"dashboard": true, "api_keys": true, "batch_image": true, "usage": true, "available_channels": true, "channel_status": true, "subscriptions": true, "purchase": true, "orders": true, "redeem": true, "affiliate": true, "affiliate_usage": true, "profile": true}
+		allowed := map[string]bool{"dashboard": true, "api_keys": true, "batch_image": true, "image_generation": true, "usage": true, "available_channels": true, "channel_status": true, "subscriptions": true, "purchase": true, "orders": true, "redeem": true, "affiliate": true, "affiliate_usage": true, "profile": true}
 		seen := make(map[string]bool)
 		items := make([]string, 0, len(*req.UserMenuItems))
 		for _, key := range *req.UserMenuItems {

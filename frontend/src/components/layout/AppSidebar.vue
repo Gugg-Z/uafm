@@ -247,7 +247,7 @@ function applyUserMenuSettings(items: NavItem[]): NavItem[] {
   if (!Array.isArray(configured) || configured.length === 0) return items
   const enabled = new Set(configured)
   const keyByPath: Record<string, string> = {
-    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/usage': 'usage',
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/image-generation': 'image_generation', '/usage': 'usage',
     '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
     '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
     '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',
@@ -766,6 +766,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
   items.push(
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/batch-image', label: t('nav.batchImage'), icon: BatchImageIcon, hideInSimpleMode: true, featureFlag: flagBatchImageAccess },
+    { path: '/image-generation', label: t('nav.imageGeneration'), icon: BatchImageIcon, hideInSimpleMode: true },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/available-channels', label: t('nav.availableChannels'), icon: ChannelIcon, hideInSimpleMode: true, featureFlag: flagAvailableChannels },
     { path: '/monitor', label: t('nav.channelStatus'), icon: SignalIcon, featureFlag: flagChannelMonitor },

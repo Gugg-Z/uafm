@@ -27,6 +27,7 @@ const appStore = vi.hoisted(() => ({
     risk_control_enabled?: boolean
     subscription_enabled?: boolean
     custom_menu_items?: []
+    user_menu_items?: string[]
   },
   fetchPublicSettings: vi.fn(),
 }))
@@ -118,6 +119,22 @@ describe('feature route guard', () => {
     appStore.publicSettingsLoaded = false
     appStore.cachedPublicSettings = null
     appStore.fetchPublicSettings.mockReset()
+  })
+
+  it('blocks direct studio access when its menu is disabled', async () => {
+    appStore.publicSettingsLoaded = true
+    appStore.cachedPublicSettings = { user_menu_items: ['api_keys'] }
+    const { navigation, next } = runGuard({}, '/image-generation')
+    await navigation
+    expect(next).toHaveBeenCalledWith('/keys')
+  })
+
+  it.each([[], ['image_generation']])('allows the studio with default or explicit menu configuration %j', async (menus) => {
+    appStore.publicSettingsLoaded = true
+    appStore.cachedPublicSettings = { user_menu_items: menus }
+    const { navigation, next } = runGuard({}, '/image-generation')
+    await navigation
+    expect(next).toHaveBeenCalledWith()
   })
 
   it('waits for the first public-settings request before deciding payment access', async () => {

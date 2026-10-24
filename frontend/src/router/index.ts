@@ -240,6 +240,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/image-generation',
+    name: 'ImageGeneration',
+    component: () => import('@/views/user/ImageGenerationView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'AI Image Generation',
+      titleKey: 'imageGeneration.title',
+      descriptionKey: 'imageGeneration.description'
+    }
+  },
+  {
     path: '/usage',
     name: 'Usage',
     component: () => import('@/views/user/UsageView.vue'),
@@ -1016,7 +1028,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   const menuKeyByPath: Record<string, string> = {
-    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/usage': 'usage',
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/image-generation': 'image_generation', '/usage': 'usage',
     '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
     '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
     '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',

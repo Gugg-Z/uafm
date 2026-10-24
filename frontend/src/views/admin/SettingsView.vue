@@ -10104,6 +10104,7 @@ type SettingsForm = Omit<
 const userMenuOptions = [
   { key: 'dashboard', label: '仪表盘' }, { key: 'api_keys', label: 'API 密钥' },
   { key: 'batch_image', label: '批量生图' }, { key: 'usage', label: '用量' },
+  { key: 'image_generation', label: 'AI 生图' },
   { key: 'available_channels', label: '可用渠道' }, { key: 'channel_status', label: '渠道状态' },
   { key: 'subscriptions', label: '我的订阅' }, { key: 'purchase', label: '充值/订阅' },
   { key: 'orders', label: '我的订单' }, { key: 'redeem', label: '兑换码' },

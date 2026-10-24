@@ -167,6 +167,7 @@ export default {
     announcements: '公告',
     apiKeys: 'API 密钥',
     batchImage: '批量生图',
+    imageGeneration: 'AI 生图',
     usage: '使用记录',
     requests: '请求',
     redeem: '兑换',

@@ -37,6 +37,10 @@ func ClientRequestID() gin.HandlerFunc {
 		}
 
 		id := uuid.New().String()
+		// Use the studio's correlation ID only after bounding and validating it.
+		if supplied, valid := normalizeCorrelationID(c.GetHeader(clientRequestIDHeader)); valid && isSafeClientRequestID(supplied) {
+			id = supplied
+		}
 		c.Header(clientRequestIDHeader, id)
 		ctx := context.WithValue(c.Request.Context(), ctxkey.ClientRequestID, id)
 		requestLogger := logger.FromContext(ctx).With(zap.String("client_request_id", strings.TrimSpace(id)))
@@ -44,4 +48,14 @@ func ClientRequestID() gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+func isSafeClientRequestID(value string) bool {
+	for _, ch := range value {
+		if ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '-' || ch == '_' || ch == '.' || ch == ':' {
+			continue
+		}
+		return false
+	}
+	return true
 }

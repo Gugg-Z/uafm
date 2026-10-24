@@ -31,6 +31,30 @@ func TestClientRequestIDGeneratesAndExposesID(t *testing.T) {
 	require.Equal(t, w.Body.String(), w.Header().Get(clientRequestIDHeader))
 }
 
+func TestClientRequestIDValidatesStudioHeader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for _, supplied := range []string{"img-test_1.2:3", strings.Repeat("x", 65), "invalid id", "bad\tvalue"} {
+		t.Run(supplied, func(t *testing.T) {
+			router := gin.New()
+			router.Use(ClientRequestID())
+			router.GET("/", func(c *gin.Context) {
+				c.String(http.StatusOK, c.Request.Context().Value(ctxkey.ClientRequestID).(string))
+			})
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set(clientRequestIDHeader, supplied)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+			if supplied == "img-test_1.2:3" {
+				require.Equal(t, supplied, w.Body.String())
+			} else {
+				require.NotEqual(t, supplied, w.Body.String())
+				require.Len(t, w.Body.String(), 36)
+			}
+			require.Equal(t, w.Body.String(), w.Header().Get(clientRequestIDHeader))
+		})
+	}
+}
+
 func TestClientRequestIDBoundsExistingContextID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
