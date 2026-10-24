@@ -100,7 +100,9 @@ type UserUpdateFields struct {
 	Notes        bool
 	PasswordHash bool
 	Role         bool
-	Status       bool
+	// AdminMenuPermissions 覆盖 admin_menu_permissions 列（仅 sub_admin 有意义）。
+	AdminMenuPermissions bool
+	Status               bool
 	Concurrency  bool
 	RPMLimit     bool
 	SignupSource bool

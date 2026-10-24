@@ -25,6 +25,8 @@ func RegisterAdminRoutes(
 
 	admin := v1.Group("/admin")
 	admin.Use(gin.HandlerFunc(adminAuth))
+	// 子管理员(role=sub_admin)菜单级只读门控：非授权菜单一律 403
+	admin.Use(middleware.SubAdminAdminPermissionGuard())
 	// 面板全局按用户限流（默认管理员豁免，可在系统设置中关闭豁免）
 	admin.Use(panelRateLimiter.Global())
 	// 审计中间件挂在认证之后：所有管理面变更类操作 + 敏感读取入审计日志

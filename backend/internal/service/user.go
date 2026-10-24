@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,11 +19,14 @@ type User struct {
 	AvatarSHA256   string
 	PasswordHash   string
 	Role           string
-	Balance        float64
-	FrozenBalance  float64
-	Concurrency    int
-	Status         string
-	AllowedGroups  []int64
+	// AdminMenuPermissions 子管理员(role=sub_admin)被授予的后台菜单 key 列表。
+	// 非 sub_admin 角色始终为空。持久化为 users.admin_menu_permissions 的 JSON 文本。
+	AdminMenuPermissions []string
+	Balance              float64
+	FrozenBalance        float64
+	Concurrency          int
+	Status               string
+	AllowedGroups        []int64
 	// RestrictPublicGroups narrows the public groups this user may bind to the
 	// ones listed in AllowedGroups. False keeps the default, where every public
 	// group is bindable.
@@ -69,7 +73,48 @@ type User struct {
 }
 
 func (u *User) IsAdmin() bool {
+	return IsAdminRole(u.Role)
+}
+
+func (u *User) IsSuperAdmin() bool {
 	return u.Role == RoleAdmin
+}
+
+func (u *User) IsSubAdmin() bool {
+	return u.Role == RoleSubAdmin
+}
+
+func IsAdminRole(role string) bool {
+	return role == RoleAdmin || role == RoleSubAdmin
+}
+
+func IsValidUserRole(role string) bool {
+	switch role {
+	case RoleAdmin, RoleSubAdmin, RoleUser:
+		return true
+	default:
+		return false
+	}
+}
+
+func NormalizeAdminMenuPermissions(items []string) []string {
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(items))
+	seen := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		normalized := strings.TrimSpace(item)
+		if normalized == "" {
+			continue
+		}
+		if _, ok := seen[normalized]; ok {
+			continue
+		}
+		seen[normalized] = struct{}{}
+		out = append(out, normalized)
+	}
+	return out
 }
 
 func (u *User) IsActive() bool {

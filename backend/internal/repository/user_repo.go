@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -146,6 +147,7 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		SetNotes(userIn.Notes).
 		SetPasswordHash(userIn.PasswordHash).
 		SetRole(userIn.Role).
+		SetAdminMenuPermissions(marshalAdminMenuPermissions(userIn.AdminMenuPermissions)).
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
@@ -307,6 +309,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User, field
 	}
 	if fields.Role {
 		updateOp = updateOp.SetRole(userIn.Role)
+	}
+	if fields.AdminMenuPermissions {
+		updateOp = updateOp.SetAdminMenuPermissions(marshalAdminMenuPermissions(userIn.AdminMenuPermissions))
 	}
 	if fields.Concurrency {
 		updateOp = updateOp.SetConcurrency(userIn.Concurrency)
@@ -1553,6 +1558,29 @@ func userSignupSourceOrDefault(signupSource string) string {
 // marshalExtraEmails serializes notify email entries to JSON for storage.
 func marshalExtraEmails(entries []service.NotifyEmailEntry) string {
 	return service.MarshalNotifyEmails(entries)
+}
+
+func marshalAdminMenuPermissions(items []string) string {
+	normalized := service.NormalizeAdminMenuPermissions(items)
+	if len(normalized) == 0 {
+		return "[]"
+	}
+	b, err := json.Marshal(normalized)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+func parseAdminMenuPermissions(raw string) []string {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	var items []string
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return nil
+	}
+	return service.NormalizeAdminMenuPermissions(items)
 }
 
 // UpdateTotpSecret 更新用户的 TOTP 加密密钥
