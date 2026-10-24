@@ -1,12 +1,14 @@
 package admin
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
+	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +55,7 @@ func (h *AffiliateHandler) ListUsers(c *gin.Context) {
 type UpdateAffiliateUserRequest struct {
 	AffCode              *string  `json:"aff_code"`
 	AffRebateRatePercent *float64 `json:"aff_rebate_rate_percent"`
+	PartnerLevel         *string  `json:"partner_level"`
 	// ClearRebateRate explicitly clears the per-user rate (sets it to NULL).
 	// Used to disambiguate from "field not provided".
 	ClearRebateRate bool `json:"clear_rebate_rate"`
@@ -90,6 +93,13 @@ func (h *AffiliateHandler) UpdateUserSettings(c *gin.Context) {
 		}
 	}
 
+	if req.PartnerLevel != nil {
+		if err := h.affiliateService.AdminSetUserPartnerLevel(c.Request.Context(), userID, *req.PartnerLevel); err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+	}
+
 	response.Success(c, gin.H{"user_id": userID})
 }
 
@@ -110,11 +120,76 @@ func (h *AffiliateHandler) ClearUserSettings(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	if err := h.affiliateService.AdminSetUserPartnerLevel(c.Request.Context(), userID, service.AffiliatePartnerLevelNone); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
 	if _, err := h.affiliateService.AdminResetUserAffCode(c.Request.Context(), userID); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 	response.Success(c, gin.H{"user_id": userID})
+}
+
+// ListPartnerTiers returns available partner levels.
+// GET /api/v1/admin/affiliates/partner-tiers
+func (h *AffiliateHandler) ListPartnerTiers(c *gin.Context) {
+	response.Success(c, h.affiliateService.PartnerTiers(c.Request.Context()))
+}
+
+type ReviewAffiliatePartnerApplicationRequest struct {
+	Status       string `json:"status" binding:"required"`
+	GrantedLevel string `json:"granted_level"`
+	ReviewNote   string `json:"review_note"`
+}
+
+// ListPartnerApplications returns partner program applications for review.
+// GET /api/v1/admin/affiliates/partner-applications
+func (h *AffiliateHandler) ListPartnerApplications(c *gin.Context) {
+	page, pageSize := response.ParsePagination(c)
+	items, total, err := h.affiliateService.AdminListPartnerApplications(c.Request.Context(), service.AffiliatePartnerApplicationFilter{
+		Search:   c.Query("search"),
+		Status:   c.Query("status"),
+		Page:     page,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Paginated(c, items, total, page, pageSize)
+}
+
+// ReviewPartnerApplication approves or rejects a partner program application.
+// PUT /api/v1/admin/affiliates/partner-applications/:id/review
+func (h *AffiliateHandler) ReviewPartnerApplication(c *gin.Context) {
+	applicationID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || applicationID <= 0 {
+		response.BadRequest(c, "Invalid application id")
+		return
+	}
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Admin not authenticated")
+		return
+	}
+
+	var req ReviewAffiliatePartnerApplicationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	application, err := h.affiliateService.AdminReviewPartnerApplication(c.Request.Context(), applicationID, subject.UserID, service.AffiliatePartnerApplicationReviewInput{
+		Status:       req.Status,
+		GrantedLevel: req.GrantedLevel,
+		ReviewNote:   req.ReviewNote,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, application)
 }
 
 // BatchSetRate applies the same rebate rate (or clears it) to multiple users.
@@ -168,12 +243,14 @@ type AffiliateUserSummary struct {
 // LookupUsers searches users by email/username for the "add custom user" modal.
 // GET /api/v1/admin/affiliates/users/lookup?q=
 func (h *AffiliateHandler) LookupUsers(c *gin.Context) {
-	keyword := c.Query("q")
-	if keyword == "" {
-		response.Success(c, []AffiliateUserSummary{})
-		return
+	keyword := strings.TrimSpace(c.Query("q"))
+	sortBy := "id"
+	sortOrder := "desc"
+	if keyword != "" {
+		sortBy = "email"
+		sortOrder = "asc"
 	}
-	users, _, err := h.adminService.ListUsers(c.Request.Context(), 1, 20, service.UserListFilters{Search: keyword}, "email", "asc")
+	users, _, err := h.adminService.ListUsers(c.Request.Context(), 1, 20, service.UserListFilters{Search: keyword}, sortBy, sortOrder)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -183,6 +260,27 @@ func (h *AffiliateHandler) LookupUsers(c *gin.Context) {
 		result[i] = AffiliateUserSummary{ID: u.ID, Email: u.Email, Username: u.Username}
 	}
 	response.Success(c, result)
+}
+
+type AssignAffiliateInviterRequest struct {
+	InviterID int64 `json:"inviter_id" binding:"required"`
+	InviteeID int64 `json:"invitee_id" binding:"required"`
+}
+
+// AssignInviter manually assigns or reassigns an invitee to an inviter.
+// POST /api/v1/admin/affiliates/invites/assign
+func (h *AffiliateHandler) AssignInviter(c *gin.Context) {
+	var req AssignAffiliateInviterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	assignment, err := h.affiliateService.AdminAssignInviter(c.Request.Context(), req.InviteeID, req.InviterID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, assignment)
 }
 
 // GetUserOverview returns one user's affiliate overview.
@@ -250,6 +348,26 @@ func (h *AffiliateHandler) ListInviteRecords(c *gin.Context) {
 	response.Paginated(c, items, total, filter.Page, filter.PageSize)
 }
 
+// ListUsageDailyRecords returns range usage grouped by user or inviter group.
+// GET /api/v1/admin/affiliates/usage
+func (h *AffiliateHandler) ListUsageDailyRecords(c *gin.Context) {
+	page, pageSize := response.ParsePagination(c)
+	filter := parseAffiliateUsageFilter(c, page, pageSize)
+	items, summary, total, err := h.affiliateService.AdminListUsageDailyRecords(c.Request.Context(), filter)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"items":     items,
+		"total":     total,
+		"page":      filter.Page,
+		"page_size": filter.PageSize,
+		"pages":     affiliateUsagePages(total, filter.PageSize),
+		"summary":   summary,
+	})
+}
+
 // ListRebateRecords returns every affiliate rebate accrual, with order details
 // when the rebate came from a payment order.
 // GET /api/v1/admin/affiliates/rebates
@@ -278,11 +396,65 @@ func (h *AffiliateHandler) ListTransferRecords(c *gin.Context) {
 	response.Paginated(c, items, total, filter.Page, filter.PageSize)
 }
 
+type CreateAffiliateSettlementRequest struct {
+	UserID    int64   `json:"user_id" binding:"required"`
+	Amount    float64 `json:"amount" binding:"required"`
+	SettledOn string  `json:"settled_on" binding:"required"`
+	Note      string  `json:"note"`
+}
+
+// ListSettlementRecords returns manually recorded affiliate cashback settlements.
+// GET /api/v1/admin/affiliates/settlements
+func (h *AffiliateHandler) ListSettlementRecords(c *gin.Context) {
+	page, pageSize := response.ParsePagination(c)
+	filter := parseAffiliateRecordFilter(c, page, pageSize)
+	items, total, err := h.affiliateService.AdminListSettlementRecords(c.Request.Context(), filter)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Paginated(c, items, total, filter.Page, filter.PageSize)
+}
+
+// CreateSettlement records a manual cashback settlement for reconciliation.
+// POST /api/v1/admin/affiliates/settlements
+func (h *AffiliateHandler) CreateSettlement(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Admin not authenticated")
+		return
+	}
+
+	var req CreateAffiliateSettlementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	settledOn, err := parseAffiliateSettlementDate(req.SettledOn)
+	if err != nil {
+		response.BadRequest(c, "Invalid settled_on")
+		return
+	}
+	record, err := h.affiliateService.AdminCreateSettlement(c.Request.Context(), service.AffiliateSettlementInput{
+		UserID:    req.UserID,
+		Amount:    req.Amount,
+		SettledOn: settledOn,
+		Note:      req.Note,
+		CreatedBy: subject.UserID,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, record)
+}
+
 func parseAffiliateRecordFilter(c *gin.Context, page, pageSize int) service.AffiliateRecordFilter {
 	filter := service.AffiliateRecordFilter{
 		Search:   c.Query("search"),
 		Page:     page,
 		PageSize: pageSize,
+		UserID:   parseAffiliateInt64Query(c, "user_id"),
 		SortBy:   c.Query("sort_by"),
 		SortDesc: c.Query("sort_order") != "asc",
 	}
@@ -297,6 +469,113 @@ func parseAffiliateRecordFilter(c *gin.Context, page, pageSize int) service.Affi
 		filter.EndAt = t
 	}
 	return filter
+}
+
+func parseAffiliateUsageFilter(c *gin.Context, page, pageSize int) service.AffiliateUsageFilter {
+	userTZ := c.Query("timezone")
+	startAt := parseAffiliateRecordStartTime(c.Query("start_at"), userTZ)
+	endAt := parseAffiliateUsageEndTime(c.Query("end_at"), userTZ)
+	if startAt == nil || endAt == nil {
+		defaultStart, defaultEnd := defaultAffiliateUsageRange(userTZ)
+		if startAt == nil {
+			startAt = &defaultStart
+		}
+		if endAt == nil {
+			endAt = &defaultEnd
+		}
+	}
+	filter := service.AffiliateUsageFilter{
+		Search:    c.Query("search"),
+		Page:      page,
+		PageSize:  pageSize,
+		StartAt:   startAt,
+		EndAt:     endAt,
+		Timezone:  normalizeAffiliateUsageTimezone(userTZ),
+		InviterID: parseAffiliateInt64Query(c, "inviter_id"),
+		InviteeID: parseAffiliateInt64Query(c, "invitee_id"),
+		View:      c.Query("view"),
+		SortBy:    c.Query("sort_by"),
+		SortDesc:  c.Query("sort_order") != "asc",
+	}
+	if filter.PageSize > 100 {
+		filter.PageSize = 100
+	}
+	return filter
+}
+
+func parseAffiliateInt64Query(c *gin.Context, name string) int64 {
+	raw := strings.TrimSpace(c.Query(name))
+	if raw == "" {
+		return 0
+	}
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || value <= 0 {
+		return 0
+	}
+	return value
+}
+
+func parseAffiliateUsageEndTime(raw string, userTZ string) *time.Time {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return &parsed
+	}
+	if parsed, err := timezone.ParseInUserLocation("2006-01-02", raw, userTZ); err == nil {
+		end := parsed.AddDate(0, 0, 1)
+		return &end
+	}
+	return nil
+}
+
+func parseAffiliateSettlementDate(raw string) (time.Time, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return time.Time{}, strconv.ErrSyntax
+	}
+	if parsed, err := time.Parse("2006-01-02", raw); err == nil {
+		return parsed, nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return parsed, nil
+	}
+	return time.Time{}, strconv.ErrSyntax
+}
+
+func defaultAffiliateUsageRange(userTZ string) (time.Time, time.Time) {
+	now := timezone.NowInUserLocation(userTZ)
+	start := timezone.StartOfDayInUserLocation(now.AddDate(0, 0, -29), userTZ)
+	end := timezone.StartOfDayInUserLocation(now.AddDate(0, 0, 1), userTZ)
+	return start, end
+}
+
+func normalizeAffiliateUsageTimezone(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw != "" {
+		if _, err := time.LoadLocation(raw); err == nil {
+			return raw
+		}
+	}
+	name := timezone.Name()
+	if name != "" && name != "Local" {
+		if _, err := time.LoadLocation(name); err == nil {
+			return name
+		}
+	}
+	return "UTC"
+}
+
+func affiliateUsagePages(total int64, pageSize int) int {
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	pages := int(math.Ceil(float64(total) / float64(pageSize)))
+	if pages < 1 {
+		return 1
+	}
+	return pages
 }
 
 func parseAffiliateRecordStartTime(raw string, userTZ string) *time.Time {

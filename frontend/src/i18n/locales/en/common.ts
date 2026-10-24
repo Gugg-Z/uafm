@@ -172,6 +172,8 @@ export default {
     redeem: 'Redeem',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
+    affiliateUsage: 'Usage Stats',
+    affiliateApplications: 'Partner Applications',
     affiliateInviteRecords: 'Invite Records',
     affiliateRebateRecords: 'Rebate Records',
     affiliateTransferRecords: 'Transfer Records',

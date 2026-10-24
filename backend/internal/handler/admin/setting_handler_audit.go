@@ -362,6 +362,12 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.AffiliateRebatePerInviteeCap != after.AffiliateRebatePerInviteeCap {
 		changed = append(changed, "affiliate_rebate_per_invitee_cap")
 	}
+	if !equalAffiliateGroupProfitRates(before.AffiliateGroupProfitRates, after.AffiliateGroupProfitRates) {
+		changed = append(changed, "affiliate_group_profit_rates")
+	}
+	if !equalAffiliatePartnerTiers(before.AffiliatePartnerTiers, after.AffiliatePartnerTiers) {
+		changed = append(changed, "affiliate_partner_tiers")
+	}
 	if before.AdminRechargeRebateEnabled != after.AdminRechargeRebateEnabled {
 		changed = append(changed, "affiliate_admin_recharge_enabled")
 	}
@@ -875,4 +881,35 @@ func stringSetting(value *string, fallback string) string {
 		return fallback
 	}
 	return *value
+}
+
+func equalAffiliateGroupProfitRates(a, b map[string]float64) bool {
+	a = service.NormalizeAffiliateGroupProfitRates(a)
+	b = service.NormalizeAffiliateGroupProfitRates(b)
+	if len(a) != len(b) {
+		return false
+	}
+	for id, rate := range a {
+		if b[id] != rate {
+			return false
+		}
+	}
+	return true
+}
+
+func equalAffiliatePartnerTiers(a, b []service.AffiliatePartnerTier) bool {
+	a = service.NormalizeAffiliatePartnerTiers(a)
+	b = service.NormalizeAffiliatePartnerTiers(b)
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Level != b[i].Level ||
+			a[i].Name != b[i].Name ||
+			a[i].RebateRatePercent != b[i].RebateRatePercent ||
+			a[i].RequiredInvitees != b[i].RequiredInvitees {
+			return false
+		}
+	}
+	return true
 }

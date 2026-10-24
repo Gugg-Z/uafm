@@ -11,6 +11,7 @@ import type {
   CustomMenuItem,
   LoginAgreementDocument,
   NotifyEmailEntry,
+  AffiliatePartnerTier,
 } from "@/types";
 import type { RechargeBonusTier } from "@/utils/rechargeBonus";
 
@@ -431,6 +432,8 @@ export interface SystemSettings {
   affiliate_rebate_freeze_hours: number;
   affiliate_rebate_duration_days: number;
   affiliate_rebate_per_invitee_cap: number;
+  affiliate_group_profit_rates: Record<string, number>;
+  affiliate_partner_tiers: AffiliatePartnerTier[];
   affiliate_admin_recharge_enabled: boolean;
   default_concurrency: number;
   default_user_rpm_limit: number;
@@ -784,6 +787,8 @@ export interface UpdateSettingsRequest {
   affiliate_rebate_freeze_hours?: number;
   affiliate_rebate_duration_days?: number;
   affiliate_rebate_per_invitee_cap?: number;
+  affiliate_group_profit_rates?: Record<string, number>;
+  affiliate_partner_tiers?: AffiliatePartnerTier[];
   affiliate_admin_recharge_enabled?: boolean;
   default_concurrency?: number;
   default_user_rpm_limit?: number;

@@ -24,9 +24,10 @@ const (
 
 // Affiliate rebate settings
 const (
-	AffiliateRebateRateDefault          = 20.0
+	AffiliateRebateRateDefault          = 5.0
 	AffiliateRebateRateMin              = 0.0
 	AffiliateRebateRateMax              = 100.0
+	AffiliateGroupProfitRateDefault     = 0.0
 	AffiliateEnabledDefault             = false // 邀请返利总开关默认关闭
 	AffiliateRebateFreezeHoursDefault   = 0     // 0 = 不冻结（向后兼容）
 	AffiliateRebateFreezeHoursMax       = 720   // 最大 30 天
@@ -233,6 +234,8 @@ const (
 	SettingKeyAffiliateRebateDurationDays         = "affiliate_rebate_duration_days"   // 返利有效期（天，0=永久）
 	SettingKeyAffiliateRebatePerInviteeCap        = "affiliate_rebate_per_invitee_cap" // 单人返利上限（0=无上限）
 	SettingKeyAffiliateAdminRechargeEnabled       = "affiliate_admin_recharge_enabled" // 管理员充值是否产生返利
+	SettingKeyAffiliateGroupProfitRates           = "affiliate_group_profit_rates"      // 分组利润率（JSON，key=group_id，value=百分比）
+	SettingKeyAffiliatePartnerTiers               = "affiliate_partner_tiers"           // 合伙人档位配置（JSON）
 	SettingKeyRiskControlEnabled                  = "risk_control_enabled"             // 是否启用风控中心入口与审计链路
 	SettingKeyContentModerationConfig             = "content_moderation_config"        // 内容审计配置（JSON）
 	SettingKeyCyberSessionBlockEnabled            = "cyber_session_block_enabled"      // cyber 命中后会话级自动屏蔽总开关(默认关)

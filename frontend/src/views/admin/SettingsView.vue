@@ -7523,6 +7523,81 @@
               <Toggle v-model="form.affiliate_enabled" />
             </div>
 
+            <div class="border-t border-gray-100 pt-6 dark:border-dark-700">
+              <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ localText("合伙人返利等级", "Partner Rebate Tiers") }}
+                  </h3>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ localText("配置达到指定邀请人数后自动升级到的返利档位，例如邀请 10 人返利 30%。", "Configure the rebate tier reached after a required invite count, for example 30% rebate after 10 invites.") }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm shrink-0"
+                  @click="resetAffiliatePartnerTiers"
+                >
+                  {{ localText("恢复默认档位", "Reset tiers") }}
+                </button>
+              </div>
+
+              <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-dark-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-700">
+                  <thead class="bg-gray-50 dark:bg-dark-800">
+                    <tr>
+                      <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                        {{ localText("等级", "Tier") }}
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                        {{ localText("邀请人数", "Invites") }}
+                      </th>
+                      <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                        {{ localText("返利比例", "Rebate") }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 bg-white dark:divide-dark-700 dark:bg-dark-900">
+                    <tr
+                      v-for="tier in form.affiliate_partner_tiers"
+                      :key="tier.level"
+                    >
+                      <td class="px-3 py-3">
+                        <div class="font-medium text-gray-900 dark:text-white">
+                          {{ tier.name }}
+                        </div>
+                        <div class="text-xs uppercase text-gray-500 dark:text-dark-400">
+                          {{ tier.level }}
+                        </div>
+                      </td>
+                      <td class="px-3 py-3">
+                        <input
+                          v-model.number="tier.required_invitees"
+                          type="number"
+                          step="1"
+                          min="0"
+                          class="input min-w-[7rem] text-sm"
+                        />
+                      </td>
+                      <td class="px-3 py-3">
+                        <div class="relative max-w-[9rem]">
+                          <input
+                            v-model.number="tier.rebate_rate_percent"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            class="input pr-8 text-sm"
+                          />
+                          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div v-if="form.affiliate_enabled" class="space-y-6">
               <div class="flex items-center justify-between">
                 <div>
@@ -7604,6 +7679,71 @@
                 />
                 <p class="mt-1 text-xs text-gray-400">
                   {{ t('admin.settings.features.affiliate.perInviteeCapDesc') }}
+                </p>
+              </div>
+
+              <div class="border-t border-gray-100 pt-6 dark:border-dark-700">
+                <div class="mb-3">
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ localText("群组利润率", "Group Profit Rates") }}
+                  </h3>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {{ localText("按订阅分组设置平台利润比例，留空表示沿用默认利润率。", "Set the platform profit rate per subscription group. Leave blank to use the default rate.") }}
+                  </p>
+                </div>
+
+                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-dark-700">
+                  <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-700">
+                    <thead class="bg-gray-50 dark:bg-dark-800">
+                      <tr>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                          {{ localText("分组", "Group") }}
+                        </th>
+                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">
+                          {{ localText("平台", "Platform") }}
+                        </th>
+                        <th class="px-3 py-2 text-right text-xs font-medium uppercase text-gray-500">
+                          {{ localText("利润率", "Rate") }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white dark:divide-dark-700 dark:bg-dark-900">
+                      <tr v-if="affiliateProfitGroups.length === 0">
+                        <td colspan="3" class="px-3 py-6 text-center text-sm text-gray-500 dark:text-dark-400">
+                          {{ localText("暂无可用分组", "No active groups") }}
+                        </td>
+                      </tr>
+                      <tr v-for="group in affiliateProfitGroups" :key="group.id">
+                        <td class="px-3 py-2">
+                          <div class="font-medium text-gray-900 dark:text-white">{{ group.name }}</div>
+                          <div class="text-xs text-gray-500 dark:text-dark-400">#{{ group.id }}</div>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-600 dark:text-dark-300">
+                          {{ group.platform }}
+                        </td>
+                        <td class="px-3 py-2">
+                          <div class="ml-auto w-32">
+                            <div class="relative">
+                              <input
+                                v-model="affiliateGroupProfitRateInputs[String(group.id)]"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                                class="input pr-8 text-right"
+                                placeholder="0"
+                                @blur="commitAffiliateGroupProfitRateInput(String(group.id))"
+                              />
+                              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="mt-2 text-xs text-gray-400">
+                  {{ localText("该比例用于计算专属用户的邀请返利，仅对启用的分组生效。", "The rate is used for invitee rebates and applies to active groups only.") }}
                 </p>
               </div>
 
@@ -9007,6 +9147,7 @@ import type {
 } from "@/api/admin/settings";
 import type {
   AdminGroup,
+  AffiliatePartnerTier,
   LoginAgreementDocument,
   NotifyEmailEntry,
   Proxy,
@@ -9076,6 +9217,177 @@ const isZhLocale = computed(() => locale.value.startsWith("zh"));
 
 function localText(zh: string, en: string): string {
   return isZhLocale.value ? zh : en;
+}
+
+const DEFAULT_AFFILIATE_PARTNER_TIERS: AffiliatePartnerTier[] = [
+  {
+    level: "spark",
+    name: "Spark",
+    rebate_rate_percent: 40,
+    required_invitees: 10,
+    next_required_invitees: 30,
+  },
+  {
+    level: "voyage",
+    name: "Voyage",
+    rebate_rate_percent: 50,
+    required_invitees: 30,
+    next_required_invitees: 50,
+  },
+  {
+    level: "summit",
+    name: "Summit",
+    rebate_rate_percent: 60,
+    required_invitees: 50,
+    next_required_invitees: 100,
+  },
+  {
+    level: "cocreate",
+    name: "Co-create",
+    rebate_rate_percent: 70,
+    required_invitees: 100,
+    next_required_invitees: null,
+  },
+];
+
+const affiliateGroupProfitRateInputs = reactive<Record<string, string>>({});
+
+function normalizeAffiliateGroupProfitRate(
+  raw: string | number | null | undefined,
+): number {
+  const value = String(raw ?? "")
+    .trim()
+    .replace("，", ".")
+    .replace(",", ".")
+    .replace(/%$/, "")
+    .trim();
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.min(100, parsed);
+}
+
+function normalizeAffiliateGroupProfitRates(
+  raw: Record<string, number> | null | undefined,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [groupId, rate] of Object.entries(raw ?? {})) {
+    const key = String(groupId).trim();
+    if (!/^\d+$/.test(key)) continue;
+    const normalized = normalizeAffiliateGroupProfitRate(rate);
+    if (normalized > 0) {
+      result[key] = normalized;
+    }
+  }
+  return result;
+}
+
+function syncAffiliateGroupProfitRateInputs(
+  values: Record<string, number> | null | undefined,
+): void {
+  const normalized = normalizeAffiliateGroupProfitRates(values);
+  form.affiliate_group_profit_rates = normalized;
+  for (const group of affiliateGroups.value) {
+    const key = String(group.id);
+    affiliateGroupProfitRateInputs[key] =
+      normalized[key] != null ? String(normalized[key]) : "";
+  }
+}
+
+function commitAffiliateGroupProfitRateInput(groupId: string): void {
+  const normalized = normalizeAffiliateGroupProfitRate(
+    affiliateGroupProfitRateInputs[groupId],
+  );
+  if (normalized > 0) {
+    form.affiliate_group_profit_rates[groupId] = normalized;
+    affiliateGroupProfitRateInputs[groupId] = String(normalized);
+  } else {
+    delete form.affiliate_group_profit_rates[groupId];
+    affiliateGroupProfitRateInputs[groupId] = "";
+  }
+}
+
+function affiliateGroupProfitRatesPayload(): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const group of affiliateGroups.value) {
+    const groupId = String(group.id);
+    const normalized = normalizeAffiliateGroupProfitRate(
+      affiliateGroupProfitRateInputs[groupId] ??
+        form.affiliate_group_profit_rates[groupId],
+    );
+    if (normalized > 0) {
+      result[groupId] = normalized;
+      affiliateGroupProfitRateInputs[groupId] = String(normalized);
+    } else {
+      affiliateGroupProfitRateInputs[groupId] = "";
+    }
+  }
+  form.affiliate_group_profit_rates = result;
+  return result;
+}
+
+function normalizeAffiliatePartnerTierRate(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(100, Math.max(0, parsed));
+}
+
+function normalizeAffiliatePartnerTierInvitees(
+  value: unknown,
+  min: number,
+): number {
+  const parsed = Math.floor(Number(value));
+  if (!Number.isFinite(parsed) || parsed < min) return min;
+  return parsed;
+}
+
+function normalizeAffiliatePartnerTiers(
+  value: unknown,
+): AffiliatePartnerTier[] {
+  const rawTiers = Array.isArray(value) ? value : [];
+  const byLevel = new Map(
+    rawTiers
+      .filter(
+        (tier): tier is AffiliatePartnerTier =>
+          Boolean(tier) && typeof tier === "object",
+      )
+      .map((tier) => [tier.level, tier]),
+  );
+  let minInvitees = 0;
+  const normalized = DEFAULT_AFFILIATE_PARTNER_TIERS.map((defaults) => {
+    const raw = byLevel.get(defaults.level);
+    const requiredInvitees = normalizeAffiliatePartnerTierInvitees(
+      raw?.required_invitees ?? defaults.required_invitees,
+      minInvitees,
+    );
+    minInvitees = requiredInvitees + 1;
+    return {
+      ...defaults,
+      name: String(raw?.name || defaults.name).trim() || defaults.name,
+      rebate_rate_percent: normalizeAffiliatePartnerTierRate(
+        raw?.rebate_rate_percent ?? defaults.rebate_rate_percent,
+      ),
+      required_invitees: requiredInvitees,
+      next_required_invitees: null,
+    };
+  });
+  return normalized.map((tier, index) => ({
+    ...tier,
+    next_required_invitees: normalized[index + 1]?.required_invitees ?? null,
+  }));
+}
+
+function affiliatePartnerTiersPayload(): AffiliatePartnerTier[] {
+  const normalized = normalizeAffiliatePartnerTiers(
+    form.affiliate_partner_tiers,
+  );
+  form.affiliate_partner_tiers = normalized;
+  return normalized;
+}
+
+function resetAffiliatePartnerTiers(): void {
+  form.affiliate_partner_tiers = normalizeAffiliatePartnerTiers(
+    DEFAULT_AFFILIATE_PARTNER_TIERS,
+  );
 }
 
 const paymentGuideHref = computed(() =>
@@ -9184,6 +9496,16 @@ const adminApiKeyMasked = ref("");
 const adminApiKeyOperating = ref(false);
 const newAdminApiKey = ref("");
 const subscriptionGroups = ref<AdminGroup[]>([]);
+const affiliateGroups = ref<AdminGroup[]>([]);
+const affiliateProfitGroups = computed(() =>
+  affiliateGroups.value
+    .filter((group) => group.status === "active")
+    .slice()
+    .sort((a, b) => {
+      const orderDiff = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      return orderDiff !== 0 ? orderDiff : a.id - b.id;
+    }),
+);
 
 // Upstream billing probe state
 const upstreamBillingProbeLoading = ref(true);
@@ -9797,11 +10119,15 @@ const form = reactive<SettingsForm>({
   default_balance: 0,
   default_platform_quotas: normalizePlatformQuotasMap() as DefaultPlatformQuotasMap,
   account_scheduling_thresholds: normalizeAccountSchedulingThresholdsMap(),
-  affiliate_rebate_rate: 20,
+  affiliate_rebate_rate: 5,
   affiliate_rebate_freeze_hours: 0,
   affiliate_rebate_duration_days: 0,
   affiliate_rebate_per_invitee_cap: 0,
   affiliate_admin_recharge_enabled: false,
+  affiliate_group_profit_rates: {},
+  affiliate_partner_tiers: DEFAULT_AFFILIATE_PARTNER_TIERS.map((tier) => ({
+    ...tier,
+  })),
   default_concurrency: 1,
   default_subscriptions: [],
   force_email_on_third_party_signup: false,
@@ -11114,6 +11440,13 @@ async function loadSettings() {
     form.account_scheduling_thresholds = normalizeAccountSchedulingThresholdsMap(
       settings.account_scheduling_thresholds,
     );
+    form.affiliate_group_profit_rates = normalizeAffiliateGroupProfitRates(
+      settings.affiliate_group_profit_rates,
+    );
+    syncAffiliateGroupProfitRateInputs(form.affiliate_group_profit_rates);
+    form.affiliate_partner_tiers = normalizeAffiliatePartnerTiers(
+      settings.affiliate_partner_tiers,
+    );
     form.backend_mode_enabled = settings.backend_mode_enabled;
     form.default_subscriptions = normalizeDefaultSubscriptionSettings(
       settings.default_subscriptions,
@@ -11233,11 +11566,14 @@ async function loadSettings() {
 async function loadSubscriptionGroups() {
   try {
     const groups = await adminAPI.groups.getAll();
+    affiliateGroups.value = groups;
     subscriptionGroups.value = groups.filter(
       (group) =>
         group.subscription_type === "subscription" && group.status === "active",
     );
+    syncAffiliateGroupProfitRateInputs(form.affiliate_group_profit_rates);
   } catch (_error: unknown) {
+    affiliateGroups.value = [];
     subscriptionGroups.value = [];
   }
 }
@@ -11475,6 +11811,7 @@ async function saveSettings() {
       return;
     }
 
+    const requestedAffiliatePartnerTiers = affiliatePartnerTiersPayload();
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
@@ -11509,6 +11846,8 @@ async function saveSettings() {
       affiliate_rebate_duration_days: Math.max(0, Math.min(3650, Math.floor(Number(form.affiliate_rebate_duration_days) || 0))),
       affiliate_rebate_per_invitee_cap: Math.max(0, Number(form.affiliate_rebate_per_invitee_cap) || 0),
       affiliate_admin_recharge_enabled: form.affiliate_admin_recharge_enabled,
+      affiliate_group_profit_rates: affiliateGroupProfitRatesPayload(),
+      affiliate_partner_tiers: requestedAffiliatePartnerTiers,
       default_concurrency: form.default_concurrency,
       default_subscriptions: normalizedDefaultSubscriptions,
       force_email_on_third_party_signup: form.force_email_on_third_party_signup,
@@ -11858,6 +12197,15 @@ async function saveSettings() {
     form.default_platform_quotas = normalizePlatformQuotasMap(updated.default_platform_quotas);
     form.account_scheduling_thresholds = normalizeAccountSchedulingThresholdsMap(
       updated.account_scheduling_thresholds,
+    );
+    form.affiliate_group_profit_rates = normalizeAffiliateGroupProfitRates(
+      updated.affiliate_group_profit_rates,
+    );
+    syncAffiliateGroupProfitRateInputs(form.affiliate_group_profit_rates);
+    form.affiliate_partner_tiers = normalizeAffiliatePartnerTiers(
+      Array.isArray(updated.affiliate_partner_tiers)
+        ? updated.affiliate_partner_tiers
+        : requestedAffiliatePartnerTiers,
     );
     registrationEmailSuffixWhitelistTags.value =
       normalizeRegistrationEmailSuffixDomains(

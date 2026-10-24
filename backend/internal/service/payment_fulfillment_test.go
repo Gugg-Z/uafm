@@ -174,12 +174,48 @@ func (r *paymentFulfillmentAffiliateRepoStub) BatchSetUserRebateRate(context.Con
 	panic("unexpected BatchSetUserRebateRate call")
 }
 
+func (r *paymentFulfillmentAffiliateRepoStub) SetUserPartnerLevel(context.Context, int64, string) error {
+	panic("unexpected SetUserPartnerLevel call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) PromotePartnerLevelForInviteCount(context.Context, int64, []AffiliatePartnerTier) (*AffiliatePartnerTier, bool, error) {
+	return nil, false, nil
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) GetPartnerSummariesByUserIDs(context.Context, []int64) (map[int64]AffiliatePartnerSummary, error) {
+	panic("unexpected GetPartnerSummariesByUserIDs call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) CreatePartnerApplication(context.Context, int64, AffiliatePartnerApplicationInput) (*AffiliatePartnerApplication, error) {
+	panic("unexpected CreatePartnerApplication call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) GetLatestPartnerApplication(context.Context, int64) (*AffiliatePartnerApplication, error) {
+	panic("unexpected GetLatestPartnerApplication call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) ListPartnerApplications(context.Context, AffiliatePartnerApplicationFilter) ([]AffiliatePartnerApplication, int64, error) {
+	panic("unexpected ListPartnerApplications call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) ReviewPartnerApplication(context.Context, int64, int64, AffiliatePartnerApplicationReviewInput) (*AffiliatePartnerApplication, error) {
+	panic("unexpected ReviewPartnerApplication call")
+}
+
 func (r *paymentFulfillmentAffiliateRepoStub) ListUsersWithCustomSettings(context.Context, AffiliateAdminFilter) ([]AffiliateAdminEntry, int64, error) {
 	panic("unexpected ListUsersWithCustomSettings call")
 }
 
+func (r *paymentFulfillmentAffiliateRepoStub) AdminAssignInviter(context.Context, int64, int64) (*AffiliateInviteAssignment, error) {
+	panic("unexpected AdminAssignInviter call")
+}
+
 func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateInviteRecords(context.Context, AffiliateRecordFilter) ([]AffiliateInviteRecord, int64, error) {
 	panic("unexpected ListAffiliateInviteRecords call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateUsageDailyRecords(context.Context, AffiliateUsageFilter) ([]AffiliateUsageDailyRecord, *AffiliateUsageSummary, int64, error) {
+	panic("unexpected ListAffiliateUsageDailyRecords call")
 }
 
 func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateRebateRecords(context.Context, AffiliateRecordFilter) ([]AffiliateRebateRecord, int64, error) {
@@ -188,6 +224,14 @@ func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateRebateRecords(context
 
 func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateTransferRecords(context.Context, AffiliateRecordFilter) ([]AffiliateTransferRecord, int64, error) {
 	panic("unexpected ListAffiliateTransferRecords call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) CreateAffiliateSettlement(context.Context, AffiliateSettlementInput) (*AffiliateSettlementRecord, error) {
+	panic("unexpected CreateAffiliateSettlement call")
+}
+
+func (r *paymentFulfillmentAffiliateRepoStub) ListAffiliateSettlementRecords(context.Context, AffiliateRecordFilter) ([]AffiliateSettlementRecord, int64, error) {
+	panic("unexpected ListAffiliateSettlementRecords call")
 }
 
 func (r *paymentFulfillmentAffiliateRepoStub) GetAffiliateUserOverview(context.Context, int64) (*AffiliateUserOverview, error) {

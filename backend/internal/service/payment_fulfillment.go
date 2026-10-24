@@ -719,8 +719,8 @@ func (s *PaymentService) hasAuditLog(ctx context.Context, orderID int64, action 
 }
 
 func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *dbent.PaymentOrder) error {
-	baseAmount := affiliateRebateBaseAmount(o)
-	if o == nil || baseAmount <= 0 {
+	baseAmount, baseCurrency, eligible := s.affiliateRebateBaseAmountUSD(ctx, o)
+	if !eligible || baseAmount <= 0 {
 		return nil
 	}
 	if s.affiliateService == nil {
@@ -759,8 +759,15 @@ func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *db
 
 	if rebateAmount <= 0 {
 		if err := s.updateClaimedAffiliateRebateAudit(txCtx, tx.Client(), o.ID, "AFFILIATE_REBATE_SKIPPED", map[string]any{
-			"baseAmount": baseAmount,
-			"reason":     "no inviter bound or rebate amount <= 0",
+			"baseAmount":         baseAmount,
+			"baseCurrency":       baseCurrency,
+			"eligiblePaidAmount": affiliateEligiblePaidAmount(o),
+			"paidAmount":         o.PayAmount,
+			"orderAmount":        o.Amount,
+			"paymentType":        o.PaymentType,
+			"providerKey":        psStringValue(o.ProviderKey),
+			"paymentCurrency":    PaymentOrderCurrency(o),
+			"reason":             "no inviter bound or rebate amount <= 0",
 		}); err != nil {
 			s.writeAuditLog(ctx, o.ID, "AFFILIATE_REBATE_FAILED", "system", map[string]any{
 				"error": err.Error(),
@@ -777,8 +784,15 @@ func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *db
 	}
 
 	if err := s.updateClaimedAffiliateRebateAudit(txCtx, tx.Client(), o.ID, "AFFILIATE_REBATE_APPLIED", map[string]any{
-		"baseAmount":   baseAmount,
-		"rebateAmount": rebateAmount,
+		"baseAmount":         baseAmount,
+		"baseCurrency":       baseCurrency,
+		"eligiblePaidAmount": affiliateEligiblePaidAmount(o),
+		"paidAmount":         o.PayAmount,
+		"orderAmount":        o.Amount,
+		"paymentType":        o.PaymentType,
+		"providerKey":        psStringValue(o.ProviderKey),
+		"paymentCurrency":    PaymentOrderCurrency(o),
+		"rebateAmount":       rebateAmount,
 	}); err != nil {
 		s.writeAuditLog(ctx, o.ID, "AFFILIATE_REBATE_FAILED", "system", map[string]any{
 			"error": err.Error(),
@@ -793,6 +807,61 @@ func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *db
 		return fmt.Errorf("commit affiliate rebate tx: %w", err)
 	}
 	return nil
+}
+
+func (s *PaymentService) affiliateRebateBaseAmountUSD(ctx context.Context, o *dbent.PaymentOrder) (float64, string, bool) {
+	if o == nil {
+		return 0, "", false
+	}
+	if o.OrderType == payment.OrderTypeBalance && affiliateOrderIsUSDT(o) {
+		eligiblePayAmount := affiliateEligiblePaidAmount(o)
+		if eligiblePayAmount <= 0 {
+			return 0, "", false
+		}
+		return roundTo(eligiblePayAmount*s.affiliateRebateCNYPerUSD(ctx), 8), "USD", true
+	}
+	baseAmount := affiliateRebateBaseAmount(o)
+	if baseAmount <= 0 || math.IsNaN(baseAmount) || math.IsInf(baseAmount, 0) {
+		return 0, "", false
+	}
+	return baseAmount, PaymentOrderCurrency(o), true
+}
+
+func affiliateEligiblePaidAmount(o *dbent.PaymentOrder) float64 {
+	if o == nil || o.PayAmount <= 0 || math.IsNaN(o.PayAmount) || math.IsInf(o.PayAmount, 0) {
+		return 0
+	}
+	return o.PayAmount
+}
+
+func (s *PaymentService) affiliateRebateCNYPerUSD(ctx context.Context) float64 {
+	if s != nil && s.configService != nil && s.configService.settingRepo != nil {
+		if raw, err := s.configService.settingRepo.GetValue(ctx, "USDT_CNY_EXCHANGE_RATE"); err == nil && strings.TrimSpace(raw) != "" {
+			if rate, parseErr := strconv.ParseFloat(strings.TrimSpace(raw), 64); parseErr == nil {
+				if !math.IsNaN(rate) && !math.IsInf(rate, 0) && rate > 0 {
+					return rate
+				}
+			}
+		}
+	}
+	return 7
+}
+
+func affiliateOrderIsUSDT(o *dbent.PaymentOrder) bool {
+	if o == nil {
+		return false
+	}
+	switch strings.ToLower(payment.GetBasePaymentType(o.PaymentType)) {
+	case "usdt", "infini":
+		return true
+	}
+	if o.ProviderKey != nil {
+		switch strings.ToLower(payment.GetBasePaymentType(*o.ProviderKey)) {
+		case "usdt", "infini":
+			return true
+		}
+	}
+	return strings.EqualFold(PaymentOrderCurrency(o), "usdt")
 }
 
 func affiliateRebateBaseAmount(o *dbent.PaymentOrder) float64 {

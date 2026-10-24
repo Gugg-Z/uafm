@@ -17,6 +17,10 @@ func RegisterUserRoutes(
 	settingService *service.SettingService,
 	panelRateLimiter *middleware.PanelRateLimiter,
 ) {
+	if h.User != nil {
+		v1.GET("/public/affiliate/partner-tiers", h.User.ListPublicAffiliatePartnerTiers)
+	}
+
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	authenticated.Use(middleware.BackendModeUserGuard(settingService))
@@ -32,7 +36,10 @@ func RegisterUserRoutes(
 			user.PUT("/password", h.User.ChangePassword)
 			user.PUT("", h.User.UpdateProfile)
 			user.GET("/aff", h.User.GetAffiliate)
+			user.GET("/aff/usage", h.User.ListAffiliateUsage)
+			user.GET("/aff/settlements", h.User.ListAffiliateSettlements)
 			user.POST("/aff/transfer", h.User.TransferAffiliateQuota)
+			user.POST("/aff/partner/apply", h.User.ApplyAffiliatePartner)
 			user.POST("/account-bindings/email/send-code", h.User.SendEmailBindingCode)
 			user.POST("/account-bindings/email", h.User.BindEmailIdentity)
 			user.DELETE("/account-bindings/:provider", h.User.UnbindIdentity)

@@ -129,6 +129,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAffiliateRebateFreezeHours:                strconv.Itoa(AffiliateRebateFreezeHoursDefault),
 		SettingKeyAffiliateRebateDurationDays:               strconv.Itoa(AffiliateRebateDurationDaysDefault),
 		SettingKeyAffiliateRebatePerInviteeCap:              strconv.FormatFloat(AffiliateRebatePerInviteeCapDefault, 'f', 2, 64),
+		SettingKeyAffiliatePartnerTiers:                     defaultAffiliatePartnerTiersJSON(),
 		SettingKeyDefaultUserRPMLimit:                       "0",
 		SettingKeyDefaultSubscriptions:                      "[]",
 		SettingKeyAuthSourceDefaultEmailBalance:             "0",
@@ -214,6 +215,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		// Affiliate (邀请返利) feature (default disabled; opt-in)
 		SettingKeyAffiliateEnabled:              "false",
 		SettingKeyAffiliateAdminRechargeEnabled: strconv.FormatBool(AdminRechargeRebateEnabledDefault),
+		SettingKeyAffiliateGroupProfitRates:     "{}",
 
 		// 风控中心功能（默认关闭，显式启用）
 		SettingKeyRiskControlEnabled: "false",
@@ -423,6 +425,8 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.AffiliateRebatePerInviteeCap = perInviteeCap
 	}
 	result.AdminRechargeRebateEnabled = settings[SettingKeyAffiliateAdminRechargeEnabled] == "true"
+	result.AffiliateGroupProfitRates = parseAffiliateGroupProfitRates(settings[SettingKeyAffiliateGroupProfitRates])
+	result.AffiliatePartnerTiers = parseAffiliatePartnerTiers(settings[SettingKeyAffiliatePartnerTiers])
 	result.DefaultSubscriptions = parseDefaultSubscriptions(settings[SettingKeyDefaultSubscriptions])
 
 	// 敏感信息直接返回，方便测试连接时使用
@@ -1353,4 +1357,75 @@ func normalizeTablePreferences(defaultPageSize int, options []int) (int, []int) 
 	}
 
 	return defaultPageSize, normalizedOptions
+}
+
+// NormalizeAffiliateGroupProfitRates 规范化分组利润率：丢弃非法 key，
+// 并把比例夹在 [AffiliateGroupProfitRateDefault, AffiliateRebateRateMax]。
+func NormalizeAffiliateGroupProfitRates(input map[string]float64) map[string]float64 {
+	result := make(map[string]float64)
+	for rawGroupID, rawRate := range input {
+		groupID, err := strconv.ParseInt(strings.TrimSpace(rawGroupID), 10, 64)
+		if err != nil || groupID <= 0 || math.IsNaN(rawRate) || math.IsInf(rawRate, 0) {
+			continue
+		}
+		rate := rawRate
+		if rate < AffiliateGroupProfitRateDefault {
+			rate = AffiliateGroupProfitRateDefault
+		}
+		if rate > AffiliateRebateRateMax {
+			rate = AffiliateRebateRateMax
+		}
+		result[strconv.FormatInt(groupID, 10)] = rate
+	}
+	return result
+}
+
+func parseAffiliateGroupProfitRates(raw string) map[string]float64 {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return map[string]float64{}
+	}
+	var parsed map[string]float64
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return map[string]float64{}
+	}
+	return NormalizeAffiliateGroupProfitRates(parsed)
+}
+
+func marshalAffiliateGroupProfitRates(input map[string]float64) (string, error) {
+	normalized := NormalizeAffiliateGroupProfitRates(input)
+	data, err := json.Marshal(normalized)
+	if err != nil {
+		return "", fmt.Errorf("marshal affiliate group profit rates: %w", err)
+	}
+	return string(data), nil
+}
+
+func parseAffiliatePartnerTiers(raw string) []AffiliatePartnerTier {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return AffiliatePartnerTiers()
+	}
+	var parsed []AffiliatePartnerTier
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return AffiliatePartnerTiers()
+	}
+	return NormalizeAffiliatePartnerTiers(parsed)
+}
+
+func marshalAffiliatePartnerTiers(input []AffiliatePartnerTier) (string, error) {
+	normalized := NormalizeAffiliatePartnerTiers(input)
+	data, err := json.Marshal(normalized)
+	if err != nil {
+		return "", fmt.Errorf("marshal affiliate partner tiers: %w", err)
+	}
+	return string(data), nil
+}
+
+func defaultAffiliatePartnerTiersJSON() string {
+	raw, err := marshalAffiliatePartnerTiers(AffiliatePartnerTiers())
+	if err != nil {
+		return "[]"
+	}
+	return raw
 }

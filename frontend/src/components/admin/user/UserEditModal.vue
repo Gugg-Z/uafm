@@ -42,6 +42,14 @@
         <textarea v-model="form.notes" rows="3" class="input"></textarea>
       </div>
       <div>
+        <label class="input-label">{{ t('admin.users.form.partnerLevel') }}</label>
+        <select v-model="form.partner_level" class="input">
+          <option v-for="level in partnerLevelOptions" :key="level" :value="level">
+            {{ t(`affiliate.partner.levels.${level}`) }}
+          </option>
+        </select>
+      </div>
+      <div>
         <label class="input-label">{{ t('admin.users.columns.concurrency') }}</label>
         <input
           v-model.number="form.concurrency"
@@ -88,7 +96,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useClipboard } from '@/composables/useClipboard'
 import { adminAPI } from '@/api/admin'
-import type { AdminUser, UserAttributeValuesMap } from '@/types'
+import type { AdminUser, AffiliatePartnerLevel, UserAttributeValuesMap } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Select from '@/components/common/Select.vue'
 import UserAttributeForm from '@/components/user/UserAttributeForm.vue'
@@ -101,6 +109,8 @@ const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const { copyToClipboard } = useClipboard()
 
 const submitting = ref(false); const passwordCopied = ref(false)
+const partnerLevelOptions: AffiliatePartnerLevel[] = ['none', 'spark', 'voyage', 'summit', 'cocreate']
+const loadedPartnerLevel = ref<AffiliatePartnerLevel>('none')
 const roleOptions = computed(() => [
   { value: 'user', label: t('admin.users.roles.user') },
   { value: 'admin', label: t('admin.users.roles.admin') }
@@ -111,15 +121,27 @@ const form = reactive({
   username: '',
   notes: '',
   role: 'user' as AdminUser['role'],
+  partner_level: 'none' as AffiliatePartnerLevel,
   concurrency: 1,
   rpm_limit: 0,
   customAttributes: {} as UserAttributeValuesMap
 })
 
-watch(() => props.user, (u) => {
+watch(() => props.user, async (u) => {
   if (u) {
     Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', role: u.role || 'user', concurrency: u.concurrency, rpm_limit: u.rpm_limit ?? 0, customAttributes: {} })
+    form.partner_level = 'none'
+    loadedPartnerLevel.value = 'none'
     passwordCopied.value = false
+    try {
+      const overview = await adminAPI.affiliates.getUserOverview(u.id)
+      if (props.user?.id === u.id) {
+        form.partner_level = overview.partner_level || 'none'
+        loadedPartnerLevel.value = form.partner_level
+      }
+    } catch (_error: unknown) {
+      // 概览接口失败不影响用户基础资料编辑
+    }
   }
 }, { immediate: true })
 
@@ -153,6 +175,10 @@ const handleUpdateUser = async () => {
     if (form.password.trim()) data.password = form.password.trim()
     // 提升为管理员属敏感操作：后端返回 STEP_UP_REQUIRED 时弹 TOTP 验证并重试
     await stepUp.run(() => adminAPI.users.update(userId, data))
+    if (form.partner_level !== loadedPartnerLevel.value) {
+      await adminAPI.affiliates.updateUserSettings(userId, { partner_level: form.partner_level })
+      loadedPartnerLevel.value = form.partner_level
+    }
     if (Object.keys(form.customAttributes).length > 0) await adminAPI.userAttributes.updateUserAttributeValues(userId, form.customAttributes)
     appStore.showSuccess(t('admin.users.userUpdated'))
     emit('success'); emit('close')

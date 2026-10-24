@@ -161,6 +161,30 @@ func (s *SettingService) GetAffiliateRebatePerInviteeCap(ctx context.Context) fl
 	return cap
 }
 
+// GetAffiliateGroupProfitRates 返回按分组配置的利润率（key 为 group_id）。
+func (s *SettingService) GetAffiliateGroupProfitRates(ctx context.Context) map[string]float64 {
+	if s == nil || s.settingRepo == nil {
+		return map[string]float64{}
+	}
+	raw, err := s.settingRepo.GetValue(ctx, SettingKeyAffiliateGroupProfitRates)
+	if err != nil {
+		return map[string]float64{}
+	}
+	return parseAffiliateGroupProfitRates(raw)
+}
+
+// GetAffiliatePartnerTiers 返回合伙人档位配置，解析失败时回退到默认档位。
+func (s *SettingService) GetAffiliatePartnerTiers(ctx context.Context) []AffiliatePartnerTier {
+	if s == nil || s.settingRepo == nil {
+		return AffiliatePartnerTiers()
+	}
+	raw, err := s.settingRepo.GetValue(ctx, SettingKeyAffiliatePartnerTiers)
+	if err != nil {
+		return AffiliatePartnerTiers()
+	}
+	return parseAffiliatePartnerTiers(raw)
+}
+
 // IsPasswordResetEnabled 检查是否启用密码重置功能
 // 要求：必须同时开启邮件验证
 func (s *SettingService) IsPasswordResetEnabled(ctx context.Context) bool {

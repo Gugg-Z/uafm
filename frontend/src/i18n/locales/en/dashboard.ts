@@ -713,28 +713,145 @@ export default {
 
   affiliate: {
     title: 'Affiliate Rebates',
-    description: 'Invite new users and convert your rebate quota into account balance',
+    description: 'Invite new users and convert regular user rebate quota into account balance',
+    partnerInviteDescription: 'Invite new users and grow partner commission through their actual usage spend',
     yourCode: 'Your Affiliate Code',
     inviteLink: 'Invite Link',
     copyCode: 'Copy Code',
     copyLink: 'Copy Link',
     codeCopied: 'Affiliate code copied',
     linkCopied: 'Invite link copied',
+    sharePoster: 'Share Poster',
+    generatingPoster: 'Generating...',
+    posterPreviewTitle: 'Invite Poster',
+    posterAlt: 'Invite poster',
+    posterPreviewHint: 'The QR code is bound to your invite link. Download it and share it directly with friends.',
+    downloadPoster: 'Download Image',
+    posterGenerated: 'Invite poster generated',
+    posterFailed: 'Failed to generate poster. Please try again later.',
     loadFailed: 'Failed to load affiliate data',
     transferFailed: 'Failed to transfer affiliate quota',
+    usage: {
+      pageTitle: 'Affiliate Usage',
+      pageDescription: 'View usage, recharge, and commission details for your invited users',
+      loadFailed: 'Failed to load affiliate usage',
+      summaryInvitees: 'Invited users',
+      summaryRequests: 'Range requests',
+      summaryRecharge: 'Range recharge',
+      summaryRebate: 'Range cashback due',
+      summarySettled: 'Range paid cashback',
+      summaryPending: 'Range pending cashback',
+      searchPlaceholder: 'Search invited user email, username, or ID',
+      invitee: 'Invited user',
+      requests: 'Requests',
+      totalTokens: 'Total tokens',
+      actualCost: 'Actual spend',
+      rechargeAmount: 'Recharge',
+      rebateAmount: 'Cashback due',
+      details: 'Details',
+      detailsTitle: 'Cashback details',
+      source: 'Source',
+      group: 'Group',
+      profitDetailAmount: 'Spend / package',
+      profitRate: 'Profit rate',
+      subscriptionSource: 'Subscription plan',
+      settlementRecordsButton: 'Paid cashback history',
+      settlementRecordsTitle: 'Paid cashback history',
+      settlementRecordSearch: 'Search note',
+      settlementRecordsLoadFailed: 'Failed to load paid cashback history',
+      settlementAmount: 'Paid cashback',
+      settlementDate: 'Paid date',
+      settlementCreatedAt: 'Recorded at',
+      settlementNote: 'Note'
+    },
     stats: {
+      partnerLevel: 'Partner Level',
       rebateRate: 'My Rebate Rate',
-      rebateRateHint: 'What you earn each time an invitee recharges',
+      rewardMode: 'Reward Mode',
+      regularRewardMode: 'Rebate quota',
+      partnerRewardMode: 'Partner commission',
+      rebateRateHint: 'Regular users earn rebate quota from eligible RMB or USDT recharge payments',
+      partnerRebateRateHint: 'Partners participate in commission from invitees’ actual usage spend and settle separately with the platform',
       invitedUsers: 'Invited Users',
       availableQuota: 'Available Rebate Quota',
+      partnerSettlement: 'Settlement',
+      manualSettlement: 'Manual payout',
+      partnerSettlementHint: 'Partner commission is reviewed and paid out separately by the platform',
       frozenQuota: 'Frozen',
       frozenQuotaHint: 'Recently earned rebates pending release',
       totalQuota: 'Historical Rebate Quota'
     },
+    partner: {
+      badge: 'Partner Program',
+      title: 'Grow with {site}',
+      description: 'Apply to become a partner, share your community reach, and unlock higher commission tiers as your invited users grow.',
+      normalRate: 'Regular user rebate',
+      currentRate: '{rate} partner commission',
+      normalBenefit: 'Rebate quota can move to balance',
+      currentBenefit: 'Exclusive partner benefits',
+      nextHint: '{count} more invites to {level}',
+      progress: 'Upgrade Progress',
+      progressHint: 'Reach {count} invited users to unlock {level}',
+      maxLevelHint: 'You are at the highest partner level',
+      tierRequirement: '{count}+ invited users',
+      benefitLabels: {
+        none: 'Base invite benefits',
+        spark: 'Growth benefits',
+        voyage: 'Advanced benefits',
+        summit: 'Core benefits',
+        cocreate: 'Co-creation benefits'
+      },
+      tierBenefits: {
+        spark: 'For early promoters and small communities starting to validate demand.',
+        voyage: 'For active channels bringing steady signups and usage.',
+        summit: 'For proven partners with repeat traffic and strong conversion.',
+        cocreate: 'For strategic partners who can bring sustained high-value usage.'
+      },
+      applyTitle: 'Apply as a Partner',
+      applyDescription: 'Tell us where you learned about us and why your audience is a good fit.',
+      pendingDescription: 'Your application is pending review.',
+      approvedDescription: 'Approved as {level}. You can still reapply for a higher level.',
+      rejectedDescription: 'Your previous application was not approved. You can update the details and apply again.',
+      requestedLevel: 'Requested Level',
+      source: 'Where did you hear about us?',
+      portalUrl: 'Profile or community URL',
+      strengths: 'Your strengths',
+      strengthsPlaceholder: 'Tell us about your audience, community, content style, or promotion plan.',
+      submitButton: 'Submit Application',
+      reapplyButton: 'Submit New Application',
+      pendingButton: 'Review Pending',
+      submitting: 'Submitting...',
+      formRequired: 'Please complete the URL and strengths fields',
+      submitSuccess: 'Application submitted',
+      submitFailed: 'Failed to submit application',
+      reviewNote: 'Review note',
+      levels: {
+        none: 'Regular User',
+        spark: 'Spark Partner',
+        voyage: 'Voyage Partner',
+        summit: 'Summit Partner',
+        cocreate: 'Co-create Partner'
+      },
+      status: {
+        pending: 'Pending',
+        approved: 'Approved',
+        rejected: 'Rejected'
+      },
+      sources: {
+        twitter: 'Twitter / X',
+        discord: 'Discord',
+        telegram: 'Telegram',
+        community: 'Other Community',
+        other: 'Other'
+      }
+    },
     transfer: {
       title: 'Transfer Rebate Quota',
-      description: 'Move available rebate quota into your account balance',
+      description: 'Regular users can move available rebate quota into account balance',
+      partnerDescription: 'Partner commission is settled separately by the platform and cannot be moved into account balance',
       button: 'Transfer to Balance',
+      partnerBadge: 'Separate settlement',
+      partnerHint: 'Your partner commission will be reconciled by the platform based on eligible invited-user usage.',
       transferring: 'Transferring...',
       empty: 'No available rebate quota',
       success: '{amount} has been transferred to your balance'
@@ -745,20 +862,21 @@ export default {
       columns: {
         email: 'Email',
         username: 'Username',
+        recharge: 'Eligible Recharge',
         rebate: 'Rebate',
-        recharge: 'Recharge',
         joinedAt: 'Joined At'
       }
     },
     tips: {
       title: 'How It Works',
       line1: 'Share your affiliate code or invite link with new users.',
-      line2: 'When invitees recharge, you receive {rate} of the recharge as rebate quota.',
-      line3: 'Transfer rebate quota to balance at any time.',
+      line2: 'For regular users, eligible RMB or USDT recharge payments generate rebate quota. Redeem-code balance is excluded.',
+      partnerLine2: 'Partners participate in commission from invitees’ actual usage spend, settled separately by the platform.',
+      line3: 'Regular users can transfer available rebate quota to account balance.',
+      partnerLine3: 'Partners are settled separately by the platform and cannot transfer rebates into account balance.',
       line4: 'Newly earned rebates may have a waiting period before they can be transferred.'
     }
   },
-
   // Redeem
   redeem: {
     title: 'Redeem Code',
@@ -1058,4 +1176,193 @@ export default {
   },
 
   // Admin
+
+  gateway: {
+    common: {
+      navSubtitle: 'AI API Gateway',
+      models: 'Model Marketplace',
+      pricing: 'Pricing',
+      docs: 'Integration Docs',
+      status: 'Status',
+      partner: 'Partner',
+      resources: 'Downloads',
+      dashboard: 'Dashboard',
+      login: 'Login'
+    },
+    home: {
+      hero: {
+        eyebrow: 'AI API Gateway · OpenAI-Compatible',
+        title: 'One API. Every Frontier Model.',
+        subtitle: 'Access GPT, Claude, Gemini, DeepSeek and other leading models through one unified OpenAI-compatible API.',
+        primary: 'Start building',
+        secondary: 'Explore models'
+      },
+      routeVisual: {
+        ingress: 'Request ingress',
+        latency: 'p95 182ms',
+        policy: 'Policy routing',
+        failover: 'Auto failover'
+      },
+      metrics: {
+        availability: 'availability',
+        models: 'frontier models',
+        compatible: 'compatible API',
+        paygo: 'usage-based billing'
+      },
+      features: {
+        key: { title: 'Unified API Key', copy: 'Issue one key and connect applications to every enabled provider without vendor-specific rewrites.' },
+        routing: { title: 'Intelligent Model Routing', copy: 'Route requests across GPT, Claude, Gemini and DeepSeek with provider-aware controls.' },
+        analytics: { title: 'Usage Analytics', copy: 'Track tokens, spend, latency and model mix from an infrastructure-grade dashboard.' },
+        failover: { title: 'Failover and Retry', copy: 'Keep production traffic moving with retry strategies and resilient gateway behavior.' }
+      },
+      sdk: {
+        eyebrow: 'Developer Experience',
+        title: 'Seamlessly compatible with the OpenAI SDK',
+        copy: 'Keep the client you already use. Change the base URL, provide your key, and route requests through the gateway.'
+      },
+      dashboard: {
+        eyebrow: 'Control Plane',
+        title: 'Observe API traffic without turning the product into an admin panel',
+        copy: 'A clean infrastructure dashboard for token usage, spend, requests, error rate, top models and API keys.',
+        tokens: 'Tokens',
+        spend: 'Today spend',
+        requests: 'Requests',
+        errorRate: 'Error rate',
+        traffic: 'Gateway traffic',
+        models: 'Top models'
+      },
+      pricing: {
+        eyebrow: 'Pay As You Go',
+        title: 'Usage-based pricing. No provider lock-in.',
+        copy: 'Simple, transparent billing for teams that want one gateway for many models instead of many vendor integrations.',
+        simple: 'Simple',
+        transparent: 'Transparent',
+        noLockin: 'No vendor lock-in'
+      },
+      cta: {
+        title: 'Connect every leading model today',
+        copy: 'Use one API to access the global frontier model ecosystem.',
+        button: 'Create API Key'
+      }
+    },
+    models: {
+      eyebrow: 'Model Marketplace',
+      title: 'Route to the right model for every workload.',
+      subtitle: 'Compare GPT, Claude, Gemini, DeepSeek and other frontier models by provider, capability, group and usage price.',
+      modelCount: '{count} models',
+      providers: {
+        openai: 'OpenAI',
+        anthropic: 'Anthropic',
+        google: 'Google',
+        gemini: 'Gemini',
+        deepseek: 'DeepSeek',
+        claude: 'Claude'
+      },
+      groups: {
+        openai: 'OpenAI Group',
+        anthropic: 'Anthropic Group',
+        claude: 'Claude Group',
+        google: 'Google Group',
+        gemini: 'Gemini Group',
+        deepseek: 'DeepSeek Group',
+        default: 'Default Group',
+        public: 'Public Group',
+        vip: 'VIP Group',
+        standard: 'Standard Group',
+        premium: 'Premium Group',
+        codex: 'Codex Group'
+      },
+      capabilities: {
+        openai_api: 'OpenAI API',
+        chat: 'Chat',
+        messages: 'Messages',
+        responses: 'Responses',
+        tools: 'Tool Calling',
+        tool: 'Tool Calling',
+        vision: 'Vision',
+        image: 'Image',
+        image_generation: 'Image Generation',
+        code: 'Code',
+        coding: 'Coding',
+        reasoning: 'Reasoning',
+        long_context: 'Long Context',
+        embedding: 'Embeddings',
+        embeddings: 'Embeddings',
+        audio: 'Audio',
+        realtime: 'Realtime'
+      },
+      priceTiers: {
+        input: 'Input',
+        output: 'Output',
+        cache_write: 'Cache write',
+        cache_read: 'Cache read',
+        prompt: 'Prompt',
+        completion: 'Completion'
+      }
+    },
+    partner: {
+      pageTitle: 'Partner Program',
+      eyebrow: 'Partner Program',
+      title: 'Earn more by bringing builders to {site}.',
+      subtitle: 'Turn your community, content, or client network into recurring partner income. Invite teams that need reliable model access, and earn from their real usage spend.',
+      primaryCta: 'Apply or get your link',
+      secondaryCta: 'Browse models',
+      rateCard: {
+        eyebrow: 'Partner growth program',
+        headline: 'Turn real usage into long-term upside',
+        copy: 'Built for promoters with communities, content channels, or client networks. As invited users keep using the platform, your partner benefits can grow with them.',
+        note: 'Regular invite rebates can move into account balance; partner commission is reviewed and paid out separately by the platform.'
+      },
+      stats: {
+        settlement: 'Usage-based settlement',
+        settlementValue: 'Real spend',
+        lifetime: 'Long-term upside',
+        lifetimeValue: 'Recurring'
+      },
+      valueProps: {
+        highRate: {
+          title: 'Growth benefits for serious partners',
+          copy: 'The partner plan focuses on real usage and long-term customer value, making it a better fit for promoters who can bring sustained adoption.'
+        },
+        realUsage: {
+          title: 'Aligned with actual AI consumption',
+          copy: 'Rewards are tied to invited-user usage spend, helping you grow with the customers who keep building on the platform.'
+        },
+        easyShare: {
+          title: 'Simple story to share',
+          copy: 'One OpenAI-compatible API, many frontier models, transparent usage pricing, and a clear reason for your audience to try it.'
+        }
+      },
+      tiers: {
+        eyebrow: 'Partner tiers',
+        title: 'As your reach proves itself, benefits become more complete.',
+        copy: 'Start with an application, invite qualified users, and unlock stronger benefit tiers as your referrals and real usage grow.',
+        items: {
+          spark: { name: 'Spark Partner', benefit: 'Growth benefits', copy: 'For early promoters and small communities starting to validate demand.' },
+          voyage: { name: 'Voyage Partner', benefit: 'Advanced benefits', copy: 'For active channels bringing steady signups and usage.' },
+          summit: { name: 'Summit Partner', benefit: 'Core benefits', copy: 'For proven partners with repeat traffic and strong conversion.' },
+          cocreate: { name: 'Co-create Partner', benefit: 'Co-creation benefits', copy: 'For strategic partners who can bring sustained high-value usage.' }
+        }
+      },
+      flow: {
+        eyebrow: 'How it works',
+        title: 'A simple path from audience to revenue.',
+        steps: {
+          apply: { title: 'Apply as a partner', copy: 'Tell us about your audience, channel, community, or client network.' },
+          invite: { title: 'Share your invite link', copy: 'Send builders to a practical AI gateway that gives them one API for many models.' },
+          settle: { title: 'Earn from qualified usage', copy: 'As invited users spend on actual model usage, your partner commission grows with them.' }
+        }
+      },
+      settlement: {
+        eyebrow: 'Settlement model',
+        title: 'Bring people who truly use the product, and the upside can last.',
+        copy: 'Regular invite rebates can move into account balance after the waiting period; partner commission is reviewed against qualified usage and paid out separately by the platform.',
+        items: {
+          usage: { title: 'Qualified usage', copy: 'Commission is built around invited users’ real model spend, not one-off registrations.' },
+          review: { title: 'Platform review', copy: 'Before settlement, the platform confirms valid users, usage data, and partner tier for clear accounting.' },
+          payout: { title: 'Separate payout', copy: 'Partner commission does not enter the balance-transfer flow; payout is coordinated separately.' }
+        }
+      }
+    }
+  },
 }

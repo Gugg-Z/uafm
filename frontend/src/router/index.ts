@@ -185,6 +185,16 @@ const routes: RouteRecordRaw[] = [
       titleKey: 'modelPlaza.title'
     }
   },
+  {
+    path: '/partners',
+    name: 'PartnerProgram',
+    component: () => import('@/views/public/PartnerProgramView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Partner Program',
+      titleKey: 'gateway.partner.pageTitle'
+    }
+  },
 
   // ==================== User Routes ====================
   {
@@ -262,6 +272,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Affiliate',
       titleKey: 'affiliate.title',
       descriptionKey: 'affiliate.description'
+    }
+  },
+  {
+    path: '/affiliate/usage',
+    name: 'AffiliateUsage',
+    component: () => import('@/views/user/AffiliateUsageView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Affiliate Usage',
+      titleKey: 'affiliate.usage.pageTitle',
+      descriptionKey: 'affiliate.usage.pageDescription'
     }
   },
   {
@@ -648,7 +670,31 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/admin/affiliates',
-    redirect: '/admin/affiliates/invites'
+    redirect: '/admin/affiliates/usage'
+  },
+  {
+    path: '/admin/affiliates/usage',
+    name: 'AdminAffiliateUsage',
+    component: () => import('@/views/admin/affiliates/AdminAffiliateUsageView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Affiliate Usage',
+      titleKey: 'nav.affiliateUsage',
+      descriptionKey: 'admin.affiliates.usageDescription'
+    }
+  },
+  {
+    path: '/admin/affiliates/applications',
+    name: 'AdminAffiliateApplications',
+    component: () => import('@/views/admin/affiliates/AdminAffiliateApplicationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Partner Applications',
+      titleKey: 'nav.affiliateApplications',
+      descriptionKey: 'admin.affiliates.applicationsDescription'
+    }
   },
   {
     path: '/admin/affiliates/invites',

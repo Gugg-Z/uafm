@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,6 +83,12 @@ type UpdateProfileRequest struct {
 	AvatarURL              *string  `json:"avatar_url"`
 	BalanceNotifyEnabled   *bool    `json:"balance_notify_enabled"`
 	BalanceNotifyThreshold *float64 `json:"balance_notify_threshold"`
+}
+
+type ApplyAffiliatePartnerRequest struct {
+	Source    string `json:"source" binding:"required"`
+	Strengths string `json:"strengths" binding:"required"`
+	PortalURL string `json:"portal_url" binding:"required"`
 }
 
 type userProfileResponse struct {
@@ -211,6 +219,194 @@ func (h *UserHandler) GetAffiliate(c *gin.Context) {
 	response.Success(c, detail)
 }
 
+// ListAffiliateUsage returns usage and payment stats for the current user's invitees.
+// GET /api/v1/user/aff/usage
+func (h *UserHandler) ListAffiliateUsage(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	page, pageSize := response.ParsePagination(c)
+	filter := parseUserAffiliateUsageFilter(c, page, pageSize)
+	items, summary, total, err := h.affiliateService.ListMyUsageDailyRecords(c.Request.Context(), subject.UserID, filter)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"items":     items,
+		"total":     total,
+		"page":      filter.Page,
+		"page_size": filter.PageSize,
+		"pages":     userAffiliateUsagePages(total, filter.PageSize),
+		"summary":   summary,
+	})
+}
+
+// ListAffiliateSettlements returns manually recorded cashback settlements for the current user.
+// GET /api/v1/user/aff/settlements
+func (h *UserHandler) ListAffiliateSettlements(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	page, pageSize := response.ParsePagination(c)
+	filter := parseUserAffiliateSettlementFilter(c, page, pageSize)
+	items, total, err := h.affiliateService.ListMySettlementRecords(c.Request.Context(), subject.UserID, filter)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Paginated(c, items, total, filter.Page, filter.PageSize)
+}
+
+func parseUserAffiliateUsageFilter(c *gin.Context, page, pageSize int) service.AffiliateUsageFilter {
+	userTZ := c.Query("timezone")
+	startAt := parseUserAffiliateStartTime(c.Query("start_at"), userTZ)
+	endAt := parseUserAffiliateUsageEndTime(c.Query("end_at"), userTZ)
+	if startAt == nil || endAt == nil {
+		defaultStart, defaultEnd := defaultUserAffiliateUsageRange(userTZ)
+		if startAt == nil {
+			startAt = &defaultStart
+		}
+		if endAt == nil {
+			endAt = &defaultEnd
+		}
+	}
+	filter := service.AffiliateUsageFilter{
+		Search:    c.Query("search"),
+		Page:      page,
+		PageSize:  pageSize,
+		StartAt:   startAt,
+		EndAt:     endAt,
+		Timezone:  normalizeUserAffiliateTimezone(userTZ),
+		InviteeID: parseUserAffiliateInt64Query(c, "invitee_id"),
+		View:      c.Query("view"),
+		SortBy:    c.Query("sort_by"),
+		SortDesc:  c.Query("sort_order") != "asc",
+	}
+	if filter.PageSize > 100 {
+		filter.PageSize = 100
+	}
+	return filter
+}
+
+func parseUserAffiliateSettlementFilter(c *gin.Context, page, pageSize int) service.AffiliateRecordFilter {
+	filter := service.AffiliateRecordFilter{
+		Search:   c.Query("search"),
+		Page:     page,
+		PageSize: pageSize,
+		SortBy:   c.Query("sort_by"),
+		SortDesc: c.Query("sort_order") != "asc",
+	}
+	if filter.PageSize > 100 {
+		filter.PageSize = 100
+	}
+	userTZ := c.Query("timezone")
+	if t := parseUserAffiliateStartTime(c.Query("start_at"), userTZ); t != nil {
+		filter.StartAt = t
+	}
+	if t := parseUserAffiliateRecordEndTime(c.Query("end_at"), userTZ); t != nil {
+		filter.EndAt = t
+	}
+	return filter
+}
+
+func parseUserAffiliateInt64Query(c *gin.Context, name string) int64 {
+	raw := strings.TrimSpace(c.Query(name))
+	if raw == "" {
+		return 0
+	}
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || value <= 0 {
+		return 0
+	}
+	return value
+}
+
+func parseUserAffiliateStartTime(raw string, userTZ string) *time.Time {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return &parsed
+	}
+	if parsed, err := time.ParseInLocation("2006-01-02", raw, userAffiliateLocation(userTZ)); err == nil {
+		return &parsed
+	}
+	return nil
+}
+
+func parseUserAffiliateUsageEndTime(raw string, userTZ string) *time.Time {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return &parsed
+	}
+	if parsed, err := time.ParseInLocation("2006-01-02", raw, userAffiliateLocation(userTZ)); err == nil {
+		end := parsed.AddDate(0, 0, 1)
+		return &end
+	}
+	return nil
+}
+
+func parseUserAffiliateRecordEndTime(raw string, userTZ string) *time.Time {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, raw); err == nil {
+		return &parsed
+	}
+	if parsed, err := time.ParseInLocation("2006-01-02", raw, userAffiliateLocation(userTZ)); err == nil {
+		end := parsed.AddDate(0, 0, 1).Add(-time.Nanosecond)
+		return &end
+	}
+	return nil
+}
+
+func defaultUserAffiliateUsageRange(userTZ string) (time.Time, time.Time) {
+	now := time.Now().In(userAffiliateLocation(userTZ))
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -29)
+	end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, 1)
+	return start, end
+}
+
+func normalizeUserAffiliateTimezone(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw != "" {
+		if _, err := time.LoadLocation(raw); err == nil {
+			return raw
+		}
+	}
+	return "UTC"
+}
+
+func userAffiliateLocation(raw string) *time.Location {
+	if loc, err := time.LoadLocation(normalizeUserAffiliateTimezone(raw)); err == nil {
+		return loc
+	}
+	return time.UTC
+}
+
+func userAffiliateUsagePages(total int64, pageSize int) int {
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	pages := int(math.Ceil(float64(total) / float64(pageSize)))
+	if pages < 1 {
+		return 1
+	}
+	return pages
+}
+
 // TransferAffiliateQuota transfers all available affiliate quota into current balance.
 // POST /api/v1/user/aff/transfer
 func (h *UserHandler) TransferAffiliateQuota(c *gin.Context) {
@@ -230,6 +426,44 @@ func (h *UserHandler) TransferAffiliateQuota(c *gin.Context) {
 		"transferred_quota": transferred,
 		"balance":           balance,
 	})
+}
+
+// ListPublicAffiliatePartnerTiers returns partner tiers for public marketing pages.
+// GET /api/v1/public/affiliate/partner-tiers
+func (h *UserHandler) ListPublicAffiliatePartnerTiers(c *gin.Context) {
+	c.Header("Cache-Control", "public, max-age=300")
+	tiers := service.AffiliatePartnerTiers()
+	if h != nil && h.affiliateService != nil {
+		tiers = h.affiliateService.PartnerTiers(c.Request.Context())
+	}
+	response.Success(c, gin.H{"items": tiers})
+}
+
+// ApplyAffiliatePartner submits the current user's partner program application.
+// POST /api/v1/user/aff/partner/apply
+func (h *UserHandler) ApplyAffiliatePartner(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	var req ApplyAffiliatePartnerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	application, err := h.affiliateService.ApplyForPartner(c.Request.Context(), subject.UserID, service.AffiliatePartnerApplicationInput{
+		Source:    req.Source,
+		Strengths: req.Strengths,
+		PortalURL: req.PortalURL,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, application)
 }
 
 type StartIdentityBindingRequest struct {

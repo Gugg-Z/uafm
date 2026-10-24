@@ -384,6 +384,16 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	}
 	updates[SettingKeyAffiliateRebatePerInviteeCap] = strconv.FormatFloat(settings.AffiliateRebatePerInviteeCap, 'f', 8, 64)
 	updates[SettingKeyAffiliateAdminRechargeEnabled] = strconv.FormatBool(settings.AdminRechargeRebateEnabled)
+	affiliateGroupProfitRates, err := marshalAffiliateGroupProfitRates(settings.AffiliateGroupProfitRates)
+	if err != nil {
+		return nil, err
+	}
+	updates[SettingKeyAffiliateGroupProfitRates] = affiliateGroupProfitRates
+	affiliatePartnerTiers, err := marshalAffiliatePartnerTiers(settings.AffiliatePartnerTiers)
+	if err != nil {
+		return nil, err
+	}
+	updates[SettingKeyAffiliatePartnerTiers] = affiliatePartnerTiers
 	updates[SettingKeyDefaultUserRPMLimit] = strconv.Itoa(settings.DefaultUserRPMLimit)
 	defaultSubsJSON, err := json.Marshal(settings.DefaultSubscriptions)
 	if err != nil {

@@ -10,12 +10,21 @@ import {
   type WeChatOAuthPublicSettings,
 } from './auth'
 import type {
+  AffiliateSettlementRecord,
+  AffiliateUsageResponse,
+  ListAffiliateRecordsParams,
+  ListAffiliateUsageParams,
+} from './admin/affiliates'
+import type {
+  PaginatedResponse,
   User,
   ChangePasswordRequest,
   NotifyEmailEntry,
   UserAuthProvider,
   UserAffiliateDetail,
   AffiliateTransferResponse,
+  AffiliatePartnerApplication,
+  AffiliatePartnerTier,
   PlatformQuotasResponse,
 } from '@/types'
 
@@ -181,6 +190,62 @@ export async function getAffiliateDetail(): Promise<UserAffiliateDetail> {
   return data
 }
 
+export async function listAffiliateUsage(
+  params: ListAffiliateUsageParams = {}
+): Promise<AffiliateUsageResponse> {
+  const { data } = await apiClient.get<AffiliateUsageResponse>('/user/aff/usage', {
+    params: {
+      page: params.page ?? 1,
+      page_size: params.page_size ?? 20,
+      search: params.search ?? '',
+      start_at: params.start_at || undefined,
+      end_at: params.end_at || undefined,
+      sort_by: params.sort_by || undefined,
+      sort_order: params.sort_order || undefined,
+      timezone: params.timezone || undefined,
+      invitee_id: params.invitee_id || undefined,
+      view: params.view || undefined,
+    },
+  })
+  return data
+}
+
+export async function listAffiliateSettlements(
+  params: ListAffiliateRecordsParams = {}
+): Promise<PaginatedResponse<AffiliateSettlementRecord>> {
+  const { data } = await apiClient.get<PaginatedResponse<AffiliateSettlementRecord>>('/user/aff/settlements', {
+    params: {
+      page: params.page ?? 1,
+      page_size: params.page_size ?? 20,
+      search: params.search ?? '',
+      start_at: params.start_at || undefined,
+      end_at: params.end_at || undefined,
+      sort_by: params.sort_by || undefined,
+      sort_order: params.sort_order || undefined,
+      timezone: params.timezone || undefined,
+    },
+  })
+  return data
+}
+
+interface PublicAffiliatePartnerTiersResponse {
+  items: AffiliatePartnerTier[]
+}
+
+export async function getPublicAffiliatePartnerTiers(): Promise<AffiliatePartnerTier[]> {
+  const { data } = await apiClient.get<PublicAffiliatePartnerTiersResponse>('/public/affiliate/partner-tiers')
+  return Array.isArray(data.items) ? data.items : []
+}
+
+export async function applyAffiliatePartner(payload: {
+  source: string
+  strengths: string
+  portal_url: string
+}): Promise<AffiliatePartnerApplication> {
+  const { data } = await apiClient.post<AffiliatePartnerApplication>('/user/aff/partner/apply', payload)
+  return data
+}
+
 export async function transferAffiliateQuota(): Promise<AffiliateTransferResponse> {
   const { data } = await apiClient.post<AffiliateTransferResponse>('/user/aff/transfer')
   return data
@@ -208,6 +273,10 @@ export const userAPI = {
   buildOAuthBindingStartURL,
   startOAuthBinding,
   getAffiliateDetail,
+  listAffiliateUsage,
+  listAffiliateSettlements,
+  getPublicAffiliatePartnerTiers,
+  applyAffiliatePartner,
   transferAffiliateQuota,
   getMyPlatformQuotas,
 }
