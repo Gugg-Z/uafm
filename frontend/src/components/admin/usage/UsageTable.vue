@@ -27,20 +27,31 @@
         @sort="(key, order) => $emit('sort', key, order)"
       >
         <template #cell-user="{ row }">
-          <div class="text-sm">
+          <div class="min-w-[180px] text-sm">
             <button
-              v-if="row.user?.email"
-              class="font-medium text-primary-600 underline decoration-dashed underline-offset-2 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+              v-if="row.user?.email || row.user?.username"
+              class="block max-w-[220px] text-left transition-colors hover:text-primary-700 dark:hover:text-primary-300"
               @click="$emit('userClick', row.user_id, row.user?.email)"
               :title="t('admin.usage.clickToViewBalance')"
             >
-              {{ row.user.email }}
+              <span
+                v-if="row.user?.username"
+                class="block truncate font-medium text-primary-600 underline decoration-dashed underline-offset-2 dark:text-primary-400"
+              >
+                {{ row.user.username }}
+              </span>
+              <span
+                class="block truncate text-xs text-gray-600 dark:text-gray-300"
+                :class="{ 'font-medium text-primary-600 underline decoration-dashed underline-offset-2 dark:text-primary-400': !row.user?.username }"
+              >
+                {{ row.user?.email || '-' }}
+              </span>
             </button>
             <span v-else class="font-medium text-gray-900 dark:text-white">-</span>
             <span v-if="row.user?.deleted_at" class="ml-1 inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-rose-100 text-rose-600 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:ring-rose-500/30">
               {{ t('admin.usage.userDeletedBadge') }}
             </span>
-            <span class="ml-1 text-gray-500 dark:text-gray-400">#{{ row.user_id }}</span>
+            <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">#{{ row.user_id }}</span>
           </div>
         </template>
 

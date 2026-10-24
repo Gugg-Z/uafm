@@ -35,8 +35,14 @@
               @click="selectUser(u)"
               class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-dark-700"
             >
-              <span>{{ u.email }}<span v-if="u.deleted" class="ml-1 text-xs text-gray-400">（{{ t('admin.usage.userDeletedBadge') }}）</span></span>
-              <span class="ml-2 text-xs text-gray-400">#{{ u.id }}</span>
+              <span v-if="u.username" class="block truncate font-medium text-gray-900 dark:text-gray-100">
+                {{ u.username }}
+              </span>
+              <span class="block truncate text-xs text-gray-500 dark:text-gray-400">
+                {{ u.email || '-' }}
+                <span v-if="u.deleted" class="ml-1 text-gray-400">（{{ t('admin.usage.userDeletedBadge') }}）</span>
+                <span class="ml-1">#{{ u.id }}</span>
+              </span>
             </button>
           </div>
         </div>
@@ -377,9 +383,16 @@ const debounceApiKeySearch = () => {
   }, 300)
 }
 
+const userLabel = (user: SimpleUser): string => {
+  const username = user.username?.trim()
+  const email = user.email?.trim()
+  if (username && email) return `${username} (${email})`
+  return username || email || `#${user.id}`
+}
+
 const selectUser = async (u: SimpleUser) => {
   clearPendingUserSearch()
-  userKeyword.value = u.email
+  userKeyword.value = userLabel(u)
   showUserDropdown.value = false
   filters.value.user_id = u.id
   clearApiKey()
