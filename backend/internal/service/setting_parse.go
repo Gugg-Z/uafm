@@ -74,6 +74,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyTableDefaultPageSize:                      "20",
 		SettingKeyTablePageSizeOptions:                      "[10,20,50,100]",
 		SettingKeyCustomMenuItems:                           "[]",
+		SettingKeyHelpCenterDraftConfig:                     DefaultHelpCenterConfigJSON(),
+		SettingKeyHelpCenterPublishedConfig:                 DefaultHelpCenterConfigJSON(),
 		SettingKeySupportContactConfig:                      defaultSupportContactConfigJSON,
 		SettingKeyUserMenuItems:                             "[]",
 		SettingKeyCustomEndpoints:                           "[]",

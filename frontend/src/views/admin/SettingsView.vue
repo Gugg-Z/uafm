@@ -9170,7 +9170,8 @@
         </div>
 
         <!-- Save Button -->
-        <div v-show="activeTab !== 'backup'" class="flex justify-end">
+        <div v-if="activeTab === 'help_center'"><HelpCenterEditor /></div>
+        <div v-show="activeTab !== 'backup' && activeTab !== 'help_center'" class="flex justify-end">
           <button
             type="submit"
             :disabled="saving || loadFailed"
@@ -9299,6 +9300,7 @@ import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
 import Toggle from "@/components/common/Toggle.vue";
 import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
+import HelpCenterEditor from "@/views/admin/settings/HelpCenterEditor.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
 import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue";
 import RechargeBonusTierEditor from "@/components/admin/settings/RechargeBonusTierEditor.vue";
@@ -9539,7 +9541,8 @@ type SettingsTab =
   | "gateway"
   | "payment"
   | "email"
-  | "backup";
+  | "backup"
+  | "help_center";
 const activeTab = ref<SettingsTab>("general");
 const settingsTabs = [
   { key: "general" as SettingsTab, icon: "home" as const },
@@ -9551,6 +9554,7 @@ const settingsTabs = [
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
+ { key: "help_center" as SettingsTab, icon: "book" as const },
 ];
 
 const settingsTabKeyboardActions = {
@@ -10219,6 +10223,7 @@ const userMenuOptions = [
   { key: 'dashboard', label: '仪表盘' }, { key: 'api_keys', label: 'API 密钥' },
   { key: 'batch_image', label: '批量生图' }, { key: 'usage', label: '用量' },
   { key: 'image_generation', label: 'AI 生图' },
+  { key: 'help_center', label: '帮助中心' },
   { key: 'support_contact', label: '售后联系' },
   { key: 'available_channels', label: '可用渠道' }, { key: 'channel_status', label: '渠道状态' },
   { key: 'subscriptions', label: '我的订阅' }, { key: 'purchase', label: '充值/订阅' },

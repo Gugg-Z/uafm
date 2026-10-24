@@ -163,7 +163,7 @@ func adminMenuKeyForAPIPath(path string) string {
 		return "admin_order_plans"
 	case strings.HasPrefix(p, "/usage"):
 		return "admin_usage"
-	case strings.HasPrefix(p, "/settings"),
+	case strings.HasPrefix(p, "/help-center"), strings.HasPrefix(p, "/settings"),
 		strings.HasPrefix(p, "/system"),
 		strings.HasPrefix(p, "/data-management"),
 		strings.HasPrefix(p, "/backups"),

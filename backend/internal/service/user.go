@@ -8,6 +8,7 @@ import (
 )
 
 type User struct {
+	HelpCenterKeyPromptDismissed     bool
 	AllowBalanceSubscriptionPurchase bool
 	ID                               int64
 	Email                            string

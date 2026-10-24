@@ -10,6 +10,7 @@ import (
 )
 
 type User struct {
+	HelpCenterKeyPromptDismissed     bool   `json:"help_center_key_prompt_dismissed"`
 	AllowBalanceSubscriptionPurchase bool   `json:"allow_balance_subscription_purchase"`
 	ID                               int64  `json:"id"`
 	Email                            string `json:"email"`

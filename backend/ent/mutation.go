@@ -49052,6 +49052,7 @@ type UserMutation struct {
 	total_recharged                     *float64
 	addtotal_recharged                  *float64
 	allow_balance_subscription_purchase *bool
+	help_center_key_prompt_dismissed    *bool
 	rpm_limit                           *int
 	addrpm_limit                        *int
 	clearedFields                       map[string]struct{}
@@ -50312,6 +50313,42 @@ func (m *UserMutation) ResetAllowBalanceSubscriptionPurchase() {
 	m.allow_balance_subscription_purchase = nil
 }
 
+// SetHelpCenterKeyPromptDismissed sets the "help_center_key_prompt_dismissed" field.
+func (m *UserMutation) SetHelpCenterKeyPromptDismissed(b bool) {
+	m.help_center_key_prompt_dismissed = &b
+}
+
+// HelpCenterKeyPromptDismissed returns the value of the "help_center_key_prompt_dismissed" field in the mutation.
+func (m *UserMutation) HelpCenterKeyPromptDismissed() (r bool, exists bool) {
+	v := m.help_center_key_prompt_dismissed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHelpCenterKeyPromptDismissed returns the old "help_center_key_prompt_dismissed" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldHelpCenterKeyPromptDismissed(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHelpCenterKeyPromptDismissed is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHelpCenterKeyPromptDismissed requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHelpCenterKeyPromptDismissed: %w", err)
+	}
+	return oldValue.HelpCenterKeyPromptDismissed, nil
+}
+
+// ResetHelpCenterKeyPromptDismissed resets all changes to the "help_center_key_prompt_dismissed" field.
+func (m *UserMutation) ResetHelpCenterKeyPromptDismissed() {
+	m.help_center_key_prompt_dismissed = nil
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (m *UserMutation) SetRpmLimit(i int) {
 	m.rpm_limit = &i
@@ -51104,7 +51141,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 27)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -51183,6 +51220,9 @@ func (m *UserMutation) Fields() []string {
 	if m.allow_balance_subscription_purchase != nil {
 		fields = append(fields, user.FieldAllowBalanceSubscriptionPurchase)
 	}
+	if m.help_center_key_prompt_dismissed != nil {
+		fields = append(fields, user.FieldHelpCenterKeyPromptDismissed)
+	}
 	if m.rpm_limit != nil {
 		fields = append(fields, user.FieldRpmLimit)
 	}
@@ -51246,6 +51286,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.TotalRecharged()
 	case user.FieldAllowBalanceSubscriptionPurchase:
 		return m.AllowBalanceSubscriptionPurchase()
+	case user.FieldHelpCenterKeyPromptDismissed:
+		return m.HelpCenterKeyPromptDismissed()
 	case user.FieldRpmLimit:
 		return m.RpmLimit()
 	}
@@ -51309,6 +51351,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldTotalRecharged(ctx)
 	case user.FieldAllowBalanceSubscriptionPurchase:
 		return m.OldAllowBalanceSubscriptionPurchase(ctx)
+	case user.FieldHelpCenterKeyPromptDismissed:
+		return m.OldHelpCenterKeyPromptDismissed(ctx)
 	case user.FieldRpmLimit:
 		return m.OldRpmLimit(ctx)
 	}
@@ -51501,6 +51545,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAllowBalanceSubscriptionPurchase(v)
+		return nil
+	case user.FieldHelpCenterKeyPromptDismissed:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHelpCenterKeyPromptDismissed(v)
 		return nil
 	case user.FieldRpmLimit:
 		v, ok := value.(int)
@@ -51749,6 +51800,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAllowBalanceSubscriptionPurchase:
 		m.ResetAllowBalanceSubscriptionPurchase()
+		return nil
+	case user.FieldHelpCenterKeyPromptDismissed:
+		m.ResetHelpCenterKeyPromptDismissed()
 		return nil
 	case user.FieldRpmLimit:
 		m.ResetRpmLimit()

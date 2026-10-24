@@ -240,6 +240,12 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/help-center',
+    name: 'HelpCenter',
+    component: () => import('@/views/user/HelpCenterView.vue'),
+    meta: { requiresAuth: true, title: 'Help Center', titleKey: 'helpCenter.title' }
+  },
+  {
     path: '/support-contact',
     name: 'SupportContact',
     component: () => import('@/views/user/SupportContactView.vue'),
@@ -1034,7 +1040,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   const menuKeyByPath: Record<string, string> = {
-    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/support-contact': 'support_contact', '/image-generation': 'image_generation', '/usage': 'usage',
+    '/dashboard': 'dashboard', '/keys': 'api_keys', '/batch-image': 'batch_image', '/help-center': 'help_center', '/support-contact': 'support_contact', '/image-generation': 'image_generation', '/usage': 'usage',
     '/available-channels': 'available_channels', '/monitor': 'channel_status', '/subscriptions': 'subscriptions',
     '/purchase': 'purchase', '/orders': 'orders', '/redeem': 'redeem', '/affiliate': 'affiliate',
     '/affiliate/usage': 'affiliate_usage', '/profile': 'profile',

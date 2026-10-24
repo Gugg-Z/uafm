@@ -149,6 +149,7 @@ func (r *userRepository) create(ctx context.Context, userIn *service.User, guard
 		SetRole(userIn.Role).
 		SetAdminMenuPermissions(marshalAdminMenuPermissions(userIn.AdminMenuPermissions)).
 		SetAllowBalanceSubscriptionPurchase(userIn.AllowBalanceSubscriptionPurchase).
+		SetHelpCenterKeyPromptDismissed(userIn.HelpCenterKeyPromptDismissed).
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
@@ -296,6 +297,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User, field
 	oldEmail := existing.Email
 
 	updateOp := txClient.User.UpdateOneID(userIn.ID)
+	if fields.HelpCenterKeyPromptDismissed {
+		updateOp.SetHelpCenterKeyPromptDismissed(userIn.HelpCenterKeyPromptDismissed)
+	}
 	if fields.Email {
 		updateOp = updateOp.SetEmail(userIn.Email)
 	}

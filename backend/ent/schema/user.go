@@ -120,6 +120,7 @@ func (User) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),
 		field.Bool("allow_balance_subscription_purchase").Default(false),
+		field.Bool("help_center_key_prompt_dismissed").Default(false),
 
 		// 用户级每分钟请求数上限（0 = 不限制）。仅当所在分组未设置 rpm_limit 时作为兜底生效。
 		field.Int("rpm_limit").

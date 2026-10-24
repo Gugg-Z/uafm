@@ -1080,6 +1080,39 @@
       @close="closeUseKeyModal"
     />
 
+    <!-- Help Center Prompt after creating an API key -->
+    <BaseDialog
+      :show="showKeyCreatedPrompt"
+      :title="keyCreatedPromptTitle"
+      width="narrow"
+      @close="closeKeyCreatedPrompt"
+    >
+      <div class="space-y-4">
+        <p class="text-sm leading-6 text-gray-600 dark:text-gray-400">
+          {{ keyCreatedPromptDescription }}
+        </p>
+        <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 text-sm text-gray-700 dark:border-dark-700 dark:text-gray-300">
+          <input
+            v-model="dismissKeyCreatedPrompt"
+            type="checkbox"
+            class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <span>{{ keyCreatedPromptDismissLabel }}</span>
+        </label>
+      </div>
+      <template #footer>
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" class="btn btn-secondary" @click="handleKeyCreatedPromptSecondary">
+            {{ keyCreatedPromptSecondaryLabel }}
+          </button>
+          <button type="button" class="btn btn-primary" @click="handleKeyCreatedPromptPrimary">
+            <Icon name="book" size="sm" />
+            {{ keyCreatedPromptPrimaryLabel }}
+          </button>
+        </div>
+      </template>
+    </BaseDialog>
+
     <!-- CCS Client Selection Dialog for Antigravity -->
     <BaseDialog
       :show="showCcsClientSelect"
@@ -1199,6 +1232,9 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from "vue-router"
+import { useAuthStore } from "@/stores/auth"
+import type { HelpCenterConfig } from "@/types"
 	import { ref, reactive, computed, watch, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
@@ -1207,7 +1243,7 @@
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 
 const { t } = useI18n()
-import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
+import { keysAPI, authAPI, usageAPI, userGroupsAPI, helpCenterAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 import BulkEditKeysModal from '@/components/keys/BulkEditKeysModal.vue'
@@ -1259,6 +1295,8 @@ interface GroupOption {
 }
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
+const router = useRouter()
 const onboardingStore = useOnboardingStore()
 const { copyToClipboard: clipboardCopy } = useClipboard()
 
@@ -1403,6 +1441,9 @@ const showResetQuotaDialog = ref(false)
 const showResetRateLimitDialog = ref(false)
 const showUseKeyModal = ref(false)
 const showCcsClientSelect = ref(false)
+const showKeyCreatedPrompt = ref(false)
+const dismissKeyCreatedPrompt = ref(false)
+const helpCenterConfig = ref<HelpCenterConfig | null>(null)
 const showColumnDropdown = ref(false)
 const pendingCcsRow = ref<ApiKey | null>(null)
 const selectedKey = ref<ApiKey | null>(null)
@@ -1485,6 +1526,13 @@ const groupFilterOptions = computed(() => [
   { value: 0, label: t('keys.noGroup') },
   ...groups.value.map((g) => ({ value: g.id, label: g.name }))
 ])
+
+const keyCreatedPrompt = computed(() => helpCenterConfig.value?.key_created_prompt)
+const keyCreatedPromptTitle = computed(() => keyCreatedPrompt.value?.title || t('helpCenter.keyPrompt.defaultTitle'))
+const keyCreatedPromptDescription = computed(() => keyCreatedPrompt.value?.description || t('helpCenter.keyPrompt.defaultDescription'))
+const keyCreatedPromptPrimaryLabel = computed(() => keyCreatedPrompt.value?.primary_action_label || t('helpCenter.keyPrompt.primary'))
+const keyCreatedPromptSecondaryLabel = computed(() => keyCreatedPrompt.value?.secondary_action_label || t('common.close'))
+const keyCreatedPromptDismissLabel = computed(() => keyCreatedPrompt.value?.dismiss_label || t('helpCenter.keyPrompt.dismiss'))
 
 const statusFilterOptions = computed(() => [
   { value: '', label: t('keys.allStatus') },
@@ -1851,6 +1899,7 @@ const handleSubmit = async () => {
     rate_limit_7d: formData.value.rate_limit_7d && formData.value.rate_limit_7d > 0 ? formData.value.rate_limit_7d : 0,
   } : { rate_limit_5h: 0, rate_limit_1d: 0, rate_limit_7d: 0 }
 
+  const isCreatingKey = !showEditModal.value
   submitting.value = true
   try {
     if (showEditModal.value && selectedKey.value) {
@@ -1890,6 +1939,9 @@ const handleSubmit = async () => {
     }
     closeModals()
     loadApiKeys()
+    if (isCreatingKey) {
+      maybeShowKeyCreatedPrompt()
+    }
   } catch (error: any) {
     const errorMsg = error.response?.data?.detail || t('keys.failedToSave')
     appStore.showError(errorMsg)
@@ -1941,6 +1993,67 @@ const closeModals = () => {
     enable_expiration: false,
     expiration_preset: '30',
     expiration_date: ''
+  }
+}
+
+const markKeyCreatedPromptDismissed = async () => {
+  if (!dismissKeyCreatedPrompt.value) return
+  try {
+    await helpCenterAPI.dismissKeyCreatedPrompt()
+    if (authStore.user) {
+      authStore.user.help_center_key_prompt_dismissed = true
+    }
+  } catch (error) {
+    console.error('Failed to dismiss help center key prompt:', error)
+  }
+}
+
+const closeKeyCreatedPrompt = async () => {
+  await markKeyCreatedPromptDismissed()
+  showKeyCreatedPrompt.value = false
+  dismissKeyCreatedPrompt.value = false
+}
+
+const navigateFromKeyCreatedPrompt = async (url?: string) => {
+  await closeKeyCreatedPrompt()
+  const target = (url || '/help-center').trim()
+  if (!target || target === window.location.pathname) return
+  if (/^https?:\/\//i.test(target)) {
+    window.open(target, '_blank', 'noopener,noreferrer')
+    return
+  }
+  router.push(target)
+}
+
+const handleKeyCreatedPromptPrimary = () => {
+  navigateFromKeyCreatedPrompt(keyCreatedPrompt.value?.primary_action_url || '/help-center')
+}
+
+const handleKeyCreatedPromptSecondary = () => {
+  const secondaryUrl = keyCreatedPrompt.value?.secondary_action_url || ''
+  if (secondaryUrl && secondaryUrl !== '/keys') {
+    navigateFromKeyCreatedPrompt(secondaryUrl)
+    return
+  }
+  closeKeyCreatedPrompt()
+}
+
+const maybeShowKeyCreatedPrompt = async () => {
+  if (authStore.user?.help_center_key_prompt_dismissed) return
+  try {
+    const response = await helpCenterAPI.get()
+    helpCenterConfig.value = response.config
+    if (response.help_center_key_prompt_dismissed || response.key_prompt_dismissed) {
+      if (authStore.user) {
+        authStore.user.help_center_key_prompt_dismissed = true
+      }
+      return
+    }
+    if (!response.config.enabled || !response.config.key_created_prompt?.enabled) return
+    dismissKeyCreatedPrompt.value = false
+    showKeyCreatedPrompt.value = true
+  } catch (error) {
+    console.error('Failed to load help center prompt:', error)
   }
 }
 

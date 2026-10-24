@@ -5,12 +5,14 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
 	"github.com/Wei-Shaw/sub2api/internal/securityaudit"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"path/filepath"
 
 	"github.com/google/wire"
 )
 
 // ProvideAdminHandlers creates the AdminHandlers struct
 func ProvideAdminHandlers(
+	adminHelpCenterHandler *admin.HelpCenterHandler,
 	dashboardHandler *admin.DashboardHandler,
 	userHandler *admin.UserHandler,
 	groupHandler *admin.GroupHandler,
@@ -57,6 +59,7 @@ func ProvideAdminHandlers(
 	accountHandler.SetOpenCodeGoUsageService(opencodeGoUsage)
 	accountHandler.SetClaudeResetCreditService(claudeResetCredits)
 	return &AdminHandlers{
+		HelpCenter:             adminHelpCenterHandler,
 		Dashboard:              dashboardHandler,
 		User:                   userHandler,
 		Group:                  groupHandler,
@@ -181,6 +184,7 @@ func ProvideAdminSettingHandler(settingService *service.SettingService, emailSer
 
 // ProvideHandlers creates the Handlers struct
 func ProvideHandlers(
+	helpCenterHandler *HelpCenterHandler,
 	authHandler *AuthHandler,
 	userHandler *UserHandler,
 	apiKeyHandler *APIKeyHandler,
@@ -207,6 +211,7 @@ func ProvideHandlers(
 	_ *service.OpenAIQuotaAutoResetService,
 ) *Handlers {
 	return &Handlers{
+		HelpCenter:       helpCenterHandler,
 		Auth:             authHandler,
 		User:             userHandler,
 		APIKey:           apiKeyHandler,
@@ -233,6 +238,8 @@ func ProvideHandlers(
 
 // ProviderSet is the Wire provider set for all handlers
 var ProviderSet = wire.NewSet(
+	ProvideHelpCenterHandler,
+	ProvideAdminHelpCenterHandler,
 	// Top-level handlers
 	NewAuthHandler,
 	NewUserHandler,
@@ -296,3 +303,31 @@ var ProviderSet = wire.NewSet(
 	ProvideAdminHandlers,
 	ProvideHandlers,
 )
+
+func ProvideHelpCenterHandler(helpCenterService *service.HelpCenterService, userService *service.UserService, cfg *config.Config) *HelpCenterHandler {
+	h := NewHelpCenterHandler(helpCenterService, userService)
+	if cfg != nil {
+		h.SetAttachmentsDir(helpCenterAttachmentsDir(cfg.Pricing.DataDir))
+	}
+	h.SetBundledAttachmentsDir(helpCenterBundledAttachmentsDir())
+	return h
+}
+
+func ProvideAdminHelpCenterHandler(helpCenterService *service.HelpCenterService, cfg *config.Config) *admin.HelpCenterHandler {
+	h := admin.NewHelpCenterHandler(helpCenterService)
+	if cfg != nil {
+		h.SetAttachmentsDir(helpCenterAttachmentsDir(cfg.Pricing.DataDir))
+	}
+	return h
+}
+
+func helpCenterAttachmentsDir(dataDir string) string {
+	if dataDir == "" {
+		dataDir = "./data"
+	}
+	return filepath.Join(dataDir, "help-center", "attachments")
+}
+
+func helpCenterBundledAttachmentsDir() string {
+	return filepath.Join("resources", "help-center", "attachments")
+}

@@ -77,6 +77,7 @@ func RegisterAdminRoutes(
 
 		// 系统设置
 		registerSettingsRoutes(admin, h)
+		registerHelpCenterRoutes(admin, h)
 
 		// 数据管理
 		registerDataManagementRoutes(admin, h, stepUpAuth)
@@ -906,5 +907,22 @@ func channelMonitorModeV2Guard(settingService *service.SettingService) gin.Handl
 			return
 		}
 		c.Next()
+	}
+}
+
+func registerHelpCenterRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	helpCenter := admin.Group("/help-center")
+	{
+		helpCenter.GET("", h.Admin.HelpCenter.Get)
+		helpCenter.PUT("/draft", h.Admin.HelpCenter.SaveDraft)
+		helpCenter.POST("/publish", h.Admin.HelpCenter.PublishDraft)
+		helpCenter.POST("/attachments", h.Admin.HelpCenter.UploadAttachment)
+	}
+	settingsHelpCenter := admin.Group("/settings/help-center")
+	{
+		settingsHelpCenter.GET("", h.Admin.HelpCenter.Get)
+		settingsHelpCenter.PUT("/draft", h.Admin.HelpCenter.SaveDraft)
+		settingsHelpCenter.POST("/publish", h.Admin.HelpCenter.PublishDraft)
+		settingsHelpCenter.POST("/attachments", h.Admin.HelpCenter.UploadAttachment)
 	}
 }

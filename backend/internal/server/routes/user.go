@@ -21,6 +21,7 @@ func RegisterUserRoutes(
 		v1.GET("/public/affiliate/partner-tiers", h.User.ListPublicAffiliatePartnerTiers)
 	}
 
+	v1.GET("/help-center/attachments/*filename", h.HelpCenter.DownloadAttachment)
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	authenticated.Use(middleware.BackendModeUserGuard(settingService))
@@ -78,6 +79,10 @@ func RegisterUserRoutes(
 				passkeys.DELETE("/:id", h.Passkey.Delete)
 			}
 		}
+
+		helpCenter := authenticated.Group("/help-center")
+		helpCenter.GET("", h.HelpCenter.Get)
+		helpCenter.POST("/key-created-prompt/dismiss", h.HelpCenter.DismissKeyCreatedPrompt)
 
 		// API Key管理
 		keys := authenticated.Group("/keys")

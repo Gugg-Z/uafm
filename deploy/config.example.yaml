@@ -1098,6 +1098,8 @@ pricing:
   hash_url: "https://raw.githubusercontent.com/Wei-Shaw/model-price-repo/refs/heads/main//model_prices_and_context_window.sha256"
   # Local data directory for caching
   # 本地数据缓存目录
+  # Help Center uploads are stored under data_dir/help-center/attachments.
+  # 帮助中心上传附件也保存在此目录下的 help-center/attachments，请持久化该目录。
   data_dir: "./data"
   # Fallback pricing file: fills in models missing from the catalog. Edits are
   # detected by content hash at the next hash check and reloaded without restart.

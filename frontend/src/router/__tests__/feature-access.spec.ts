@@ -129,10 +129,10 @@ describe('feature route guard', () => {
     expect(next).toHaveBeenCalledWith('/keys')
   })
 
-  it('blocks direct support access when its menu is disabled', async () => {
+  it.each(['/support-contact', '/help-center'])('blocks direct access to %s when its menu is disabled', async (path) => {
     appStore.publicSettingsLoaded = true
     appStore.cachedPublicSettings = { user_menu_items: ['api_keys'] }
-    const { navigation, next } = runGuard({}, '/support-contact')
+    const { navigation, next } = runGuard({}, path)
     await navigation
     expect(next).toHaveBeenCalledWith('/keys')
   })
