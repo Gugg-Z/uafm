@@ -6874,9 +6874,12 @@
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">关闭后普通用户不会看到对应入口，也无法直接访问页面。未选择表示全部开启。</p>
             </div>
             <div class="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-3">
-              <label v-for="item in userMenuOptions" :key="item.key" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                <input v-model="form.user_menu_items" type="checkbox" :value="item.key" class="rounded border-gray-300 text-primary-600" />
-                {{ item.label }}
+              <label v-for="item in userMenuOptions" :key="item.key" class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input v-model="form.user_menu_items" type="checkbox" :value="item.key" class="mt-1 rounded border-gray-300 text-primary-600" />
+                <span>
+                  {{ item.label }}
+                  <span class="block text-xs font-normal text-gray-400 dark:text-gray-500">{{ item.description }}</span>
+                </span>
               </label>
             </div>
           </div>
@@ -10220,16 +10223,22 @@ type SettingsForm = Omit<
 };
 
 const userMenuOptions = [
-  { key: 'dashboard', label: '仪表盘' }, { key: 'api_keys', label: 'API 密钥' },
-  { key: 'batch_image', label: '批量生图' }, { key: 'usage', label: '用量' },
-  { key: 'image_generation', label: 'AI 生图' },
-  { key: 'help_center', label: '帮助中心' },
-  { key: 'support_contact', label: '售后联系' },
-  { key: 'available_channels', label: '可用渠道' }, { key: 'channel_status', label: '渠道状态' },
-  { key: 'subscriptions', label: '我的订阅' }, { key: 'purchase', label: '充值/订阅' },
-  { key: 'orders', label: '我的订单' }, { key: 'redeem', label: '兑换码' },
-  { key: 'affiliate', label: '联盟中心' }, { key: 'affiliate_usage', label: '联盟用量' },
-  { key: 'profile', label: '个人资料' },
+  { key: 'dashboard', label: '仪表盘', description: '用户总览、余额和账户状态入口' },
+  { key: 'api_keys', label: 'API 密钥', description: '创建与管理调用网关的 API 密钥' },
+  { key: 'batch_image', label: '批量生图', description: '批量提交与管理图像生成任务' },
+  { key: 'usage', label: '使用记录', description: '查看个人请求用量与消费明细' },
+  { key: 'image_generation', label: 'AI 生图', description: '交互式 AI 图像生成工作台' },
+  { key: 'help_center', label: '帮助中心', description: '常见问题与使用指引' },
+  { key: 'support_contact', label: '售后联系', description: '售后联系方式与二维码（需在售后联系设置中启用）' },
+  { key: 'available_channels', label: '可用渠道', description: '当前账号可使用的渠道与模型清单' },
+  { key: 'channel_status', label: '渠道状态', description: '渠道实时可用性与延迟监控' },
+  { key: 'subscriptions', label: '我的订阅', description: '查看订阅套餐余量与到期时间' },
+  { key: 'purchase', label: '充值/订阅', description: '余额充值与订阅购买入口（文案随支付模式变化）' },
+  { key: 'orders', label: '我的订单', description: '查看支付订单与订单状态' },
+  { key: 'redeem', label: '兑换码', description: '使用兑换码兑换余额或订阅' },
+  { key: 'affiliate', label: '邀请返利', description: '生成邀请链接、查看返佣与提现' },
+  { key: 'affiliate_usage', label: '用量统计', description: '查看被邀请用户的用量与返利明细' },
+  { key: 'profile', label: '个人资料', description: '账号信息、密码与安全设置' },
 ]
 
 const schedulingThresholdPlatforms = SCHEDULING_THRESHOLD_PLATFORMS;
