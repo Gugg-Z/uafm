@@ -78,6 +78,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyHelpCenterPublishedConfig:                 DefaultHelpCenterConfigJSON(),
 		SettingKeySupportContactConfig:                      defaultSupportContactConfigJSON,
 		SettingKeyUserMenuItems:                             "[]",
+		SettingKeyMarketingNavItems:                         defaultMarketingNavItemsJSON,
 		SettingKeyCustomEndpoints:                           "[]",
 		SettingKeyWeChatConnectEnabled:                      "false",
 		SettingKeyWeChatConnectAppID:                        "",
@@ -281,6 +282,74 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	return s.settingRepo.SetMultiple(ctx, defaults)
 }
 
+const defaultMarketingNavItemsJSON = `["models","docs","resources","partner"]`
+
+var marketingNavItemOrder = []string{"models", "docs", "resources", "partner"}
+
+// ParseMarketingNavItems parses the stored marketing navbar item list.
+// Missing or invalid settings fall back to all default entries; an explicit
+// empty JSON array is preserved so admins can hide every marketing nav item.
+func ParseMarketingNavItems(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return append([]string(nil), marketingNavItemOrder...)
+	}
+	var items []string
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return append([]string(nil), marketingNavItemOrder...)
+	}
+	return normalizeMarketingNavItems(items)
+}
+
+// MarketingNavItemsJSON marshals the normalized marketing nav item list.
+// An empty normalized slice stays as "[]" (all hidden); only a marshal error
+// falls back to the default set.
+func MarketingNavItemsJSON(items []string) string {
+	normalized := normalizeMarketingNavItems(items)
+	data, err := json.Marshal(normalized)
+	if err != nil {
+		return defaultMarketingNavItemsJSON
+	}
+	return string(data)
+}
+
+// NormalizeMarketingNavItemsJSON normalizes the stored raw JSON string.
+// Empty or invalid input yields all defaults; an explicit empty array is kept.
+func NormalizeMarketingNavItemsJSON(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return defaultMarketingNavItemsJSON
+	}
+	var items []string
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return defaultMarketingNavItemsJSON
+	}
+	return MarketingNavItemsJSON(items)
+}
+
+func normalizeMarketingNavItems(items []string) []string {
+	enabled := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		switch strings.TrimSpace(item) {
+		case "models":
+			enabled["models"] = struct{}{}
+		case "docs":
+			enabled["docs"] = struct{}{}
+		case "resources":
+			enabled["resources"] = struct{}{}
+		case "partner":
+			enabled["partner"] = struct{}{}
+		}
+	}
+	normalized := make([]string, 0, len(marketingNavItemOrder))
+	for _, item := range marketingNavItemOrder {
+		if _, ok := enabled[item]; ok {
+			normalized = append(normalized, item)
+		}
+	}
+	return normalized
+}
+
 func parseForwardedClientIPHeadersSetting(value string) ([]string, error) {
 	var headers []string
 	if err := json.Unmarshal([]byte(value), &headers); err != nil {
@@ -379,6 +448,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		CustomMenuItems:                        settings[SettingKeyCustomMenuItems],
 		SupportContactConfig:                   NormalizeSupportContactConfigJSON(settings[SettingKeySupportContactConfig]),
 		UserMenuItems:                          settings[SettingKeyUserMenuItems],
+		MarketingNavItems:                      NormalizeMarketingNavItemsJSON(settings[SettingKeyMarketingNavItems]),
 		CustomEndpoints:                        settings[SettingKeyCustomEndpoints],
 		BackendModeEnabled:                     settings[SettingKeyBackendModeEnabled] == "true",
 	}

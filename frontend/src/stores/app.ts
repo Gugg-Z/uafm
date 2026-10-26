@@ -13,6 +13,7 @@ import {
   type ReleaseInfo
 } from '@/api/admin/system'
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
+import { DEFAULT_MARKETING_NAV_ITEMS } from '@/utils/marketingNav'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -352,6 +353,7 @@ export const useAppStore = defineStore('app', () => {
         table_default_page_size: 20,
         table_page_size_options: [10, 20, 50, 100],
         custom_menu_items: [],
+        marketing_nav_items: [...DEFAULT_MARKETING_NAV_ITEMS],
         user_menu_items: [],
         custom_endpoints: [],
         linuxdo_oauth_enabled: false,

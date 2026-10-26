@@ -394,8 +394,9 @@ const (
 	SettingKeyHelpCenterDraftConfig       = "help_center_draft_config"
 	SettingKeyHelpCenterPublishedConfig   = "help_center_published_config"
 	SettingKeySupportContactConfig        = "support_contact_config"
-	SettingKeyUserMenuItems               = "user_menu_items"  // 用户侧内置菜单开关（JSON 数组，空/缺省表示全部开启）
-	SettingKeyCustomEndpoints             = "custom_endpoints" // 自定义端点列表（JSON 数组）
+	SettingKeyUserMenuItems               = "user_menu_items"     // 用户侧内置菜单开关（JSON 数组，空/缺省表示全部开启）
+	SettingKeyMarketingNavItems           = "marketing_nav_items" // 营销顶栏入口 JSON 数组（空数组=全部隐藏；缺失/非法=全部显示）
+	SettingKeyCustomEndpoints             = "custom_endpoints"    // 自定义端点列表（JSON 数组）
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"    // 新用户默认并发量

@@ -5,38 +5,35 @@
       <div class="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-primary-100/70 via-white/18 to-transparent dark:from-primary-950/35 dark:via-white/[0.03]"></div>
     </div>
 
-    <header class="relative z-20 border-b border-primary-100/60 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/60">
-      <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <RouterLink to="/home" class="flex min-w-0 items-center gap-2">
-          <img :src="siteLogo" alt="Logo" class="h-8 w-8 rounded-lg object-contain" />
-          <span class="truncate text-base font-semibold text-slate-950 dark:text-white">{{ siteName }}</span>
-        </RouterLink>
-        <div class="flex shrink-0 items-center gap-2">
-          <RouterLink
-            to="/model-plaza"
-            class="hidden text-sm font-medium text-slate-600 transition hover:text-primary-600 dark:text-slate-300 dark:hover:text-primary-300 sm:block"
-          >
-            {{ t('gateway.common.models') }}
-          </RouterLink>
-          <LocaleSwitcher />
-          <button
-            type="button"
-            class="h-10 rounded-xl border border-primary-200/70 bg-white/75 p-2 text-slate-600 transition hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/12 dark:hover:text-white"
-            :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
-            @click="toggleTheme"
-          >
-            <Icon v-if="isDark" name="sun" size="md" />
-            <Icon v-else name="moon" size="md" />
-          </button>
-          <RouterLink
-            :to="isAuthenticated ? dashboardPath : '/login'"
-            class="btn btn-primary btn-sm"
-          >
-            {{ isAuthenticated ? t('gateway.common.dashboard') : t('gateway.common.login') }}
-          </RouterLink>
-        </div>
-      </div>
-    </header>
+    <MarketingNavbar
+      :site-name="siteName"
+      :subtitle="t('gateway.common.navSubtitle')"
+      :logo="siteLogo"
+      :doc-url="docUrl"
+      :docs-label="t('gateway.common.docs')"
+      :cta-to="isAuthenticated ? dashboardPath : '/login'"
+      :cta-label="isAuthenticated ? t('gateway.common.dashboard') : t('gateway.common.login')"
+      :model-marketplace-to="modelsTarget"
+      :model-marketplace-label="t('gateway.common.models')"
+      partner-to="/partners"
+      :partner-label="t('gateway.common.partner')"
+      resources-to="/downloads"
+      :resources-label="t('gateway.common.resources')"
+      :visible-items="marketingNavItems"
+    >
+      <template #tools>
+        <LocaleSwitcher />
+        <button
+          type="button"
+          class="h-10 w-10 rounded-xl border border-primary-200/70 bg-white/75 p-2 text-slate-600 transition hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/12 dark:hover:text-white"
+          :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
+          @click="toggleTheme"
+        >
+          <Icon v-if="isDark" name="sun" size="md" />
+          <Icon v-else name="moon" size="md" />
+        </button>
+      </template>
+    </MarketingNavbar>
 
     <main class="relative z-10 flex-1 px-4 pb-16 pt-6 sm:px-6">
       <section class="mx-auto grid max-w-7xl gap-8 rounded-[2rem] border border-primary-100/80 bg-white/74 p-5 shadow-[0_26px_90px_rgba(15,23,42,0.10)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.045] dark:shadow-[0_26px_90px_rgba(0,0,0,0.30)] md:p-8 lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center">
@@ -152,6 +149,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
+import MarketingNavbar from '@/components/marketing/MarketingNavbar.vue'
 import userAPI from '@/api/user'
 import type { AffiliatePartnerLevel, AffiliatePartnerTier } from '@/types'
 
@@ -170,6 +168,11 @@ const fallbackPartnerTiers: AffiliatePartnerTier[] = [
 
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
 const siteLogo = computed(() => appStore.siteLogo || '/logo.svg')
+const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
+const marketingNavItems = computed(() => appStore.cachedPublicSettings?.marketing_nav_items)
+const modelsTarget = computed(() =>
+  appStore.cachedPublicSettings?.model_plaza_enabled ? '/model-plaza' : '/available-channels',
+)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
 const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')

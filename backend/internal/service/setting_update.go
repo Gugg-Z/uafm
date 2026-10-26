@@ -360,6 +360,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeySupportContactConfig] = NormalizeSupportContactConfigJSON(settings.SupportContactConfig)
 	updates[SettingKeyUserMenuItems] = settings.UserMenuItems
+	updates[SettingKeyMarketingNavItems] = NormalizeMarketingNavItemsJSON(settings.MarketingNavItems)
 	updates[SettingKeyCustomEndpoints] = settings.CustomEndpoints
 
 	// 默认配置

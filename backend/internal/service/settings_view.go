@@ -165,6 +165,7 @@ type SystemSettings struct {
 	CustomMenuItems             string // JSON array of custom menu items
 	SupportContactConfig        string
 	UserMenuItems               string // JSON array of enabled user menu keys
+	MarketingNavItems           string // JSON array of marketing navbar entries (空数组=全部隐藏)
 	CustomEndpoints             string // JSON array of custom endpoints
 
 	DefaultConcurrency           int
@@ -333,6 +334,7 @@ type DefaultSubscriptionSetting struct {
 type PublicSettings struct {
 	SupportContactConfig                string
 	UserMenuItems                       string
+	MarketingNavItems                   string
 	RegistrationEnabled                 bool
 	EmailVerifyEnabled                  bool
 	ForceEmailOnThirdPartySignup        bool

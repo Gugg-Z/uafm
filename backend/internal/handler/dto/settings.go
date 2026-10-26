@@ -165,6 +165,7 @@ type SystemSettings struct {
 	CustomMenuItems             []CustomMenuItem             `json:"custom_menu_items"`
 	SupportContactConfig        service.SupportContactConfig `json:"support_contact_config"`
 	UserMenuItems               []string                     `json:"user_menu_items"`
+	MarketingNavItems           []string                     `json:"marketing_nav_items"`
 	CustomEndpoints             []CustomEndpoint             `json:"custom_endpoints"`
 
 	DefaultConcurrency           int                            `json:"default_concurrency"`
@@ -408,6 +409,7 @@ type PublicSettings struct {
 	TablePageSizeOptions                []int                    `json:"table_page_size_options"`
 	CustomMenuItems                     []CustomMenuItem         `json:"custom_menu_items"`
 	UserMenuItems                       []string                 `json:"user_menu_items"`
+	MarketingNavItems                   []string                 `json:"marketing_nav_items"`
 	CustomEndpoints                     []CustomEndpoint         `json:"custom_endpoints"`
 	DingTalkOAuthEnabled                bool                     `json:"dingtalk_oauth_enabled"`
 	LinuxDoOAuthEnabled                 bool                     `json:"linuxdo_oauth_enabled"`

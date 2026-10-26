@@ -262,6 +262,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		CustomMenuItems:                                        dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		SupportContactConfig:                                   parseSupportContactConfig(settings.SupportContactConfig),
 		UserMenuItems:                                          dto.ParseStringArray(settings.UserMenuItems),
+		MarketingNavItems:                                      service.ParseMarketingNavItems(settings.MarketingNavItems),
 		CustomEndpoints:                                        dto.ParseCustomEndpoints(settings.CustomEndpoints),
 		DefaultConcurrency:                                     settings.DefaultConcurrency,
 		DefaultBalance:                                         settings.DefaultBalance,

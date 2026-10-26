@@ -497,6 +497,7 @@ export interface SystemSettings {
   table_page_size_options: number[];
   backend_mode_enabled: boolean;
   custom_menu_items: CustomMenuItem[];
+  marketing_nav_items: string[];
   user_menu_items: string[];
   support_contact_config: import("@/types").SupportContactConfig;
   custom_endpoints: CustomEndpoint[];
@@ -853,6 +854,7 @@ export interface UpdateSettingsRequest {
   table_page_size_options?: number[];
   backend_mode_enabled?: boolean;
   custom_menu_items?: CustomMenuItem[];
+  marketing_nav_items?: string[];
   user_menu_items?: string[];
   support_contact_config?: import("@/types").SupportContactConfig;
   custom_endpoints?: CustomEndpoint[];

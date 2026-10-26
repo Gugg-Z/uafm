@@ -6867,6 +6867,23 @@
             </div>
           </div>
 
+          <!-- Marketing Navbar Items -->
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">营销导航</h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">控制公开页面顶部营销导航展示哪些入口；全部取消勾选则顶栏不显示任何入口。</p>
+            </div>
+            <div class="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-4">
+              <label v-for="item in marketingNavOptions" :key="item.key" class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input v-model="form.marketing_nav_items" type="checkbox" :value="item.key" class="mt-1 rounded border-gray-300 text-primary-600" />
+                <span>
+                  {{ item.label }}
+                  <span class="block text-xs font-normal text-gray-400 dark:text-gray-500">{{ item.description }}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
           <!-- Custom Menu Items -->
           <div class="card">
             <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -9325,6 +9342,7 @@ import {
 import TotpStepUpDialog from "@/components/auth/TotpStepUpDialog.vue";
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
 import { extractApiErrorMessage, extractI18nErrorMessage } from "@/utils/apiError";
+import { DEFAULT_MARKETING_NAV_ITEMS } from "@/utils/marketingNav";
 import { useAppStore } from "@/stores";
 import { useAdminSettingsStore } from "@/stores/adminSettings";
 import { normalizeVisibleMethod } from "@/components/payment/paymentFlow";
@@ -10222,6 +10240,13 @@ type SettingsForm = Omit<
   account_scheduling_thresholds: ReturnType<typeof normalizeAccountSchedulingThresholdsMap>;
 };
 
+const marketingNavOptions = [
+  { key: 'models', label: '模型广场', description: '可用模型与价格入口（指向内置模型广场）' },
+  { key: 'docs', label: '接入文档', description: 'API 接入指南入口（走站点设置中的文档外链）' },
+  { key: 'resources', label: '资源下载', description: '客户端安装包与工具下载入口' },
+  { key: 'partner', label: '合伙人', description: '合伙人计划介绍入口' },
+]
+
 const userMenuOptions = [
   { key: 'dashboard', label: '仪表盘', description: '用户总览、余额和账户状态入口' },
   { key: 'api_keys', label: 'API 密钥', description: '创建与管理调用网关的 API 密钥' },
@@ -10338,6 +10363,7 @@ const form = reactive<SettingsForm>({
     hide_open_button?: boolean;
   }>,
   user_menu_items: [] as string[],
+  marketing_nav_items: [...DEFAULT_MARKETING_NAV_ITEMS] as string[],
   support_contact_config: { enabled: true, title: "", description: "", contacts: [] as import("@/types").SupportContactItem[] },
   custom_endpoints: [] as Array<{
     name: string;
@@ -12027,6 +12053,7 @@ async function saveSettings() {
       table_page_size_options: form.table_page_size_options,
       custom_menu_items: form.custom_menu_items,
       user_menu_items: form.user_menu_items,
+      marketing_nav_items: form.marketing_nav_items,
       support_contact_config: form.support_contact_config,
       custom_endpoints: form.custom_endpoints,
       frontend_url: form.frontend_url,

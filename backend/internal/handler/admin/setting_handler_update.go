@@ -169,6 +169,7 @@ type UpdateSettingsRequest struct {
 	CustomMenuItems             *[]dto.CustomMenuItem         `json:"custom_menu_items"`
 	SupportContactConfig        *service.SupportContactConfig `json:"support_contact_config"`
 	UserMenuItems               *[]string                     `json:"user_menu_items"`
+	MarketingNavItems           *[]string                     `json:"marketing_nav_items"`
 	CustomEndpoints             *[]dto.CustomEndpoint         `json:"custom_endpoints"`
 
 	// 默认配置
@@ -1315,6 +1316,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}
 		userMenuJSON = string(bytes)
 	}
+	marketingNavJSON := previousSettings.MarketingNavItems
+	if req.MarketingNavItems != nil {
+		marketingNavJSON = service.MarketingNavItemsJSON(*req.MarketingNavItems)
+	}
 	if req.CustomMenuItems != nil {
 		items := *req.CustomMenuItems
 		if len(items) > maxCustomMenuItems {
@@ -1696,6 +1701,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		CustomMenuItems:                        customMenuJSON,
 		SupportContactConfig:                   supportContactJSON,
 		UserMenuItems:                          userMenuJSON,
+		MarketingNavItems:                      marketingNavJSON,
 		CustomEndpoints:                        customEndpointsJSON,
 		DefaultConcurrency:                     req.DefaultConcurrency,
 		DefaultBalance:                         req.DefaultBalance,

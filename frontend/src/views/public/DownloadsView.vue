@@ -6,11 +6,10 @@
       :subtitle="t('gateway.common.navSubtitle')"
       :logo="siteLogo"
       :doc-url="docUrl"
-      docs-to="/docs"
       :docs-label="t('gateway.common.docs')"
       :cta-to="isAuthenticated ? dashboardPath : '/login'"
       :cta-label="isAuthenticated ? t('gateway.common.dashboard') : t('gateway.common.login')"
-      model-marketplace-to="/available-channels"
+      :model-marketplace-to="modelsTarget"
       :model-marketplace-label="t('gateway.common.models')"
       partner-to="/partners"
       :partner-label="t('gateway.common.partner')"
@@ -132,7 +131,10 @@ const isDark = ref(false)
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || '58Token')
 const siteLogo = computed(() => appStore.siteLogo || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
-const marketingNavItems = computed(() => undefined)
+const marketingNavItems = computed(() => appStore.cachedPublicSettings?.marketing_nav_items)
+const modelsTarget = computed(() =>
+  appStore.cachedPublicSettings?.model_plaza_enabled ? '/model-plaza' : '/available-channels',
+)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
 const numberFormatter = computed(() => new Intl.NumberFormat(locale.value.startsWith('zh') ? 'zh-CN' : 'en-US'))
