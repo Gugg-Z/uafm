@@ -14,6 +14,7 @@ import {
 } from '@/api/admin/system'
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
 import { DEFAULT_MARKETING_NAV_ITEMS } from '@/utils/marketingNav'
+import { BRAND_NAME, BRAND_LOGO_URL } from '@/constants/brand'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -27,8 +28,8 @@ export const useAppStore = defineStore('app', () => {
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
   const publicSettingsLoading = ref<boolean>(false)
-  const siteName = ref<string>('Sub2API')
-  const siteLogo = ref<string>('')
+  const siteName = ref<string>(BRAND_NAME)
+  const siteLogo = ref<string>(BRAND_LOGO_URL)
   const siteVersion = ref<string>('')
   const contactInfo = ref<string>('')
   const apiBaseUrl = ref<string>('')
@@ -291,6 +292,11 @@ export const useAppStore = defineStore('app', () => {
    * Apply settings to store state (internal helper to avoid code duplication)
    */
   function applySettings(config: PublicSettings): void {
+    config = {
+      ...config,
+      site_name: !config.site_name || config.site_name === 'Sub2API' ? BRAND_NAME : config.site_name,
+      site_logo: config.site_logo || BRAND_LOGO_URL,
+    }
     if (typeof window !== 'undefined') {
       window.__APP_CONFIG__ = { ...config }
     }
