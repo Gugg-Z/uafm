@@ -220,6 +220,16 @@ func VideoPrice1080p(v float64) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldVideoPrice1080p, v))
 }
 
+// VideoMaxPendingTasks applies equality check predicate on the "video_max_pending_tasks" field. It's identical to VideoMaxPendingTasksEQ.
+func VideoMaxPendingTasks(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoTaskTimeoutHours applies equality check predicate on the "video_task_timeout_hours" field. It's identical to VideoTaskTimeoutHoursEQ.
+func VideoTaskTimeoutHours(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldVideoTaskTimeoutHours, v))
+}
+
 // WebSearchPricePerCall applies equality check predicate on the "web_search_price_per_call" field. It's identical to WebSearchPricePerCallEQ.
 func WebSearchPricePerCall(v float64) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldWebSearchPricePerCall, v))
@@ -1813,6 +1823,86 @@ func VideoModelPricesIsNil() predicate.Group {
 // VideoModelPricesNotNil applies the NotNil predicate on the "video_model_prices" field.
 func VideoModelPricesNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldVideoModelPrices))
+}
+
+// VideoMaxPendingTasksEQ applies the EQ predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksNEQ applies the NEQ predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksNEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksIn applies the In predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldVideoMaxPendingTasks, vs...))
+}
+
+// VideoMaxPendingTasksNotIn applies the NotIn predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksNotIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldVideoMaxPendingTasks, vs...))
+}
+
+// VideoMaxPendingTasksGT applies the GT predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksGT(v int) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksGTE applies the GTE predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksGTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksLT applies the LT predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksLT(v int) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksLTE applies the LTE predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksLTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoTaskTimeoutHoursEQ applies the EQ predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldVideoTaskTimeoutHours, v))
+}
+
+// VideoTaskTimeoutHoursNEQ applies the NEQ predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursNEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldVideoTaskTimeoutHours, v))
+}
+
+// VideoTaskTimeoutHoursIn applies the In predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldVideoTaskTimeoutHours, vs...))
+}
+
+// VideoTaskTimeoutHoursNotIn applies the NotIn predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursNotIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldVideoTaskTimeoutHours, vs...))
+}
+
+// VideoTaskTimeoutHoursGT applies the GT predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursGT(v int) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldVideoTaskTimeoutHours, v))
+}
+
+// VideoTaskTimeoutHoursGTE applies the GTE predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursGTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldVideoTaskTimeoutHours, v))
+}
+
+// VideoTaskTimeoutHoursLT applies the LT predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursLT(v int) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldVideoTaskTimeoutHours, v))
+}
+
+// VideoTaskTimeoutHoursLTE applies the LTE predicate on the "video_task_timeout_hours" field.
+func VideoTaskTimeoutHoursLTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldVideoTaskTimeoutHours, v))
 }
 
 // WebSearchPricePerCallEQ applies the EQ predicate on the "web_search_price_per_call" field.

@@ -659,6 +659,48 @@ func (_u *GroupUpdate) ClearVideoModelPrices() *GroupUpdate {
 	return _u
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_u *GroupUpdate) SetVideoMaxPendingTasks(v int) *GroupUpdate {
+	_u.mutation.ResetVideoMaxPendingTasks()
+	_u.mutation.SetVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableVideoMaxPendingTasks(v *int) *GroupUpdate {
+	if v != nil {
+		_u.SetVideoMaxPendingTasks(*v)
+	}
+	return _u
+}
+
+// AddVideoMaxPendingTasks adds value to the "video_max_pending_tasks" field.
+func (_u *GroupUpdate) AddVideoMaxPendingTasks(v int) *GroupUpdate {
+	_u.mutation.AddVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (_u *GroupUpdate) SetVideoTaskTimeoutHours(v int) *GroupUpdate {
+	_u.mutation.ResetVideoTaskTimeoutHours()
+	_u.mutation.SetVideoTaskTimeoutHours(v)
+	return _u
+}
+
+// SetNillableVideoTaskTimeoutHours sets the "video_task_timeout_hours" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableVideoTaskTimeoutHours(v *int) *GroupUpdate {
+	if v != nil {
+		_u.SetVideoTaskTimeoutHours(*v)
+	}
+	return _u
+}
+
+// AddVideoTaskTimeoutHours adds value to the "video_task_timeout_hours" field.
+func (_u *GroupUpdate) AddVideoTaskTimeoutHours(v int) *GroupUpdate {
+	_u.mutation.AddVideoTaskTimeoutHours(v)
+	return _u
+}
+
 // SetWebSearchPricePerCall sets the "web_search_price_per_call" field.
 func (_u *GroupUpdate) SetWebSearchPricePerCall(v float64) *GroupUpdate {
 	_u.mutation.ResetWebSearchPricePerCall()
@@ -1754,6 +1796,18 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.VideoModelPricesCleared() {
 		_spec.ClearField(group.FieldVideoModelPrices, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoMaxPendingTasks(); ok {
+		_spec.AddField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.VideoTaskTimeoutHours(); ok {
+		_spec.SetField(group.FieldVideoTaskTimeoutHours, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoTaskTimeoutHours(); ok {
+		_spec.AddField(group.FieldVideoTaskTimeoutHours, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.WebSearchPricePerCall(); ok {
 		_spec.SetField(group.FieldWebSearchPricePerCall, field.TypeFloat64, value)
@@ -2859,6 +2913,48 @@ func (_u *GroupUpdateOne) SetVideoModelPrices(v map[string]map[string]float64) *
 // ClearVideoModelPrices clears the value of the "video_model_prices" field.
 func (_u *GroupUpdateOne) ClearVideoModelPrices() *GroupUpdateOne {
 	_u.mutation.ClearVideoModelPrices()
+	return _u
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_u *GroupUpdateOne) SetVideoMaxPendingTasks(v int) *GroupUpdateOne {
+	_u.mutation.ResetVideoMaxPendingTasks()
+	_u.mutation.SetVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableVideoMaxPendingTasks(v *int) *GroupUpdateOne {
+	if v != nil {
+		_u.SetVideoMaxPendingTasks(*v)
+	}
+	return _u
+}
+
+// AddVideoMaxPendingTasks adds value to the "video_max_pending_tasks" field.
+func (_u *GroupUpdateOne) AddVideoMaxPendingTasks(v int) *GroupUpdateOne {
+	_u.mutation.AddVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (_u *GroupUpdateOne) SetVideoTaskTimeoutHours(v int) *GroupUpdateOne {
+	_u.mutation.ResetVideoTaskTimeoutHours()
+	_u.mutation.SetVideoTaskTimeoutHours(v)
+	return _u
+}
+
+// SetNillableVideoTaskTimeoutHours sets the "video_task_timeout_hours" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableVideoTaskTimeoutHours(v *int) *GroupUpdateOne {
+	if v != nil {
+		_u.SetVideoTaskTimeoutHours(*v)
+	}
+	return _u
+}
+
+// AddVideoTaskTimeoutHours adds value to the "video_task_timeout_hours" field.
+func (_u *GroupUpdateOne) AddVideoTaskTimeoutHours(v int) *GroupUpdateOne {
+	_u.mutation.AddVideoTaskTimeoutHours(v)
 	return _u
 }
 
@@ -3987,6 +4083,18 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.VideoModelPricesCleared() {
 		_spec.ClearField(group.FieldVideoModelPrices, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoMaxPendingTasks(); ok {
+		_spec.AddField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.VideoTaskTimeoutHours(); ok {
+		_spec.SetField(group.FieldVideoTaskTimeoutHours, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoTaskTimeoutHours(); ok {
+		_spec.AddField(group.FieldVideoTaskTimeoutHours, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.WebSearchPricePerCall(); ok {
 		_spec.SetField(group.FieldWebSearchPricePerCall, field.TypeFloat64, value)

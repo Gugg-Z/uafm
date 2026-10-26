@@ -1041,7 +1041,7 @@
           </p>
         </div>
 
-        <!-- 视频生成计费配置（仅 Grok 平台） -->
+        <!-- 视频生成计费配置（Grok、OpenAI、Composite 平台） -->
         <div
           v-if="supportsVideoPricingPlatform(createForm.platform)"
           class="border-t pt-4"
@@ -1051,6 +1051,14 @@
           >
             {{ t(videoPricingI18nKey("title")) }}
           </label>
+          <div class="mb-4 grid gap-3 sm:grid-cols-2">
+            <label class="block text-sm text-gray-700 dark:text-gray-300">最大待完成任务数
+              <input v-model.number="createForm.video_max_pending_tasks" type="number" min="1" max="1000" class="input mt-1" />
+            </label>
+            <label class="block text-sm text-gray-700 dark:text-gray-300">未确认超时（小时）
+              <input v-model.number="createForm.video_task_timeout_hours" type="number" min="1" max="168" class="input mt-1" />
+            </label>
+          </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
             {{ t(videoPricingI18nKey("description")) }}
           </p>
@@ -2681,7 +2689,7 @@
           </p>
         </div>
 
-        <!-- 视频生成计费配置（仅 Grok 平台） -->
+        <!-- 视频生成计费配置（Grok、OpenAI、Composite 平台） -->
         <div
           v-if="supportsVideoPricingPlatform(editForm.platform)"
           class="border-t pt-4"
@@ -2691,6 +2699,14 @@
           >
             {{ t(videoPricingI18nKey("title")) }}
           </label>
+          <div class="mb-4 grid gap-3 sm:grid-cols-2">
+            <label class="block text-sm text-gray-700 dark:text-gray-300">最大待完成任务数
+              <input v-model.number="editForm.video_max_pending_tasks" type="number" min="1" max="1000" class="input mt-1" />
+            </label>
+            <label class="block text-sm text-gray-700 dark:text-gray-300">未确认超时（小时）
+              <input v-model.number="editForm.video_task_timeout_hours" type="number" min="1" max="168" class="input mt-1" />
+            </label>
+          </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
             {{ t(videoPricingI18nKey("description")) }}
           </p>
@@ -4973,6 +4989,8 @@ const createForm = reactive({
   video_price_720p: null as number | null,
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
+  video_max_pending_tasks: 5,
+  video_task_timeout_hours: 2,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
   web_search_price_per_call: null as number | null,
   search_price_per_1k: null as number | null,
@@ -5339,6 +5357,8 @@ const editForm = reactive({
   video_price_720p: null as number | null,
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
+  video_max_pending_tasks: 5,
+  video_task_timeout_hours: 2,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
   web_search_price_per_call: null as number | null,
   search_price_per_1k: null as number | null,
@@ -5796,6 +5816,8 @@ const closeCreateModal = () => {
   createForm.video_price_720p = null;
   createForm.video_price_1080p = null;
   createForm.video_model_prices = createVideoModelPricesForm();
+  createForm.video_max_pending_tasks = 5;
+  createForm.video_task_timeout_hours = 2;
   createForm.long_context_pricing_enabled = true;
   createForm.force_openai_fast = false;
   createForm.free_openai_fast = false;
@@ -5944,6 +5966,8 @@ const handleCreateGroup = async () => {
       ...(Object.keys(videoModelPrices).length > 0
         ? { video_model_prices: videoModelPrices }
         : {}),
+      video_max_pending_tasks: createForm.video_max_pending_tasks,
+      video_task_timeout_hours: createForm.video_task_timeout_hours,
       model_routing: convertRoutingRulesToApiFormat(
         createModelRoutingRules.value,
       ),
@@ -6094,6 +6118,8 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.video_model_prices = createVideoModelPricesForm(
     group.video_model_prices,
   );
+  editForm.video_max_pending_tasks = group.video_max_pending_tasks ?? 5;
+  editForm.video_task_timeout_hours = group.video_task_timeout_hours ?? 2;
   editForm.web_search_price_per_call = group.web_search_price_per_call ?? null;
   editForm.search_price_per_1k = group.search_price_per_1k ?? null;
   editForm.audio_realtime_price_per_min = group.audio_realtime_price_per_min ?? null;
@@ -6205,6 +6231,8 @@ const closeEditModal = () => {
   editForm.video_price_720p = null;
   editForm.video_price_1080p = null;
   editForm.video_model_prices = createVideoModelPricesForm();
+  editForm.video_max_pending_tasks = 5;
+  editForm.video_task_timeout_hours = 2;
   editForm.long_context_pricing_enabled = true;
   editForm.force_openai_fast = false;
   editForm.free_openai_fast = false;
@@ -6287,6 +6315,8 @@ const handleUpdateGroup = async () => {
       video_model_prices: serializeVideoModelPrices(
         editForm.video_model_prices,
       ),
+      video_max_pending_tasks: editForm.video_max_pending_tasks,
+      video_task_timeout_hours: editForm.video_task_timeout_hours,
       fallback_group_id:
         editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
       fallback_group_id_on_invalid_request:

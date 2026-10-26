@@ -496,6 +496,34 @@ func (_c *GroupCreate) SetVideoModelPrices(v map[string]map[string]float64) *Gro
 	return _c
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_c *GroupCreate) SetVideoMaxPendingTasks(v int) *GroupCreate {
+	_c.mutation.SetVideoMaxPendingTasks(v)
+	return _c
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableVideoMaxPendingTasks(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetVideoMaxPendingTasks(*v)
+	}
+	return _c
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (_c *GroupCreate) SetVideoTaskTimeoutHours(v int) *GroupCreate {
+	_c.mutation.SetVideoTaskTimeoutHours(v)
+	return _c
+}
+
+// SetNillableVideoTaskTimeoutHours sets the "video_task_timeout_hours" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableVideoTaskTimeoutHours(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetVideoTaskTimeoutHours(*v)
+	}
+	return _c
+}
+
 // SetWebSearchPricePerCall sets the "web_search_price_per_call" field.
 func (_c *GroupCreate) SetWebSearchPricePerCall(v float64) *GroupCreate {
 	_c.mutation.SetWebSearchPricePerCall(v)
@@ -1129,6 +1157,14 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultVideoRateMultiplier
 		_c.mutation.SetVideoRateMultiplier(v)
 	}
+	if _, ok := _c.mutation.VideoMaxPendingTasks(); !ok {
+		v := group.DefaultVideoMaxPendingTasks
+		_c.mutation.SetVideoMaxPendingTasks(v)
+	}
+	if _, ok := _c.mutation.VideoTaskTimeoutHours(); !ok {
+		v := group.DefaultVideoTaskTimeoutHours
+		_c.mutation.SetVideoTaskTimeoutHours(v)
+	}
 	if _, ok := _c.mutation.LongContextPricingEnabled(); !ok {
 		v := group.DefaultLongContextPricingEnabled
 		_c.mutation.SetLongContextPricingEnabled(v)
@@ -1326,6 +1362,12 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.VideoRateMultiplier(); !ok {
 		return &ValidationError{Name: "video_rate_multiplier", err: errors.New(`ent: missing required field "Group.video_rate_multiplier"`)}
+	}
+	if _, ok := _c.mutation.VideoMaxPendingTasks(); !ok {
+		return &ValidationError{Name: "video_max_pending_tasks", err: errors.New(`ent: missing required field "Group.video_max_pending_tasks"`)}
+	}
+	if _, ok := _c.mutation.VideoTaskTimeoutHours(); !ok {
+		return &ValidationError{Name: "video_task_timeout_hours", err: errors.New(`ent: missing required field "Group.video_task_timeout_hours"`)}
 	}
 	if v, ok := _c.mutation.SearchPricePer1k(); ok {
 		if err := group.SearchPricePer1kValidator(v); err != nil {
@@ -1597,6 +1639,14 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.VideoModelPrices(); ok {
 		_spec.SetField(group.FieldVideoModelPrices, field.TypeJSON, value)
 		_node.VideoModelPrices = value
+	}
+	if value, ok := _c.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
+		_node.VideoMaxPendingTasks = value
+	}
+	if value, ok := _c.mutation.VideoTaskTimeoutHours(); ok {
+		_spec.SetField(group.FieldVideoTaskTimeoutHours, field.TypeInt, value)
+		_node.VideoTaskTimeoutHours = value
 	}
 	if value, ok := _c.mutation.WebSearchPricePerCall(); ok {
 		_spec.SetField(group.FieldWebSearchPricePerCall, field.TypeFloat64, value)
@@ -2443,6 +2493,42 @@ func (u *GroupUpsert) UpdateVideoModelPrices() *GroupUpsert {
 // ClearVideoModelPrices clears the value of the "video_model_prices" field.
 func (u *GroupUpsert) ClearVideoModelPrices() *GroupUpsert {
 	u.SetNull(group.FieldVideoModelPrices)
+	return u
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *GroupUpsert) SetVideoMaxPendingTasks(v int) *GroupUpsert {
+	u.Set(group.FieldVideoMaxPendingTasks, v)
+	return u
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateVideoMaxPendingTasks() *GroupUpsert {
+	u.SetExcluded(group.FieldVideoMaxPendingTasks)
+	return u
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *GroupUpsert) AddVideoMaxPendingTasks(v int) *GroupUpsert {
+	u.Add(group.FieldVideoMaxPendingTasks, v)
+	return u
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (u *GroupUpsert) SetVideoTaskTimeoutHours(v int) *GroupUpsert {
+	u.Set(group.FieldVideoTaskTimeoutHours, v)
+	return u
+}
+
+// UpdateVideoTaskTimeoutHours sets the "video_task_timeout_hours" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateVideoTaskTimeoutHours() *GroupUpsert {
+	u.SetExcluded(group.FieldVideoTaskTimeoutHours)
+	return u
+}
+
+// AddVideoTaskTimeoutHours adds v to the "video_task_timeout_hours" field.
+func (u *GroupUpsert) AddVideoTaskTimeoutHours(v int) *GroupUpsert {
+	u.Add(group.FieldVideoTaskTimeoutHours, v)
 	return u
 }
 
@@ -3653,6 +3739,48 @@ func (u *GroupUpsertOne) UpdateVideoModelPrices() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearVideoModelPrices() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearVideoModelPrices()
+	})
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *GroupUpsertOne) SetVideoMaxPendingTasks(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetVideoMaxPendingTasks(v)
+	})
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *GroupUpsertOne) AddVideoMaxPendingTasks(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddVideoMaxPendingTasks(v)
+	})
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateVideoMaxPendingTasks() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateVideoMaxPendingTasks()
+	})
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (u *GroupUpsertOne) SetVideoTaskTimeoutHours(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetVideoTaskTimeoutHours(v)
+	})
+}
+
+// AddVideoTaskTimeoutHours adds v to the "video_task_timeout_hours" field.
+func (u *GroupUpsertOne) AddVideoTaskTimeoutHours(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddVideoTaskTimeoutHours(v)
+	})
+}
+
+// UpdateVideoTaskTimeoutHours sets the "video_task_timeout_hours" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateVideoTaskTimeoutHours() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateVideoTaskTimeoutHours()
 	})
 }
 
@@ -5113,6 +5241,48 @@ func (u *GroupUpsertBulk) UpdateVideoModelPrices() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearVideoModelPrices() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearVideoModelPrices()
+	})
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *GroupUpsertBulk) SetVideoMaxPendingTasks(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetVideoMaxPendingTasks(v)
+	})
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *GroupUpsertBulk) AddVideoMaxPendingTasks(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddVideoMaxPendingTasks(v)
+	})
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateVideoMaxPendingTasks() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateVideoMaxPendingTasks()
+	})
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (u *GroupUpsertBulk) SetVideoTaskTimeoutHours(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetVideoTaskTimeoutHours(v)
+	})
+}
+
+// AddVideoTaskTimeoutHours adds v to the "video_task_timeout_hours" field.
+func (u *GroupUpsertBulk) AddVideoTaskTimeoutHours(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddVideoTaskTimeoutHours(v)
+	})
+}
+
+// UpdateVideoTaskTimeoutHours sets the "video_task_timeout_hours" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateVideoTaskTimeoutHours() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateVideoTaskTimeoutHours()
 	})
 }
 

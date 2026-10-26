@@ -159,6 +159,12 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Comment("按模型族和分辨率覆盖视频每秒价格"),
+		field.Int("video_max_pending_tasks").
+			Default(5).
+			Comment("每个用户允许的待完成视频任务数"),
+		field.Int("video_task_timeout_hours").
+			Default(2).
+			Comment("视频任务未确认结果的最长等待小时数"),
 		field.Float("web_search_price_per_call").
 			Optional().
 			Nillable().

@@ -86,6 +86,10 @@ const (
 	FieldVideoPrice1080p = "video_price_1080p"
 	// FieldVideoModelPrices holds the string denoting the video_model_prices field in the database.
 	FieldVideoModelPrices = "video_model_prices"
+	// FieldVideoMaxPendingTasks holds the string denoting the video_max_pending_tasks field in the database.
+	FieldVideoMaxPendingTasks = "video_max_pending_tasks"
+	// FieldVideoTaskTimeoutHours holds the string denoting the video_task_timeout_hours field in the database.
+	FieldVideoTaskTimeoutHours = "video_task_timeout_hours"
 	// FieldWebSearchPricePerCall holds the string denoting the web_search_price_per_call field in the database.
 	FieldWebSearchPricePerCall = "web_search_price_per_call"
 	// FieldSearchPricePer1k holds the string denoting the search_price_per_1k field in the database.
@@ -260,6 +264,8 @@ var Columns = []string{
 	FieldVideoPrice720p,
 	FieldVideoPrice1080p,
 	FieldVideoModelPrices,
+	FieldVideoMaxPendingTasks,
+	FieldVideoTaskTimeoutHours,
 	FieldWebSearchPricePerCall,
 	FieldSearchPricePer1k,
 	FieldAudioRealtimePricePerMin,
@@ -379,6 +385,10 @@ var (
 	DefaultVideoRateIndependent bool
 	// DefaultVideoRateMultiplier holds the default value on creation for the "video_rate_multiplier" field.
 	DefaultVideoRateMultiplier float64
+	// DefaultVideoMaxPendingTasks holds the default value on creation for the "video_max_pending_tasks" field.
+	DefaultVideoMaxPendingTasks int
+	// DefaultVideoTaskTimeoutHours holds the default value on creation for the "video_task_timeout_hours" field.
+	DefaultVideoTaskTimeoutHours int
 	// SearchPricePer1kValidator is a validator for the "search_price_per_1k" field. It is called by the builders before save.
 	SearchPricePer1kValidator func(float64) error
 	// AudioRealtimePricePerMinValidator is a validator for the "audio_realtime_price_per_min" field. It is called by the builders before save.
@@ -612,6 +622,16 @@ func ByVideoPrice720p(opts ...sql.OrderTermOption) OrderOption {
 // ByVideoPrice1080p orders the results by the video_price_1080p field.
 func ByVideoPrice1080p(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVideoPrice1080p, opts...).ToFunc()
+}
+
+// ByVideoMaxPendingTasks orders the results by the video_max_pending_tasks field.
+func ByVideoMaxPendingTasks(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoMaxPendingTasks, opts...).ToFunc()
+}
+
+// ByVideoTaskTimeoutHours orders the results by the video_task_timeout_hours field.
+func ByVideoTaskTimeoutHours(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoTaskTimeoutHours, opts...).ToFunc()
 }
 
 // ByWebSearchPricePerCall orders the results by the web_search_price_per_call field.

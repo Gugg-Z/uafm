@@ -22132,6 +22132,10 @@ type GroupMutation struct {
 	video_price_1080p                       *float64
 	addvideo_price_1080p                    *float64
 	video_model_prices                      *map[string]map[string]float64
+	video_max_pending_tasks                 *int
+	addvideo_max_pending_tasks              *int
+	video_task_timeout_hours                *int
+	addvideo_task_timeout_hours             *int
 	web_search_price_per_call               *float64
 	addweb_search_price_per_call            *float64
 	search_price_per_1k                     *float64
@@ -24058,6 +24062,118 @@ func (m *GroupMutation) ResetVideoModelPrices() {
 	delete(m.clearedFields, group.FieldVideoModelPrices)
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (m *GroupMutation) SetVideoMaxPendingTasks(i int) {
+	m.video_max_pending_tasks = &i
+	m.addvideo_max_pending_tasks = nil
+}
+
+// VideoMaxPendingTasks returns the value of the "video_max_pending_tasks" field in the mutation.
+func (m *GroupMutation) VideoMaxPendingTasks() (r int, exists bool) {
+	v := m.video_max_pending_tasks
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoMaxPendingTasks returns the old "video_max_pending_tasks" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldVideoMaxPendingTasks(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoMaxPendingTasks is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoMaxPendingTasks requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoMaxPendingTasks: %w", err)
+	}
+	return oldValue.VideoMaxPendingTasks, nil
+}
+
+// AddVideoMaxPendingTasks adds i to the "video_max_pending_tasks" field.
+func (m *GroupMutation) AddVideoMaxPendingTasks(i int) {
+	if m.addvideo_max_pending_tasks != nil {
+		*m.addvideo_max_pending_tasks += i
+	} else {
+		m.addvideo_max_pending_tasks = &i
+	}
+}
+
+// AddedVideoMaxPendingTasks returns the value that was added to the "video_max_pending_tasks" field in this mutation.
+func (m *GroupMutation) AddedVideoMaxPendingTasks() (r int, exists bool) {
+	v := m.addvideo_max_pending_tasks
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVideoMaxPendingTasks resets all changes to the "video_max_pending_tasks" field.
+func (m *GroupMutation) ResetVideoMaxPendingTasks() {
+	m.video_max_pending_tasks = nil
+	m.addvideo_max_pending_tasks = nil
+}
+
+// SetVideoTaskTimeoutHours sets the "video_task_timeout_hours" field.
+func (m *GroupMutation) SetVideoTaskTimeoutHours(i int) {
+	m.video_task_timeout_hours = &i
+	m.addvideo_task_timeout_hours = nil
+}
+
+// VideoTaskTimeoutHours returns the value of the "video_task_timeout_hours" field in the mutation.
+func (m *GroupMutation) VideoTaskTimeoutHours() (r int, exists bool) {
+	v := m.video_task_timeout_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVideoTaskTimeoutHours returns the old "video_task_timeout_hours" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldVideoTaskTimeoutHours(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVideoTaskTimeoutHours is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVideoTaskTimeoutHours requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVideoTaskTimeoutHours: %w", err)
+	}
+	return oldValue.VideoTaskTimeoutHours, nil
+}
+
+// AddVideoTaskTimeoutHours adds i to the "video_task_timeout_hours" field.
+func (m *GroupMutation) AddVideoTaskTimeoutHours(i int) {
+	if m.addvideo_task_timeout_hours != nil {
+		*m.addvideo_task_timeout_hours += i
+	} else {
+		m.addvideo_task_timeout_hours = &i
+	}
+}
+
+// AddedVideoTaskTimeoutHours returns the value that was added to the "video_task_timeout_hours" field in this mutation.
+func (m *GroupMutation) AddedVideoTaskTimeoutHours() (r int, exists bool) {
+	v := m.addvideo_task_timeout_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVideoTaskTimeoutHours resets all changes to the "video_task_timeout_hours" field.
+func (m *GroupMutation) ResetVideoTaskTimeoutHours() {
+	m.video_task_timeout_hours = nil
+	m.addvideo_task_timeout_hours = nil
+}
+
 // SetWebSearchPricePerCall sets the "web_search_price_per_call" field.
 func (m *GroupMutation) SetWebSearchPricePerCall(f float64) {
 	m.web_search_price_per_call = &f
@@ -25958,7 +26074,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 67)
+	fields := make([]string, 0, 69)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -26063,6 +26179,12 @@ func (m *GroupMutation) Fields() []string {
 	}
 	if m.video_model_prices != nil {
 		fields = append(fields, group.FieldVideoModelPrices)
+	}
+	if m.video_max_pending_tasks != nil {
+		fields = append(fields, group.FieldVideoMaxPendingTasks)
+	}
+	if m.video_task_timeout_hours != nil {
+		fields = append(fields, group.FieldVideoTaskTimeoutHours)
 	}
 	if m.web_search_price_per_call != nil {
 		fields = append(fields, group.FieldWebSearchPricePerCall)
@@ -26238,6 +26360,10 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.VideoPrice1080p()
 	case group.FieldVideoModelPrices:
 		return m.VideoModelPrices()
+	case group.FieldVideoMaxPendingTasks:
+		return m.VideoMaxPendingTasks()
+	case group.FieldVideoTaskTimeoutHours:
+		return m.VideoTaskTimeoutHours()
 	case group.FieldWebSearchPricePerCall:
 		return m.WebSearchPricePerCall()
 	case group.FieldSearchPricePer1k:
@@ -26381,6 +26507,10 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldVideoPrice1080p(ctx)
 	case group.FieldVideoModelPrices:
 		return m.OldVideoModelPrices(ctx)
+	case group.FieldVideoMaxPendingTasks:
+		return m.OldVideoMaxPendingTasks(ctx)
+	case group.FieldVideoTaskTimeoutHours:
+		return m.OldVideoTaskTimeoutHours(ctx)
 	case group.FieldWebSearchPricePerCall:
 		return m.OldWebSearchPricePerCall(ctx)
 	case group.FieldSearchPricePer1k:
@@ -26699,6 +26829,20 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetVideoModelPrices(v)
 		return nil
+	case group.FieldVideoMaxPendingTasks:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoMaxPendingTasks(v)
+		return nil
+	case group.FieldVideoTaskTimeoutHours:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVideoTaskTimeoutHours(v)
+		return nil
 	case group.FieldWebSearchPricePerCall:
 		v, ok := value.(float64)
 		if !ok {
@@ -26979,6 +27123,12 @@ func (m *GroupMutation) AddedFields() []string {
 	if m.addvideo_price_1080p != nil {
 		fields = append(fields, group.FieldVideoPrice1080p)
 	}
+	if m.addvideo_max_pending_tasks != nil {
+		fields = append(fields, group.FieldVideoMaxPendingTasks)
+	}
+	if m.addvideo_task_timeout_hours != nil {
+		fields = append(fields, group.FieldVideoTaskTimeoutHours)
+	}
 	if m.addweb_search_price_per_call != nil {
 		fields = append(fields, group.FieldWebSearchPricePerCall)
 	}
@@ -27052,6 +27202,10 @@ func (m *GroupMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedVideoPrice720p()
 	case group.FieldVideoPrice1080p:
 		return m.AddedVideoPrice1080p()
+	case group.FieldVideoMaxPendingTasks:
+		return m.AddedVideoMaxPendingTasks()
+	case group.FieldVideoTaskTimeoutHours:
+		return m.AddedVideoTaskTimeoutHours()
 	case group.FieldWebSearchPricePerCall:
 		return m.AddedWebSearchPricePerCall()
 	case group.FieldSearchPricePer1k:
@@ -27194,6 +27348,20 @@ func (m *GroupMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddVideoPrice1080p(v)
+		return nil
+	case group.FieldVideoMaxPendingTasks:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVideoMaxPendingTasks(v)
+		return nil
+	case group.FieldVideoTaskTimeoutHours:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVideoTaskTimeoutHours(v)
 		return nil
 	case group.FieldWebSearchPricePerCall:
 		v, ok := value.(float64)
@@ -27538,6 +27706,12 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldVideoModelPrices:
 		m.ResetVideoModelPrices()
+		return nil
+	case group.FieldVideoMaxPendingTasks:
+		m.ResetVideoMaxPendingTasks()
+		return nil
+	case group.FieldVideoTaskTimeoutHours:
+		m.ResetVideoTaskTimeoutHours()
 		return nil
 	case group.FieldWebSearchPricePerCall:
 		m.ResetWebSearchPricePerCall()
