@@ -1054,9 +1054,11 @@
           <div class="mb-4 grid gap-3 sm:grid-cols-2">
             <label class="block text-sm text-gray-700 dark:text-gray-300">最大待完成任务数
               <input v-model.number="createForm.video_max_pending_tasks" type="number" min="1" max="1000" class="input mt-1" />
+              <span class="mt-1 block text-xs text-gray-500">分组默认上限；用户设置了视频任务上限时优先使用用户配置。</span>
             </label>
             <label class="block text-sm text-gray-700 dark:text-gray-300">未确认超时（小时）
-              <input v-model.number="createForm.video_task_timeout_hours" type="number" min="1" max="168" class="input mt-1" />
+              <input v-model.number="createForm.video_task_timeout_hours" type="number" min="0" max="168" class="input mt-1" />
+              <span class="mt-1 block text-xs text-gray-500">默认 24 小时，0 表示永不超时。超时则认为任务失败，解冻锁定余额</span>
             </label>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -1133,6 +1135,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {{ t("admin.groups.videoPricing.modelOverridesDescription") }}
             </p>
+            <div class="mt-3 flex items-end gap-2">
+              <label class="min-w-0 flex-1">
+                <span class="mb-1 block text-xs text-gray-500">{{ t("admin.groups.videoPricing.customModel") }}</span>
+                <input v-model="createCustomVideoModel" class="input" :placeholder="t('admin.groups.videoPricing.customModelPlaceholder')" @keydown.enter.prevent="addCustomVideoModel('create')" />
+              </label>
+              <button type="button" class="btn btn-secondary" :disabled="!createCustomVideoModel.trim()" @click="addCustomVideoModel('create')">{{ t("admin.groups.videoPricing.addCustomModel") }}</button>
+            </div>
             <div class="mt-3 space-y-3">
               <div
                 v-for="family in videoModelPriceFamilyRows(createForm.video_model_prices)"
@@ -2702,9 +2711,11 @@
           <div class="mb-4 grid gap-3 sm:grid-cols-2">
             <label class="block text-sm text-gray-700 dark:text-gray-300">最大待完成任务数
               <input v-model.number="editForm.video_max_pending_tasks" type="number" min="1" max="1000" class="input mt-1" />
+              <span class="mt-1 block text-xs text-gray-500">分组默认上限；用户设置了视频任务上限时优先使用用户配置。</span>
             </label>
             <label class="block text-sm text-gray-700 dark:text-gray-300">未确认超时（小时）
-              <input v-model.number="editForm.video_task_timeout_hours" type="number" min="1" max="168" class="input mt-1" />
+              <input v-model.number="editForm.video_task_timeout_hours" type="number" min="0" max="168" class="input mt-1" />
+              <span class="mt-1 block text-xs text-gray-500">默认 24 小时，0 表示永不超时。超时则认为任务失败，解冻锁定余额</span>
             </label>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -2781,6 +2792,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {{ t("admin.groups.videoPricing.modelOverridesDescription") }}
             </p>
+            <div class="mt-3 flex items-end gap-2">
+              <label class="min-w-0 flex-1">
+                <span class="mb-1 block text-xs text-gray-500">{{ t("admin.groups.videoPricing.customModel") }}</span>
+                <input v-model="editCustomVideoModel" class="input" :placeholder="t('admin.groups.videoPricing.customModelPlaceholder')" @keydown.enter.prevent="addCustomVideoModel('edit')" />
+              </label>
+              <button type="button" class="btn btn-secondary" :disabled="!editCustomVideoModel.trim()" @click="addCustomVideoModel('edit')">{{ t("admin.groups.videoPricing.addCustomModel") }}</button>
+            </div>
             <div class="mt-3 space-y-3">
               <div
                 v-for="family in videoModelPriceFamilyRows(editForm.video_model_prices)"
@@ -4395,7 +4413,16 @@ import {
   grokVideoPriceResolutions,
   serializeVideoModelPrices,
   videoModelPriceFamilyRows,
+  addVideoModelPriceRow,
 } from "./groupsVideoModelPricing";
+
+const createCustomVideoModel = ref("");
+const editCustomVideoModel = ref("");
+function addCustomVideoModel(mode: "create" | "edit") {
+  const name = mode === "create" ? createCustomVideoModel : editCustomVideoModel;
+  const form = mode === "create" ? createForm : editForm;
+  if (addVideoModelPriceRow(form.video_model_prices, name.value)) name.value = "";
+}
 
 const supportsLivePlatform = (platform: string): boolean =>
   platform === "openai" || platform === "composite";
@@ -4990,7 +5017,7 @@ const createForm = reactive({
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
   video_max_pending_tasks: 5,
-  video_task_timeout_hours: 2,
+  video_task_timeout_hours: 24,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
   web_search_price_per_call: null as number | null,
   search_price_per_1k: null as number | null,
@@ -5358,7 +5385,7 @@ const editForm = reactive({
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
   video_max_pending_tasks: 5,
-  video_task_timeout_hours: 2,
+  video_task_timeout_hours: 24,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
   web_search_price_per_call: null as number | null,
   search_price_per_1k: null as number | null,
@@ -5817,7 +5844,8 @@ const closeCreateModal = () => {
   createForm.video_price_1080p = null;
   createForm.video_model_prices = createVideoModelPricesForm();
   createForm.video_max_pending_tasks = 5;
-  createForm.video_task_timeout_hours = 2;
+  createForm.video_task_timeout_hours = 24;
+  createCustomVideoModel.value = "";
   createForm.long_context_pricing_enabled = true;
   createForm.force_openai_fast = false;
   createForm.free_openai_fast = false;
@@ -6119,7 +6147,7 @@ const handleEdit = async (group: AdminGroup) => {
     group.video_model_prices,
   );
   editForm.video_max_pending_tasks = group.video_max_pending_tasks ?? 5;
-  editForm.video_task_timeout_hours = group.video_task_timeout_hours ?? 2;
+  editForm.video_task_timeout_hours = group.video_task_timeout_hours ?? 24;
   editForm.web_search_price_per_call = group.web_search_price_per_call ?? null;
   editForm.search_price_per_1k = group.search_price_per_1k ?? null;
   editForm.audio_realtime_price_per_min = group.audio_realtime_price_per_min ?? null;
@@ -6232,7 +6260,8 @@ const closeEditModal = () => {
   editForm.video_price_1080p = null;
   editForm.video_model_prices = createVideoModelPricesForm();
   editForm.video_max_pending_tasks = 5;
-  editForm.video_task_timeout_hours = 2;
+  editForm.video_task_timeout_hours = 24;
+  editCustomVideoModel.value = "";
   editForm.long_context_pricing_enabled = true;
   editForm.force_openai_fast = false;
   editForm.free_openai_fast = false;

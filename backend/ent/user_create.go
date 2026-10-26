@@ -396,6 +396,20 @@ func (_c *UserCreate) SetNillableHelpCenterKeyPromptDismissed(v *bool) *UserCrea
 	return _c
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_c *UserCreate) SetVideoMaxPendingTasks(v int) *UserCreate {
+	_c.mutation.SetVideoMaxPendingTasks(v)
+	return _c
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_c *UserCreate) SetNillableVideoMaxPendingTasks(v *int) *UserCreate {
+	if v != nil {
+		_c.SetVideoMaxPendingTasks(*v)
+	}
+	return _c
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (_c *UserCreate) SetRpmLimit(v int) *UserCreate {
 	_c.mutation.SetRpmLimit(v)
@@ -724,6 +738,10 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultHelpCenterKeyPromptDismissed
 		_c.mutation.SetHelpCenterKeyPromptDismissed(v)
 	}
+	if _, ok := _c.mutation.VideoMaxPendingTasks(); !ok {
+		v := user.DefaultVideoMaxPendingTasks
+		_c.mutation.SetVideoMaxPendingTasks(v)
+	}
 	if _, ok := _c.mutation.RpmLimit(); !ok {
 		v := user.DefaultRpmLimit
 		_c.mutation.SetRpmLimit(v)
@@ -825,6 +843,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.HelpCenterKeyPromptDismissed(); !ok {
 		return &ValidationError{Name: "help_center_key_prompt_dismissed", err: errors.New(`ent: missing required field "User.help_center_key_prompt_dismissed"`)}
+	}
+	if _, ok := _c.mutation.VideoMaxPendingTasks(); !ok {
+		return &ValidationError{Name: "video_max_pending_tasks", err: errors.New(`ent: missing required field "User.video_max_pending_tasks"`)}
 	}
 	if _, ok := _c.mutation.RpmLimit(); !ok {
 		return &ValidationError{Name: "rpm_limit", err: errors.New(`ent: missing required field "User.rpm_limit"`)}
@@ -963,6 +984,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.HelpCenterKeyPromptDismissed(); ok {
 		_spec.SetField(user.FieldHelpCenterKeyPromptDismissed, field.TypeBool, value)
 		_node.HelpCenterKeyPromptDismissed = value
+	}
+	if value, ok := _c.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(user.FieldVideoMaxPendingTasks, field.TypeInt, value)
+		_node.VideoMaxPendingTasks = value
 	}
 	if value, ok := _c.mutation.RpmLimit(); ok {
 		_spec.SetField(user.FieldRpmLimit, field.TypeInt, value)
@@ -1610,6 +1635,24 @@ func (u *UserUpsert) UpdateHelpCenterKeyPromptDismissed() *UserUpsert {
 	return u
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *UserUpsert) SetVideoMaxPendingTasks(v int) *UserUpsert {
+	u.Set(user.FieldVideoMaxPendingTasks, v)
+	return u
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *UserUpsert) UpdateVideoMaxPendingTasks() *UserUpsert {
+	u.SetExcluded(user.FieldVideoMaxPendingTasks)
+	return u
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *UserUpsert) AddVideoMaxPendingTasks(v int) *UserUpsert {
+	u.Add(user.FieldVideoMaxPendingTasks, v)
+	return u
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (u *UserUpsert) SetRpmLimit(v int) *UserUpsert {
 	u.Set(user.FieldRpmLimit, v)
@@ -2111,6 +2154,27 @@ func (u *UserUpsertOne) SetHelpCenterKeyPromptDismissed(v bool) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateHelpCenterKeyPromptDismissed() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateHelpCenterKeyPromptDismissed()
+	})
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *UserUpsertOne) SetVideoMaxPendingTasks(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetVideoMaxPendingTasks(v)
+	})
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *UserUpsertOne) AddVideoMaxPendingTasks(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddVideoMaxPendingTasks(v)
+	})
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateVideoMaxPendingTasks() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateVideoMaxPendingTasks()
 	})
 }
 
@@ -2784,6 +2848,27 @@ func (u *UserUpsertBulk) SetHelpCenterKeyPromptDismissed(v bool) *UserUpsertBulk
 func (u *UserUpsertBulk) UpdateHelpCenterKeyPromptDismissed() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateHelpCenterKeyPromptDismissed()
+	})
+}
+
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (u *UserUpsertBulk) SetVideoMaxPendingTasks(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetVideoMaxPendingTasks(v)
+	})
+}
+
+// AddVideoMaxPendingTasks adds v to the "video_max_pending_tasks" field.
+func (u *UserUpsertBulk) AddVideoMaxPendingTasks(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddVideoMaxPendingTasks(v)
+	})
+}
+
+// UpdateVideoMaxPendingTasks sets the "video_max_pending_tasks" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateVideoMaxPendingTasks() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateVideoMaxPendingTasks()
 	})
 }
 

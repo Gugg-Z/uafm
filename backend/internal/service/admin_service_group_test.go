@@ -2350,3 +2350,29 @@ func TestAdminService_CreateGroup_CodexModelsManifestConfigDisabledAccepted(t *t
 	require.Equal(t, []int64{1, 2}, group.CodexModelsManifestConfig.AccountIDs)
 	require.False(t, repo.created.CodexModelsManifestConfig.Enabled)
 }
+
+func TestAdminService_CreateGroup_VideoTimeoutDefaultAndZero(t *testing.T) {
+	zero, negative := 0, -1
+	for _, tc := range []struct {
+		name    string
+		value   *int
+		want    int
+		invalid bool
+	}{
+		{name: "omitted", want: 24},
+		{name: "never", value: &zero, want: 0},
+		{name: "negative", value: &negative, invalid: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &groupRepoStubForAdmin{}
+			svc := &adminServiceImpl{groupRepo: repo}
+			_, err := svc.CreateGroup(context.Background(), &CreateGroupInput{Name: "video", Platform: PlatformOpenAI, RateMultiplier: 1, VideoTaskTimeoutHours: tc.value})
+			if tc.invalid {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.want, repo.created.VideoTaskTimeoutHours)
+		})
+	}
+}

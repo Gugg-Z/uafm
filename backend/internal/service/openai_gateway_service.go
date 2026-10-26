@@ -244,6 +244,9 @@ type OpenAIForwardResult struct {
 	// This is set by the Anthropic Messages conversion path where
 	// the mapped upstream model differs from the client-facing model.
 	BillingModel string
+	// BillingModeOverride pins media billing for protocol-specific endpoints.
+	// Empty preserves the normal model/result based billing selection.
+	BillingModeOverride string
 	// UpstreamModel is the actual model sent to the upstream provider after mapping.
 	// Empty when no mapping was applied (requested model was used as-is).
 	UpstreamModel string
@@ -288,6 +291,13 @@ type OpenAIForwardResult struct {
 	VideoResolution       string
 	// VideoDurationSeconds 是提交时请求的生成时长（xAI 按输出秒数计费），已归一化到 1-15 秒。
 	VideoDurationSeconds int
+	// VideoDurationActual marks an upstream-confirmed duration (Seedance
+	// actualDuration). Actual durations are not clamped to Grok's 1-15s rules.
+	VideoDurationActual bool
+	VideoActualSeconds  float64
+	VideoTaskBody       json.RawMessage
+	Status              string
+	StatusError         string
 	// WebSearchCalls 是 Codex alpha/search 网页搜索调用次数（每次成功请求为 1）。
 	// 上游不返回 usage 字段，>0 时走按次计费（分组单价 × 次数 × 倍率）。
 	WebSearchCalls int
@@ -442,6 +452,10 @@ var ErrNoAvailableCompactAccounts = errors.New("no available accounts support /r
 
 // OpenAIGatewayService handles OpenAI API gateway operations
 type OpenAIGatewayService struct {
+	videoTasks            VideoTaskRepository
+	videoTaskAPIKeys      *APIKeyService
+	videoTaskCancel       context.CancelFunc
+	videoTaskWG           sync.WaitGroup
 	accountRepo           AccountRepository
 	usageLogRepo          UsageLogRepository
 	usageBillingRepo      UsageBillingRepository
@@ -704,6 +718,9 @@ func (s *OpenAIGatewayService) billingDeps() *billingDeps {
 // CloseOpenAIWSPool 关闭 OpenAI WebSocket 连接池的后台 worker 和空闲连接。
 // 应在应用优雅关闭时调用。
 func (s *OpenAIGatewayService) CloseOpenAIWSPool() {
+	if s != nil {
+		s.StopVideoTasks()
+	}
 	if s != nil && s.openaiWSPool != nil {
 		s.openaiWSPool.Close()
 	}

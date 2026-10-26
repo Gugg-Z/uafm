@@ -190,6 +190,11 @@ func HelpCenterKeyPromptDismissed(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldHelpCenterKeyPromptDismissed, v))
 }
 
+// VideoMaxPendingTasks applies equality check predicate on the "video_max_pending_tasks" field. It's identical to VideoMaxPendingTasksEQ.
+func VideoMaxPendingTasks(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldVideoMaxPendingTasks, v))
+}
+
 // RpmLimit applies equality check predicate on the "rpm_limit" field. It's identical to RpmLimitEQ.
 func RpmLimit(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldRpmLimit, v))
@@ -1458,6 +1463,46 @@ func HelpCenterKeyPromptDismissedEQ(v bool) predicate.User {
 // HelpCenterKeyPromptDismissedNEQ applies the NEQ predicate on the "help_center_key_prompt_dismissed" field.
 func HelpCenterKeyPromptDismissedNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldHelpCenterKeyPromptDismissed, v))
+}
+
+// VideoMaxPendingTasksEQ applies the EQ predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksEQ(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksNEQ applies the NEQ predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksNEQ(v int) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksIn applies the In predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldIn(FieldVideoMaxPendingTasks, vs...))
+}
+
+// VideoMaxPendingTasksNotIn applies the NotIn predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksNotIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldVideoMaxPendingTasks, vs...))
+}
+
+// VideoMaxPendingTasksGT applies the GT predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksGT(v int) predicate.User {
+	return predicate.User(sql.FieldGT(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksGTE applies the GTE predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksGTE(v int) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksLT applies the LT predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksLT(v int) predicate.User {
+	return predicate.User(sql.FieldLT(FieldVideoMaxPendingTasks, v))
+}
+
+// VideoMaxPendingTasksLTE applies the LTE predicate on the "video_max_pending_tasks" field.
+func VideoMaxPendingTasksLTE(v int) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldVideoMaxPendingTasks, v))
 }
 
 // RpmLimitEQ applies the EQ predicate on the "rpm_limit" field.

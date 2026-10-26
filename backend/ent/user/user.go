@@ -69,6 +69,8 @@ const (
 	FieldAllowBalanceSubscriptionPurchase = "allow_balance_subscription_purchase"
 	// FieldHelpCenterKeyPromptDismissed holds the string denoting the help_center_key_prompt_dismissed field in the database.
 	FieldHelpCenterKeyPromptDismissed = "help_center_key_prompt_dismissed"
+	// FieldVideoMaxPendingTasks holds the string denoting the video_max_pending_tasks field in the database.
+	FieldVideoMaxPendingTasks = "video_max_pending_tasks"
 	// FieldRpmLimit holds the string denoting the rpm_limit field in the database.
 	FieldRpmLimit = "rpm_limit"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
@@ -229,6 +231,7 @@ var Columns = []string{
 	FieldTotalRecharged,
 	FieldAllowBalanceSubscriptionPurchase,
 	FieldHelpCenterKeyPromptDismissed,
+	FieldVideoMaxPendingTasks,
 	FieldRpmLimit,
 }
 
@@ -308,6 +311,8 @@ var (
 	DefaultAllowBalanceSubscriptionPurchase bool
 	// DefaultHelpCenterKeyPromptDismissed holds the default value on creation for the "help_center_key_prompt_dismissed" field.
 	DefaultHelpCenterKeyPromptDismissed bool
+	// DefaultVideoMaxPendingTasks holds the default value on creation for the "video_max_pending_tasks" field.
+	DefaultVideoMaxPendingTasks int
 	// DefaultRpmLimit holds the default value on creation for the "rpm_limit" field.
 	DefaultRpmLimit int
 )
@@ -453,6 +458,11 @@ func ByAllowBalanceSubscriptionPurchase(opts ...sql.OrderTermOption) OrderOption
 // ByHelpCenterKeyPromptDismissed orders the results by the help_center_key_prompt_dismissed field.
 func ByHelpCenterKeyPromptDismissed(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHelpCenterKeyPromptDismissed, opts...).ToFunc()
+}
+
+// ByVideoMaxPendingTasks orders the results by the video_max_pending_tasks field.
+func ByVideoMaxPendingTasks(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVideoMaxPendingTasks, opts...).ToFunc()
 }
 
 // ByRpmLimit orders the results by the rpm_limit field.

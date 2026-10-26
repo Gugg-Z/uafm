@@ -170,6 +170,7 @@ type CreateUserInput struct {
 	Balance                          *float64
 	Concurrency                      int
 	RPMLimit                         int
+	VideoMaxPendingTasks             int
 	AllowedGroups                    []int64
 	RestrictPublicGroups             bool
 	// ActorAdminID 执行本次操作的管理员ID(来自JWT)，仅用于权限敏感操作的审计日志。
@@ -188,6 +189,7 @@ type UpdateUserInput struct {
 	Balance              *float64 // 使用指针区分"未提供"和"设置为0"
 	Concurrency          *int     // 使用指针区分"未提供"和"设置为0"
 	RPMLimit             *int     // 使用指针区分"未提供"和"设置为0"
+	VideoMaxPendingTasks *int
 	Status               string
 	AllowedGroups        *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 	// RestrictPublicGroups 指针区分"未提供"和"显式开关"。
@@ -271,9 +273,9 @@ type CreateGroupInput struct {
 	VideoPrice720P     *float64
 	VideoPrice1080P    *float64
 	// VideoModelPrices 可选按模型族×分辨率覆盖视频每秒单价。
-	VideoModelPrices map[string]map[string]float64
-	VideoMaxPendingTasks int
-	VideoTaskTimeoutHours int
+	VideoModelPrices      map[string]map[string]float64
+	VideoMaxPendingTasks  int
+	VideoTaskTimeoutHours *int
 	// Codex alpha/search 网页搜索单次价格（USD/次，仅 openai 平台使用）；nil/负数按默认价 0.01 处理
 	WebSearchPricePerCall *float64
 	// 搜索工具单价 per 1k
@@ -355,8 +357,8 @@ type UpdateGroupInput struct {
 	VideoPrice720P     *float64
 	VideoPrice1080P    *float64
 	// VideoModelPrices 可选按模型族×分辨率覆盖；nil 表示不修改，空 map 表示清除。
-	VideoModelPrices map[string]map[string]float64
-	VideoMaxPendingTasks *int
+	VideoModelPrices      map[string]map[string]float64
+	VideoMaxPendingTasks  *int
 	VideoTaskTimeoutHours *int
 	// Codex alpha/search 网页搜索单次价格（USD/次）；nil 表示不修改，负数表示清除回默认价 0.01
 	WebSearchPricePerCall *float64

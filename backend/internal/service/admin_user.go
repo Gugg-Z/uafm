@@ -118,6 +118,9 @@ func normalizeUserRole(role, fallback string) (string, error) {
 }
 
 func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInput) (*User, error) {
+	if input.VideoMaxPendingTasks < 0 || input.VideoMaxPendingTasks > 1000 {
+		return nil, fmt.Errorf("video_max_pending_tasks must be between 0 and 1000")
+	}
 	balance := 0.0
 	if input.Balance != nil {
 		balance = *input.Balance
@@ -145,6 +148,7 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 		Balance:                          balance,
 		Concurrency:                      input.Concurrency,
 		RPMLimit:                         input.RPMLimit,
+		VideoMaxPendingTasks:             input.VideoMaxPendingTasks,
 		Status:                           StatusActive,
 		AllowedGroups:                    input.AllowedGroups,
 
@@ -278,6 +282,13 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		fields.Concurrency = true
 	}
 
+	if input.VideoMaxPendingTasks != nil {
+		if *input.VideoMaxPendingTasks < 0 || *input.VideoMaxPendingTasks > 1000 {
+			return nil, fmt.Errorf("video_max_pending_tasks must be between 0 and 1000")
+		}
+		user.VideoMaxPendingTasks = *input.VideoMaxPendingTasks
+		fields.VideoMaxPendingTasks = true
+	}
 	if input.RPMLimit != nil {
 		user.RPMLimit = *input.RPMLimit
 		fields.RPMLimit = true

@@ -21,6 +21,7 @@ import (
 
 // OpenAIRecordUsageInput input for recording usage
 type OpenAIRecordUsageInput struct {
+	VideoTask          *VideoTask
 	Result             *OpenAIForwardResult
 	APIKey             *APIKey
 	User               *User
@@ -239,21 +240,28 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	}
 	longContextBillingGate := openAILongContextBillingGate(billingAccount)
 	modelLongContextExempt := openAISubscriptionLongContextExempt(billingAccount, result)
-	cost, err = s.calculateOpenAIRecordUsageCost(
-		ctx,
-		result,
-		apiKey,
-		billingModels,
-		multiplier,
-		imageMultiplier,
-		videoMultiplier,
-		baseMultiplier,
-		tokens,
-		serviceTier,
-		longContextBillingGate,
-		modelLongContextExempt,
-		pricingAt,
-	)
+	if input.VideoTask != nil && input.VideoTask.Mode == string(BillingModeVideo) {
+		cost, err = videoTaskCost(input.VideoTask, result)
+		videoMultiplier = input.VideoTask.Multiplier
+	} else if input.VideoTask != nil && input.VideoTask.TokenPricing != nil {
+		cost, err = s.billingService.CalculateCostUnified(CostInput{Ctx: ctx, Model: billingModel, Group: apiKey.Group, Tokens: tokens, RequestCount: 1, RateMultiplier: input.VideoTask.Multiplier, Resolver: s.resolver, Resolved: input.VideoTask.TokenPricing})
+	} else {
+		cost, err = s.calculateOpenAIRecordUsageCost(
+			ctx,
+			result,
+			apiKey,
+			billingModels,
+			multiplier,
+			imageMultiplier,
+			videoMultiplier,
+			baseMultiplier,
+			tokens,
+			serviceTier,
+			longContextBillingGate,
+			modelLongContextExempt,
+			pricingAt,
+		)
+	}
 	if err != nil {
 		if !isUsagePricingUnavailableError(err) {
 			return err
@@ -417,6 +425,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		usageLog.VideoCount = result.VideoCount
 		usageLog.VideoResolution = optionalTrimmedStringPtr(NormalizeVideoBillingResolutionOrDefault(result.VideoResolution))
 		videoDurationSeconds := NormalizeVideoBillingDurationSecondsOrDefault(result.VideoDurationSeconds)
+		if result.VideoDurationActual {
+			videoDurationSeconds = result.VideoDurationSeconds
+		}
 		usageLog.VideoDurationSeconds = &videoDurationSeconds
 	}
 	if cost != nil {
@@ -595,6 +606,16 @@ func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(
 	pricingAt time.Time,
 ) (*CostBreakdown, error) {
 	billingModel := firstUsageBillingModel(billingModels)
+	if result != nil && result.BillingModeOverride == string(BillingModeToken) {
+		// Protocol-level override: Seedance's native /api/v3 endpoint remains
+		// token billed even though it is an asynchronous video task.
+		return s.calculateOpenAIRecordUsageTokenCost(ctx, apiKey, billingModel, multiplier, pricingAt, tokens, serviceTier, optionalStringValue(result.ReasoningEffort), longContextBillingGate, modelLongContextExempt)
+	}
+	if result != nil && result.BillingModeOverride == string(BillingModeVideo) && !result.VideoDurationActual {
+		// Seedance per-second settlement requires provider-confirmed actualDuration.
+		// Do not silently fall back to Grok's default/request duration.
+		return nil, fmt.Errorf("seedance video usage missing actualDuration")
+	}
 	if result != nil && result.WebSearchCalls > 0 {
 		// Codex alpha/search 网页搜索按次计费：上游不返回 usage/token 字段，单价只取
 		// 分组覆盖价（nil 时默认 0.01 = 官方 $10/1000 次），不参与渠道级模型定价。
@@ -834,6 +855,9 @@ func (s *OpenAIGatewayService) calculateOpenAIVideoCost(
 	}
 	resolution := NormalizeVideoBillingResolutionOrDefault(result.VideoResolution)
 	durationSeconds := NormalizeVideoBillingDurationSecondsOrDefault(result.VideoDurationSeconds)
+	if result.VideoDurationActual && result.VideoDurationSeconds > 0 {
+		durationSeconds = result.VideoDurationSeconds
+	}
 	resolved := s.resolveOpenAIChannelPricing(ctx, billingModel, apiKey)
 	if resolved != nil && resolved.Source == PricingSourceGroup && resolved.Mode == BillingModeVideo {
 		gid := apiKey.Group.ID

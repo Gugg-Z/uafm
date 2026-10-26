@@ -35,6 +35,7 @@ func UserFromServiceShallow(u *service.User) *User {
 		AllowBalanceSubscriptionPurchase: u.AllowBalanceSubscriptionPurchase,
 		HelpCenterKeyPromptDismissed:     u.HelpCenterKeyPromptDismissed,
 		RPMLimit:                         u.RPMLimit,
+		VideoMaxPendingTasks:             u.VideoMaxPendingTasks,
 		DeletedAt:                        u.DeletedAt,
 	}
 }
@@ -214,8 +215,8 @@ func groupFromServiceBase(g *service.Group) Group {
 		VideoPrice720P:                  g.VideoPrice720P,
 		VideoPrice1080P:                 g.VideoPrice1080P,
 		VideoModelPrices:                g.VideoModelPrices,
-		VideoMaxPendingTasks:             g.VideoMaxPendingTasks,
-		VideoTaskTimeoutHours:            g.VideoTaskTimeoutHours,
+		VideoMaxPendingTasks:            g.VideoMaxPendingTasks,
+		VideoTaskTimeoutHours:           g.VideoTaskTimeoutHours,
 		WebSearchPricePerCall:           g.WebSearchPricePerCall,
 		SearchPricePer1k:                g.SearchPricePer1k,
 		AudioRealtimePricePerMin:        g.AudioRealtimePricePerMin,

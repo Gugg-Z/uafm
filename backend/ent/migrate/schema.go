@@ -939,7 +939,7 @@ var (
 		{Name: "video_price_1080p", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "video_model_prices", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "video_max_pending_tasks", Type: field.TypeInt, Default: 5},
-		{Name: "video_task_timeout_hours", Type: field.TypeInt, Default: 2},
+		{Name: "video_task_timeout_hours", Type: field.TypeInt, Default: 24},
 		{Name: "web_search_price_per_call", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "search_price_per_1k", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "audio_realtime_price_per_min", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
@@ -1820,6 +1820,7 @@ var (
 		{Name: "total_recharged", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "allow_balance_subscription_purchase", Type: field.TypeBool, Default: false},
 		{Name: "help_center_key_prompt_dismissed", Type: field.TypeBool, Default: false},
+		{Name: "video_max_pending_tasks", Type: field.TypeInt, Default: 0},
 		{Name: "rpm_limit", Type: field.TypeInt, Default: 0},
 	}
 	// UsersTable holds the schema information for the "users" table.

@@ -485,11 +485,19 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		videoRateMultiplier = *input.VideoRateMultiplier
 	}
 	videoMaxPendingTasks := input.VideoMaxPendingTasks
-	if videoMaxPendingTasks <= 0 { videoMaxPendingTasks = 5 }
-	if videoMaxPendingTasks > 1000 { return nil, errors.New("video_max_pending_tasks must be <= 1000") }
-	videoTaskTimeoutHours := input.VideoTaskTimeoutHours
-	if videoTaskTimeoutHours <= 0 { videoTaskTimeoutHours = 2 }
-	if videoTaskTimeoutHours > 168 { return nil, errors.New("video_task_timeout_hours must be <= 168") }
+	if videoMaxPendingTasks <= 0 {
+		videoMaxPendingTasks = 5
+	}
+	if videoMaxPendingTasks > 1000 {
+		return nil, errors.New("video_max_pending_tasks must be <= 1000")
+	}
+	videoTaskTimeoutHours := 24
+	if input.VideoTaskTimeoutHours != nil {
+		videoTaskTimeoutHours = *input.VideoTaskTimeoutHours
+	}
+	if videoTaskTimeoutHours < 0 || videoTaskTimeoutHours > 168 {
+		return nil, errors.New("video_task_timeout_hours must be between 0 and 168")
+	}
 
 	peakRateMultiplier := 1.0
 	if input.PeakRateMultiplier != nil {
@@ -890,11 +898,15 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 		group.VideoRateMultiplier = *input.VideoRateMultiplier
 	}
 	if input.VideoMaxPendingTasks != nil {
-		if *input.VideoMaxPendingTasks <= 0 || *input.VideoMaxPendingTasks > 1000 { return nil, errors.New("video_max_pending_tasks must be between 1 and 1000") }
+		if *input.VideoMaxPendingTasks <= 0 || *input.VideoMaxPendingTasks > 1000 {
+			return nil, errors.New("video_max_pending_tasks must be between 1 and 1000")
+		}
 		group.VideoMaxPendingTasks = *input.VideoMaxPendingTasks
 	}
 	if input.VideoTaskTimeoutHours != nil {
-		if *input.VideoTaskTimeoutHours <= 0 || *input.VideoTaskTimeoutHours > 168 { return nil, errors.New("video_task_timeout_hours must be between 1 and 168") }
+		if *input.VideoTaskTimeoutHours < 0 || *input.VideoTaskTimeoutHours > 168 {
+			return nil, errors.New("video_task_timeout_hours must be between 0 and 168")
+		}
 		group.VideoTaskTimeoutHours = *input.VideoTaskTimeoutHours
 	}
 	if input.PeakRateEnabled != nil {

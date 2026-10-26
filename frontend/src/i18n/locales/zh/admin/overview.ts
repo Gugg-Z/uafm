@@ -739,6 +739,8 @@ export default {
         concurrencyHint: '该用户的最大并发请求数，0 = 不限制',
         rpmLimitPlaceholder: '0 表示不限制',
         rpmLimitHint: '该用户每分钟最大请求数，0 = 不限制；仅在所用分组未设置 rpm_limit 时作为兜底生效',
+        videoPendingLimit: '视频最大待完成任务数',
+        videoPendingLimitHint: '留空或 0 沿用分组默认；填写 1–1000 后覆盖分组默认，按该用户所有分组和 API Key 的待完成视频任务合计限制。',
         partnerLevel: '合伙人等级'
       },
       adjustBalance: '调整余额',
@@ -1177,14 +1179,16 @@ export default {
       },
       videoPricing: {
         title: '视频生成计费',
-        description:
-          '配置 Grok 视频生成的每秒单价（USD/秒），留空则使用默认每秒价（grok-imagine-video：480p $0.05/s、720p $0.07/s；video-1.5：480p $0.08/s、720p $0.14/s、1080p $0.25/s）',
+        description: '配置 Seedance 视频生成的每秒单价（USD/秒），seedance 按模型和分辨率使用下方配置的价格；请根据上游成本填写。',
         modelOverridesTitle: '按模型覆盖视频价格',
-        modelOverridesDescription: '已填写的单元格会覆盖该模型族的平面分辨率价格。video-1.5 的 preview 与 legacy 别名共用同一模型族；留空则回退到平面分辨率价格。',
+        modelOverridesDescription: '已填写的单元格覆盖该模型的通用分辨率价格；留空则回退到通用价格。自定义模型名须与客户请求的模型名一致，添加后可填写各分辨率的每秒单价。',
+        customModel: '自定义模型',
+        customModelPlaceholder: '输入上游支持的模型名称',
+        addCustomModel: '添加模型与分辨率价格',
         independentMultiplier: '视频倍率独立',
         videoMultiplier: '视频独立倍率',
         modeHint:
-          '视频按秒计费：费用 = 每秒价格 × 时长（1-15 秒，未指定默认 8 秒）。默认叠加当前分组有效倍率；开启独立倍率后改用视频独立倍率。',
+          '视频按秒计费：费用 = 每秒价格 × 上游确认的实际时长（actualDuration 优先）。创建时按 15 秒预冻结余额。默认使用当前分组有效倍率；开启独立倍率后使用视频独立倍率。',
         finalPricePreview: '最终每秒价格预览',
         notConfigured: '未配置'
       },

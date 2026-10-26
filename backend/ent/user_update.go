@@ -467,6 +467,27 @@ func (_u *UserUpdate) SetNillableHelpCenterKeyPromptDismissed(v *bool) *UserUpda
 	return _u
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_u *UserUpdate) SetVideoMaxPendingTasks(v int) *UserUpdate {
+	_u.mutation.ResetVideoMaxPendingTasks()
+	_u.mutation.SetVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableVideoMaxPendingTasks(v *int) *UserUpdate {
+	if v != nil {
+		_u.SetVideoMaxPendingTasks(*v)
+	}
+	return _u
+}
+
+// AddVideoMaxPendingTasks adds value to the "video_max_pending_tasks" field.
+func (_u *UserUpdate) AddVideoMaxPendingTasks(v int) *UserUpdate {
+	_u.mutation.AddVideoMaxPendingTasks(v)
+	return _u
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (_u *UserUpdate) SetRpmLimit(v int) *UserUpdate {
 	_u.mutation.ResetRpmLimit()
@@ -1160,6 +1181,12 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.HelpCenterKeyPromptDismissed(); ok {
 		_spec.SetField(user.FieldHelpCenterKeyPromptDismissed, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(user.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoMaxPendingTasks(); ok {
+		_spec.AddField(user.FieldVideoMaxPendingTasks, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.RpmLimit(); ok {
 		_spec.SetField(user.FieldRpmLimit, field.TypeInt, value)
@@ -2211,6 +2238,27 @@ func (_u *UserUpdateOne) SetNillableHelpCenterKeyPromptDismissed(v *bool) *UserU
 	return _u
 }
 
+// SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
+func (_u *UserUpdateOne) SetVideoMaxPendingTasks(v int) *UserUpdateOne {
+	_u.mutation.ResetVideoMaxPendingTasks()
+	_u.mutation.SetVideoMaxPendingTasks(v)
+	return _u
+}
+
+// SetNillableVideoMaxPendingTasks sets the "video_max_pending_tasks" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableVideoMaxPendingTasks(v *int) *UserUpdateOne {
+	if v != nil {
+		_u.SetVideoMaxPendingTasks(*v)
+	}
+	return _u
+}
+
+// AddVideoMaxPendingTasks adds value to the "video_max_pending_tasks" field.
+func (_u *UserUpdateOne) AddVideoMaxPendingTasks(v int) *UserUpdateOne {
+	_u.mutation.AddVideoMaxPendingTasks(v)
+	return _u
+}
+
 // SetRpmLimit sets the "rpm_limit" field.
 func (_u *UserUpdateOne) SetRpmLimit(v int) *UserUpdateOne {
 	_u.mutation.ResetRpmLimit()
@@ -2934,6 +2982,12 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.HelpCenterKeyPromptDismissed(); ok {
 		_spec.SetField(user.FieldHelpCenterKeyPromptDismissed, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
+		_spec.SetField(user.FieldVideoMaxPendingTasks, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVideoMaxPendingTasks(); ok {
+		_spec.AddField(user.FieldVideoMaxPendingTasks, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.RpmLimit(); ok {
 		_spec.SetField(user.FieldRpmLimit, field.TypeInt, value)

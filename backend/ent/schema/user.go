@@ -123,6 +123,7 @@ func (User) Fields() []ent.Field {
 		field.Bool("help_center_key_prompt_dismissed").Default(false),
 
 		// 用户级每分钟请求数上限（0 = 不限制）。仅当所在分组未设置 rpm_limit 时作为兜底生效。
+		field.Int("video_max_pending_tasks").Default(0).Comment("用户视频待完成任务上限，0 沿用分组默认"),
 		field.Int("rpm_limit").
 			Default(0),
 	}

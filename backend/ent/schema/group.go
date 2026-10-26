@@ -163,7 +163,7 @@ func (Group) Fields() []ent.Field {
 			Default(5).
 			Comment("每个用户允许的待完成视频任务数"),
 		field.Int("video_task_timeout_hours").
-			Default(2).
+			Default(24).
 			Comment("视频任务未确认结果的最长等待小时数"),
 		field.Float("web_search_price_per_call").
 			Optional().

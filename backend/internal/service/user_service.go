@@ -107,6 +107,7 @@ type UserUpdateFields struct {
 	Status               bool
 	Concurrency          bool
 	RPMLimit             bool
+	VideoMaxPendingTasks bool
 	SignupSource         bool
 	LastLoginAt          bool
 	LastActiveAt         bool

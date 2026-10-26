@@ -66,6 +66,7 @@ type GrokMediaRequestInfo struct {
 	ImageResolution string
 	Resolution      string
 	DurationSeconds int
+	GenerateAudio   bool
 	InputImageURLs  []string
 	MaskImageURL    string
 	Uploads         []OpenAIImagesUpload
@@ -153,6 +154,15 @@ func parseGrokMediaJSONRequest(body []byte, info *GrokMediaRequestInfo) {
 	assignGrokMediaResolution(strings.TrimSpace(gjson.GetBytes(body, "resolution").String()), info)
 	if duration := gjson.GetBytes(body, "duration"); duration.Exists() && duration.Type == gjson.Number {
 		info.DurationSeconds = int(duration.Int())
+	}
+	if seconds := gjson.GetBytes(body, "seconds"); seconds.Exists() {
+		if info.DurationSeconds <= 0 && seconds.Type == gjson.Number {
+			info.DurationSeconds = int(seconds.Int())
+		} else if info.DurationSeconds <= 0 && seconds.Type == gjson.String {
+			if n, err := strconv.Atoi(strings.TrimSpace(seconds.String())); err == nil {
+				info.DurationSeconds = n
+			}
+		}
 	}
 	if n := gjson.GetBytes(body, "n"); n.Exists() && n.Type == gjson.Number {
 		info.N = int(n.Int())
@@ -375,17 +385,26 @@ func (s *OpenAIGatewayService) SelectMediaVideoRequestAccount(
 // first observes a completed video URL. Status may omit model/duration; we fall
 // back to this snapshot, then defaults.
 type GrokVideoPendingBilling struct {
+	// BillingMode is fixed when the asynchronous task is created. Status polling
+	// must never change pricing mode based on the polling endpoint.
+	BillingMode          string `json:"billing_mode,omitempty"`
 	Model                string `json:"model"`
 	BillingModel         string `json:"billing_model,omitempty"`
 	UpstreamModel        string `json:"upstream_model,omitempty"`
 	VideoResolution      string `json:"video_resolution,omitempty"`
 	VideoDurationSeconds int    `json:"video_duration_seconds,omitempty"`
+	VideoDurationActual  bool   `json:"video_duration_actual,omitempty"`
 	OriginalModel        string `json:"original_model,omitempty"`
 	// CreatedAt is when the gateway accepted the async create (RFC3339Nano UTC).
 	// duration_ms for deferred billing is measured from this instant until the
 	// first official done+video.url observation (status poll or content download),
 	// not the latency of that single discovery request alone.
-	CreatedAt string `json:"created_at,omitempty"`
+	CreatedAt      string `json:"created_at,omitempty"`
+	TaskID         string `json:"task_id,omitempty"`
+	IdempotencyKey string `json:"idempotency_key,omitempty"`
+	RequestHash    string `json:"request_hash,omitempty"`
+	TerminalStatus string `json:"terminal_status,omitempty"`
+	TerminalError  string `json:"terminal_error,omitempty"`
 }
 
 // GrokVideoPendingCreatedAtNow formats a create-accept timestamp for pending billing.
@@ -426,6 +445,18 @@ func grokVideoPendingBillingKey(requestID string, userID, apiKeyID int64) string
 		return ""
 	}
 	return fmt.Sprintf("%d:%d:%s", userID, apiKeyID, requestID)
+}
+
+func SeedanceIdempotencyRequestKey(key string) string {
+	return "seedance:idempotency:" + strings.TrimSpace(key)
+}
+
+func (s *OpenAIGatewayService) LoadSeedanceIdempotentTask(ctx context.Context, key string, userID, apiKeyID int64) (*GrokVideoPendingBilling, error) {
+	return s.LoadGrokVideoPendingBilling(ctx, SeedanceIdempotencyRequestKey(key), userID, apiKeyID)
+}
+
+func (s *OpenAIGatewayService) StoreSeedanceIdempotentTask(ctx context.Context, key string, userID, apiKeyID int64, pending GrokVideoPendingBilling) error {
+	return s.StoreGrokVideoPendingBilling(ctx, SeedanceIdempotencyRequestKey(key), userID, apiKeyID, pending)
 }
 
 func grokVideoPendingBillingTTL(cfg *config.Config) time.Duration {
@@ -763,7 +794,6 @@ func (s *OpenAIGatewayService) ForwardGrokMedia(
 			grokMediaContentProxyURL(c, requestID),
 		)
 	}
-	writeGrokMediaResponse(c, resp, respBody, s.responseHeaderFilter)
 	usage := grokMediaUsageFromResponse(endpoint, requestInfo, respBody)
 	resultModel := requestModel
 	resultBillingModel := requestModel
@@ -776,8 +806,9 @@ func (s *OpenAIGatewayService) ForwardGrokMedia(
 			resultBillingModel = m
 		}
 	}
-	return &OpenAIForwardResult{
+	result := &OpenAIForwardResult{
 		RequestID:            requestIDHeader,
+		VideoTaskBody:        append([]byte(nil), respBody...),
 		UpstreamHeaders:      resp.Header,
 		ResponseID:           usage.ResponseID,
 		Usage:                usage.Usage,
@@ -793,7 +824,12 @@ func (s *OpenAIGatewayService) ForwardGrokMedia(
 		VideoCount:           usage.VideoCount,
 		VideoResolution:      usage.VideoResolution,
 		VideoDurationSeconds: usage.VideoDurationSeconds,
-	}, nil
+	}
+	if err := acceptDurableVideoTask(c, result); err != nil {
+		return nil, err
+	}
+	writeGrokMediaResponse(c, resp, respBody, s.responseHeaderFilter)
+	return result, nil
 }
 
 func (s *OpenAIGatewayService) forwardGrokMediaVideoContent(

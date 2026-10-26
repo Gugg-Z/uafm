@@ -32,7 +32,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
-	"github.com/Wei-Shaw/sub2api/ent/schema"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
 	"github.com/Wei-Shaw/sub2api/ent/subscriptionplan"
@@ -45,6 +44,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/schema"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
 )
 
@@ -2297,8 +2297,12 @@ func init() {
 	userDescHelpCenterKeyPromptDismissed := userFields[23].Descriptor()
 	// user.DefaultHelpCenterKeyPromptDismissed holds the default value on creation for the help_center_key_prompt_dismissed field.
 	user.DefaultHelpCenterKeyPromptDismissed = userDescHelpCenterKeyPromptDismissed.Default.(bool)
+	// userDescVideoMaxPendingTasks is the schema descriptor for video_max_pending_tasks field.
+	userDescVideoMaxPendingTasks := userFields[24].Descriptor()
+	// user.DefaultVideoMaxPendingTasks holds the default value on creation for the video_max_pending_tasks field.
+	user.DefaultVideoMaxPendingTasks = userDescVideoMaxPendingTasks.Default.(int)
 	// userDescRpmLimit is the schema descriptor for rpm_limit field.
-	userDescRpmLimit := userFields[24].Descriptor()
+	userDescRpmLimit := userFields[25].Descriptor()
 	// user.DefaultRpmLimit holds the default value on creation for the rpm_limit field.
 	user.DefaultRpmLimit = userDescRpmLimit.Default.(int)
 	userallowedgroupFields := schema.UserAllowedGroup{}.Fields()

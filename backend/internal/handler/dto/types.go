@@ -36,7 +36,8 @@ type User struct {
 	TotalRecharged             float64            `json:"total_recharged"`
 
 	// RPMLimit 用户级每分钟请求数上限（0 = 不限制），仅在所用分组未设置 rpm_limit 时作为兜底生效。
-	RPMLimit int `json:"rpm_limit"`
+	RPMLimit             int `json:"rpm_limit"`
+	VideoMaxPendingTasks int `json:"video_max_pending_tasks"`
 
 	APIKeys       []APIKey           `json:"api_keys,omitempty"`
 	Subscriptions []UserSubscription `json:"subscriptions,omitempty"`
@@ -134,9 +135,9 @@ type Group struct {
 	VideoPrice720P     *float64 `json:"video_price_720p"`
 	VideoPrice1080P    *float64 `json:"video_price_1080p"`
 	// VideoModelPrices 可选按模型族×分辨率覆盖视频每秒单价 (USD/s)。
-	VideoModelPrices map[string]map[string]float64 `json:"video_model_prices,omitempty"`
-	VideoMaxPendingTasks int `json:"video_max_pending_tasks"`
-	VideoTaskTimeoutHours int `json:"video_task_timeout_hours"`
+	VideoModelPrices      map[string]map[string]float64 `json:"video_model_prices,omitempty"`
+	VideoMaxPendingTasks  int                           `json:"video_max_pending_tasks"`
+	VideoTaskTimeoutHours int                           `json:"video_task_timeout_hours"`
 	// Codex alpha/search 网页搜索单次价格（USD/次）；null 表示使用默认价 0.01
 	WebSearchPricePerCall        *float64 `json:"web_search_price_per_call"`
 	SearchPricePer1k             *float64 `json:"search_price_per_1k"`

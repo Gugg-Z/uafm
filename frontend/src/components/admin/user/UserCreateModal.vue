@@ -46,6 +46,11 @@
         </div>
       </div>
       <div>
+        <label class="input-label">{{ t('admin.users.form.videoPendingLimit') }}</label>
+        <input data-test="video-pending-limit-input" v-model.number="form.video_max_pending_tasks" type="number" min="0" max="1000" step="1" class="input" />
+        <p class="input-hint">{{ t('admin.users.form.videoPendingLimitHint') }}</p>
+      </div>
+      <div>
         <label class="input-label">{{ t('admin.users.form.rpmLimit') }}</label>
         <input
           v-model.number="form.rpm_limit"
@@ -86,7 +91,7 @@ const props = defineProps<{ show: boolean }>()
 const emit = defineEmits(['close', 'success']); const { t } = useI18n()
 const appStore = useAppStore()
 
-const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'sub_admin' | 'admin', balance: '', concurrency: 1, rpm_limit: 0, allow_balance_subscription_purchase: false, admin_menu_permissions: [] as string[] })
+const form = reactive({ email: '', password: '', username: '', notes: '', role: 'user' as 'user' | 'sub_admin' | 'admin', balance: '', concurrency: 1, rpm_limit: 0, video_max_pending_tasks: '' as number | string, allow_balance_subscription_purchase: false, admin_menu_permissions: [] as string[] })
 
 const stepUp = useStepUp()
 const loading = ref(false)
@@ -97,7 +102,7 @@ const submit = async () => {
   try {
     const { balance: rawBalance, ...rest } = { ...form }
     const balance = String(rawBalance).trim()
-    const payload: typeof rest & { balance?: number } = { ...rest }
+    const payload = { ...rest, video_max_pending_tasks: Number(form.video_max_pending_tasks) || 0 } as Omit<typeof rest, "video_max_pending_tasks"> & { video_max_pending_tasks: number; balance?: number }
     if (balance !== '') {
       payload.balance = Number(balance)
     }
@@ -120,7 +125,7 @@ const submit = async () => {
   } finally { loading.value = false }
 }
 
-watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, rpm_limit: 0, admin_menu_permissions: [], allow_balance_subscription_purchase: false }) })
+watch(() => props.show, (v) => { if(v) Object.assign(form, { email: '', password: '', username: '', notes: '', role: 'user', balance: '', concurrency: 1, rpm_limit: 0, video_max_pending_tasks: '' as number | string, admin_menu_permissions: [], allow_balance_subscription_purchase: false }) })
 
 const generateRandomPassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*'

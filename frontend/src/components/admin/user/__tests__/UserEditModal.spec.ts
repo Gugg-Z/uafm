@@ -77,6 +77,19 @@ describe('UserEditModal concurrency', () => {
     expect(wrapper.emitted('success')).toBeTruthy()
   })
 
+  it('saves and clears the user video pending limit override', async () => {
+    const wrapper = mountModal(3)
+    const input = wrapper.get('[data-test="video-pending-limit-input"]')
+    await input.setValue('12')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(update).toHaveBeenLastCalledWith(7, expect.objectContaining({ video_max_pending_tasks: 12 }))
+    await input.setValue('')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(update).toHaveBeenLastCalledWith(7, expect.objectContaining({ video_max_pending_tasks: 0 }))
+  })
+
   it('still rejects a negative concurrency', async () => {
     const wrapper = mountModal(3)
 

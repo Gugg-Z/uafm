@@ -673,6 +673,8 @@ export default {
         concurrencyHint: 'Max concurrent requests for this user; 0 = unlimited.',
         rpmLimitPlaceholder: '0 = unlimited',
         rpmLimitHint: 'Max requests per minute for this user; 0 = unlimited. Acts as a fallback only when the group has no rpm_limit set.',
+        videoPendingLimit: 'Maximum pending video tasks',
+        videoPendingLimitHint: 'Blank or 0 uses group defaults. Set 1–1000 to override group defaults with a total across all groups and API keys for this user.',
         partnerLevel: 'Partner level'
       },
       columns: {
@@ -1180,14 +1182,16 @@ export default {
       },
       videoPricing: {
         title: 'Video Generation Pricing',
-        description:
-          'Configure Grok video generation prices in USD per second of output video. Leave empty to use the default per-second rates (grok-imagine-video: $0.05/s 480p, $0.07/s 720p; video-1.5: $0.08/s 480p, $0.14/s 720p, $0.25/s 1080p).',
+        description: 'Configure Seedance video prices in USD/second. Set seedance prices by model and resolution below based on your upstream costs.',
         modelOverridesTitle: 'Per-model video price overrides',
-        modelOverridesDescription: 'Each populated cell overrides the flat resolution price for that model family. Preview and legacy aliases for video-1.5 use the same family; empty cells fall back to the flat resolution price.',
+        modelOverridesDescription: 'Populated cells override common resolution prices. Empty cells use common prices. Custom model names must match client requests; add a model to configure its resolution prices.',
+        customModel: 'Custom model',
+        customModelPlaceholder: 'Enter a model name supported by the upstream',
+        addCustomModel: 'Add model and resolution prices',
         independentMultiplier: 'Use independent video multiplier',
         videoMultiplier: 'Video multiplier',
         modeHint:
-          'Videos are billed per second: per-second price × duration (1-15s, default 8s). By default the current effective group multiplier applies; independent mode uses the video multiplier instead.',
+          'Video cost = price per second × upstream-confirmed duration (actualDuration preferred). Creation reserves 15 seconds of cost. Uses the effective group multiplier unless the independent video multiplier is enabled.',
         finalPricePreview: 'Final per-second price preview',
         notConfigured: 'Not configured'
       },

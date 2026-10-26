@@ -9,6 +9,13 @@ export const grokVideoPriceFamilies = [
   { key: 'grok-imagine-video-1.5', label: 'grok-imagine-video-1.5' }
 ] as const
 
+// Seedance model names are provider-configured and may change independently
+// of the frontend release; custom rows are preserved and supported by the form.
+export const seedanceVideoPriceFamilies = [
+  { key: 'seedance-2.0', label: 'seedance-2.0' },
+  { key: 'seedance-2.5', label: 'seedance-2.5' },
+] as const
+
 export type VideoModelPrices = Record<string, Record<string, number>>
 export type VideoModelPricesForm = Record<string, Record<string, number | string | null>>
 
@@ -43,7 +50,7 @@ export function createVideoModelPricesForm(
     }
   }
 
-  for (const { key } of grokVideoPriceFamilies) {
+  for (const { key } of seedanceVideoPriceFamilies) {
     form[key] ??= emptyTiers()
   }
   return form
@@ -67,11 +74,19 @@ export function serializeVideoModelPrices(form: VideoModelPricesForm): VideoMode
 }
 
 export function videoModelPriceFamilyRows(form: VideoModelPricesForm) {
-  const known = new Set<string>(grokVideoPriceFamilies.map(({ key }) => key))
+  const known = new Set<string>(seedanceVideoPriceFamilies.map(({ key }) => key))
   const extra = Object.keys(form)
     .map(normalizeFamily)
     .filter((family) => family && !known.has(family))
     .sort()
     .map((key) => ({ key, label: key }))
-  return [...grokVideoPriceFamilies, ...extra]
+  return [...seedanceVideoPriceFamilies, ...extra]
+}
+
+// Add a provider-configured model without overwriting any existing tier prices.
+export function addVideoModelPriceRow(form: VideoModelPricesForm, name: string): boolean {
+  const model = normalizeFamily(name)
+  if (!model) return false
+  form[model] ??= emptyTiers()
+  return true
 }
