@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -18,8 +20,13 @@ const (
 	SeedanceEndpointCreate           GrokMediaEndpoint        = "seedance_create"
 	SeedanceEndpointStatus           GrokMediaEndpoint        = "seedance_status"
 	SeedanceEndpointDelete           GrokMediaEndpoint        = "seedance_delete"
+	SeedanceEndpointContent          GrokMediaEndpoint        = "seedance_content"
 	OpenAIEndpointCapabilitySeedance OpenAIEndpointCapability = "seedance"
 )
+
+// SeedanceContentProxyURLContextKey carries the gateway-side content URL that
+// status responses should advertise instead of the upstream asset URL.
+const SeedanceContentProxyURLContextKey = "seedance_content_proxy_url"
 
 // Seedance polling policy used by the first, client-driven lifecycle. The
 // gateway may return the cached task state when a client polls sooner than the
@@ -44,7 +51,7 @@ func SeedanceRecommendedPollInterval(age time.Duration) time.Duration {
 }
 
 func (e GrokMediaEndpoint) IsSeedance() bool {
-	return e == SeedanceEndpointCreate || e == SeedanceEndpointStatus || e == SeedanceEndpointDelete
+	return e == SeedanceEndpointCreate || e == SeedanceEndpointStatus || e == SeedanceEndpointDelete || e == SeedanceEndpointContent
 }
 
 // SeedanceTaskKey isolates ownership and billing keys from other video providers.
@@ -115,6 +122,9 @@ func buildSeedanceURL(base string, endpoint GrokMediaEndpoint, taskID string) (s
 func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Context, account *Account, endpoint GrokMediaEndpoint, taskID string, body []byte) (*OpenAIForwardResult, error) {
 	if !account.SupportsOpenAIEndpointCapability(OpenAIEndpointCapabilitySeedance) || !endpoint.IsSeedance() {
 		return nil, fmt.Errorf("seedance requires an OpenAI API key account with a custom base URL")
+	}
+	if endpoint == SeedanceEndpointContent {
+		return s.forwardSeedanceVideoContent(ctx, c, account, taskID)
 	}
 	base, err := s.validateUpstreamBaseURL(account.GetCredential("base_url"))
 	if err != nil {
@@ -250,6 +260,191 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 			return nil, err
 		}
 	}
+	if endpoint == SeedanceEndpointStatus {
+		if proxyURL, ok := c.Get(SeedanceContentProxyURLContextKey); ok {
+			if value, ok := proxyURL.(string); ok {
+				responseBody = RewriteSeedanceVideoURLs(responseBody, value)
+			}
+		}
+	}
 	writeGrokMediaResponse(c, resp, responseBody, s.responseHeaderFilter)
 	return result, nil
+}
+
+// forwardSeedanceVideoContent relays the finished asset through the gateway. The
+// upstream asset is fetched with the platform account's key, so clients never
+// need (and never receive) a URL that only the task creator can open.
+func (s *OpenAIGatewayService) forwardSeedanceVideoContent(ctx context.Context, c *gin.Context, account *Account, taskID string) (*OpenAIForwardResult, error) {
+	rawID := strings.TrimPrefix(strings.TrimSpace(taskID), "seedance:")
+	base, err := s.validateUpstreamBaseURL(account.GetCredential("base_url"))
+	if err != nil {
+		return nil, err
+	}
+	statusURL, err := buildSeedanceURL(base, SeedanceEndpointStatus, rawID)
+	if err != nil {
+		return nil, err
+	}
+	token := strings.TrimSpace(account.GetCredential("api_key"))
+	if token == "" {
+		return nil, fmt.Errorf("seedance account missing api_key")
+	}
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+	started := time.Now()
+	upstreamCtx, releaseUpstreamCtx := detachUpstreamContext(ctx)
+	defer releaseUpstreamCtx()
+
+	statusReq, err := http.NewRequestWithContext(upstreamCtx, http.MethodGet, statusURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	statusReq.Header.Set("Authorization", "Bearer "+token)
+	statusReq.Header.Set("Accept", "application/json")
+	account.ApplyHeaderOverrides(statusReq.Header)
+	statusResp, err := s.httpUpstream.Do(statusReq, proxyURL, account.ID, account.Concurrency)
+	SetOpsLatencyMs(c, OpsUpstreamLatencyMsKey, time.Since(started).Milliseconds())
+	if err != nil {
+		return nil, err
+	}
+	statusBody, err := ReadUpstreamResponseBody(statusResp.Body, s.cfg, c, openAITooLargeError)
+	_ = statusResp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	if statusResp.StatusCode >= 300 {
+		writeGrokMediaResponse(c, statusResp, statusBody, s.responseHeaderFilter)
+		return nil, fmt.Errorf("seedance upstream status %d", statusResp.StatusCode)
+	}
+	contentURL := seedanceVideoContentURL(statusBody)
+	if contentURL == "" {
+		c.JSON(http.StatusConflict, gin.H{"error": gin.H{"type": "video_not_ready", "message": "Video is not ready yet"}})
+		return nil, fmt.Errorf("seedance video content is not ready")
+	}
+	target, signed, err := resolveSeedanceContentURL(contentURL, base)
+	if err != nil {
+		return nil, err
+	}
+
+	contentReq, err := http.NewRequestWithContext(WithHTTPUpstreamRedirectsDisabled(upstreamCtx), http.MethodGet, target.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	contentReq.Header.Set("Accept", "*/*")
+	if c != nil {
+		if rangeHeader := strings.TrimSpace(c.GetHeader("Range")); rangeHeader != "" {
+			contentReq.Header.Set("Range", rangeHeader)
+		}
+	}
+	if !signed {
+		contentReq.Header.Set("Authorization", "Bearer "+token)
+		account.ApplyHeaderOverrides(contentReq.Header)
+	}
+	contentResp, err := s.httpUpstream.Do(contentReq, proxyURL, account.ID, account.Concurrency)
+	SetOpsLatencyMs(c, OpsUpstreamLatencyMsKey, time.Since(started).Milliseconds())
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = contentResp.Body.Close() }()
+	if contentResp.StatusCode >= 300 && contentResp.StatusCode != http.StatusRequestedRangeNotSatisfiable {
+		body, readErr := ReadUpstreamResponseBody(contentResp.Body, s.cfg, c, openAITooLargeError)
+		if readErr != nil {
+			return nil, readErr
+		}
+		writeGrokMediaResponse(c, contentResp, body, s.responseHeaderFilter)
+		return nil, fmt.Errorf("seedance content upstream status %d", contentResp.StatusCode)
+	}
+	if err := writeGrokMediaContentResponse(c, contentResp); err != nil {
+		return nil, err
+	}
+	return &OpenAIForwardResult{
+		RequestID:       rawID,
+		ResponseID:      SeedanceTaskKey(rawID),
+		UpstreamHeaders: contentResp.Header,
+		ResponseHeaders: contentResp.Header.Clone(),
+		Duration:        time.Since(started),
+	}, nil
+}
+
+func seedanceVideoContentURL(body []byte) string {
+	for _, path := range []string{"content.video_url", "video_url", "result_url", "video.url"} {
+		if value := strings.TrimSpace(gjson.GetBytes(body, path).String()); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+// resolveSeedanceContentURL accepts same-origin asset URLs (fetched with the
+// account key) and public HTTPS signed URLs (fetched without credentials).
+func resolveSeedanceContentURL(rawURL, base string) (*url.URL, bool, error) {
+	baseURL, err := url.Parse(strings.TrimSpace(base))
+	if err != nil || baseURL.Host == "" {
+		return nil, false, fmt.Errorf("invalid seedance base URL")
+	}
+	ref, err := url.Parse(strings.TrimSpace(rawURL))
+	if err != nil || (ref.Host == "" && ref.Path == "") || ref.User != nil {
+		return nil, false, fmt.Errorf("invalid seedance content URL")
+	}
+	target := ref
+	if ref.Host == "" {
+		target = baseURL.ResolveReference(ref)
+	}
+	if target.Scheme != "http" && target.Scheme != "https" {
+		return nil, false, fmt.Errorf("invalid seedance content URL")
+	}
+	if strings.EqualFold(target.Scheme, baseURL.Scheme) && strings.EqualFold(target.Host, baseURL.Host) {
+		return target, false, nil
+	}
+	if target.Scheme != "https" || isBlockedHostname(target.Hostname()) {
+		return nil, false, fmt.Errorf("unsupported seedance content URL")
+	}
+	if ip := net.ParseIP(target.Hostname()); ip != nil && isPrivateIP(ip) {
+		return nil, false, fmt.Errorf("unsupported seedance content URL")
+	}
+	return target, true, nil
+}
+
+// RewriteSeedanceVideoURLs replaces upstream asset URLs with the gateway
+// content endpoint so clients can download with their own API key.
+func RewriteSeedanceVideoURLs(body []byte, proxyURL string) []byte {
+	if len(body) == 0 || strings.TrimSpace(proxyURL) == "" || !gjson.ValidBytes(body) {
+		return body
+	}
+	out := body
+	for _, path := range []string{"video_url", "result_url", "video.url", "content.video_url"} {
+		if value := strings.TrimSpace(gjson.GetBytes(out, path).String()); value == "" {
+			continue
+		}
+		next, err := sjson.SetBytes(out, path, proxyURL)
+		if err != nil {
+			return out
+		}
+		out = next
+	}
+	return out
+}
+
+// SeedanceContentProxyURL builds the gateway URL clients should use for the
+// finished asset. Ark's native surface needs an absolute URL, so use the
+// request host (never X-Forwarded-Host) and fall back to a relative path.
+func SeedanceContentProxyURL(c *gin.Context, taskID string) string {
+	if c == nil || c.Request == nil {
+		return ""
+	}
+	taskID = strings.TrimPrefix(strings.TrimSpace(taskID), "seedance:")
+	if taskID == "" {
+		return ""
+	}
+	path := "/v1/videos/" + url.PathEscape(taskID) + "/content"
+	host := strings.TrimSpace(c.Request.Host)
+	if host == "" {
+		return path
+	}
+	scheme := "http"
+	if c.Request.TLS != nil || strings.EqualFold(strings.TrimSpace(c.GetHeader("X-Forwarded-Proto")), "https") {
+		scheme = "https"
+	}
+	return scheme + "://" + host + path
 }

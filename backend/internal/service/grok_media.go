@@ -41,7 +41,8 @@ func (e GrokMediaEndpoint) RequiresRequestBody() bool {
 }
 
 func (e GrokMediaEndpoint) IsVideoLookupRequest() bool {
-	return e == GrokMediaEndpointVideoStatus || e == GrokMediaEndpointVideoContent || e == SeedanceEndpointStatus || e == SeedanceEndpointDelete
+	return e == GrokMediaEndpointVideoStatus || e == GrokMediaEndpointVideoContent ||
+		e == SeedanceEndpointStatus || e == SeedanceEndpointDelete || e == SeedanceEndpointContent
 }
 
 func (e GrokMediaEndpoint) IsGenerationRequest() bool {
@@ -343,6 +344,31 @@ func (s *OpenAIGatewayService) ResolveGrokMediaVideoRequestAccount(
 		return 0, fmt.Errorf("grok video request binding is invalid")
 	}
 	return s.cache.GetSessionAccountID(ctx, derefGroupID(groupID), cacheKey)
+}
+
+// ResolveVideoLookupAccount finds the account that owns a video status, content
+// or delete request. The Redis binding is the create-time fast path and expires;
+// a durable task keeps the same owner for the life of the record, so finished
+// assets remain downloadable after the binding TTL.
+func (s *OpenAIGatewayService) ResolveVideoLookupAccount(ctx context.Context, key *APIKey, userID int64, requestID string) (int64, error) {
+	if s == nil || key == nil {
+		return 0, fmt.Errorf("video lookup requires an API key")
+	}
+	accountID, bindErr := s.ResolveGrokMediaVideoRequestAccount(ctx, key.GroupID, requestID, userID, key.ID)
+	if bindErr == nil && accountID > 0 {
+		return accountID, nil
+	}
+	if !s.VideoTasksEnabled() {
+		return 0, bindErr
+	}
+	task, err := s.FindVideoTask(ctx, key, requestID)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrVideoTaskStoreUnavailable, err)
+	}
+	if task != nil && task.AccountID > 0 && task.UpstreamID != "" {
+		return task.AccountID, nil
+	}
+	return 0, bindErr
 }
 
 // SelectGrokMediaVideoRequestAccount only admits the already authenticated

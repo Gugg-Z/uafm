@@ -9,6 +9,7 @@ import (
 
 var ErrVideoTaskLimit = errors.New("pending video task limit reached")
 var ErrVideoTaskBusy = errors.New("video task query is already in progress")
+var ErrVideoTaskStoreUnavailable = errors.New("video task store unavailable")
 
 // VideoTask contains billing context, never upstream credentials or API key secrets.
 type VideoTask struct {
@@ -31,6 +32,7 @@ type VideoTask struct {
 	Status                               string
 	Body                                 json.RawMessage
 	Result                               *OpenAIForwardResult
+	InboundEndpoint, UpstreamEndpoint    string
 	Settled, Closed                      bool
 	LastError                            string
 	HoldID                               string

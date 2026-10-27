@@ -96,7 +96,15 @@ func (h *OpenAIGatewayHandler) handleGrokMedia(c *gin.Context, endpoint service.
 			if task != nil {
 				updated, pollErr := h.gatewayService.PollVideoTask(c.Request.Context(), task.ID)
 				if updated != nil && len(updated.Body) > 0 {
-					c.Data(200, "application/json", updated.Body)
+					body := updated.Body
+					// Task polling stores the upstream body; publish gateway asset URLs
+					// only on the response so a background poll cannot bake a host.
+					if task.Provider == "seedance" {
+						if proxyURL := service.SeedanceContentProxyURL(c, task.UpstreamID); proxyURL != "" {
+							body = service.RewriteSeedanceVideoURLs(body, proxyURL)
+						}
+					}
+					c.Data(200, "application/json", body)
 					return
 				}
 				if pollErr != nil {
@@ -210,7 +218,7 @@ func (h *OpenAIGatewayHandler) handleGrokMedia(c *gin.Context, endpoint service.
 			h.errorResponse(c, 400, "invalid_request_error", "Video duration must not exceed 15 seconds")
 			return
 		}
-		durableTask, err = h.gatewayService.PrepareVideoTask(c.Request.Context(), apiKey, subscription, endpoint, requestModel, requestInfo.Resolution, mode)
+		durableTask, err = h.gatewayService.PrepareVideoTask(c.Request.Context(), apiKey, subscription, endpoint, requestModel, requestInfo.Resolution, mode, GetInboundEndpoint(c), GetUpstreamEndpoint(c, platform))
 		if err != nil {
 			code := http.StatusBadRequest
 			if errors.Is(err, service.ErrVideoTaskLimit) {
@@ -253,10 +261,12 @@ func (h *OpenAIGatewayHandler) handleGrokMedia(c *gin.Context, endpoint service.
 	boundLookupAccountID := int64(0)
 	if endpoint.IsVideoLookupRequest() {
 		sessionHash = service.GrokMediaVideoRequestSessionHash(requestID, subject.UserID, apiKey.ID)
-		boundLookupAccountID, err = h.gatewayService.ResolveGrokMediaVideoRequestAccount(
-			c.Request.Context(), apiKey.GroupID, requestID, subject.UserID, apiKey.ID,
-		)
+		boundLookupAccountID, err = h.gatewayService.ResolveVideoLookupAccount(c.Request.Context(), apiKey, subject.UserID, requestID)
 		if err != nil || boundLookupAccountID <= 0 {
+			if errors.Is(err, service.ErrVideoTaskStoreUnavailable) {
+				h.errorResponse(c, http.StatusServiceUnavailable, "api_error", "Video task store unavailable")
+				return
+			}
 			reqLog.Info("grok_media.video_lookup_owner_binding_missing", zap.Error(err))
 			h.errorResponse(c, http.StatusNotFound, "not_found_error", "Video request not found")
 			return

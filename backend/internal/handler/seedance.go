@@ -36,7 +36,7 @@ func (h *OpenAIGatewayHandler) seedanceTaskRequest(c *gin.Context) {
 			}
 		}
 	}
-	if (c.Request.Method == http.MethodGet || c.Request.Method == http.MethodDelete) && h != nil && h.gatewayService != nil && !h.gatewayService.VideoTasksEnabled() {
+	if (c.Request.Method == http.MethodGet || c.Request.Method == http.MethodDelete) && !isSeedanceContentRequest(c) && h != nil && h.gatewayService != nil && !h.gatewayService.VideoTasksEnabled() {
 		if key, ok := middleware.GetAPIKeyFromContext(c); ok {
 			taskID := service.SeedanceTaskKey(c.Param("task_id"))
 			if taskID == "seedance:" {
@@ -72,9 +72,23 @@ func (h *OpenAIGatewayHandler) seedanceTaskRequest(c *gin.Context) {
 		endpoint = service.SeedanceEndpointStatus
 		if c.Request.Method == http.MethodDelete {
 			endpoint = service.SeedanceEndpointDelete
+		} else if isSeedanceContentRequest(c) {
+			endpoint = service.SeedanceEndpointContent
+		}
+		if endpoint == service.SeedanceEndpointStatus {
+			if proxyURL := service.SeedanceContentProxyURL(c, rawTaskID); proxyURL != "" {
+				c.Set(service.SeedanceContentProxyURLContextKey, proxyURL)
+			}
 		}
 	}
 	h.handleGrokMedia(c, endpoint, taskID)
+}
+
+func isSeedanceContentRequest(c *gin.Context) bool {
+	if c == nil || c.Request == nil || c.Request.URL == nil {
+		return false
+	}
+	return strings.HasSuffix(strings.TrimRight(c.Request.URL.Path, "/"), "/content")
 }
 
 // Ark reports actual completion tokens. Never infer tokens from duration or use

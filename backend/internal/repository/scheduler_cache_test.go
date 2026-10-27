@@ -37,6 +37,23 @@ func TestFilterSchedulerCredentialsKeepsGeminiExplicitCacheKeys(t *testing.T) {
 	require.NotContains(t, filtered, "service_account_json")
 }
 
+func TestFilterSchedulerCredentialsKeepsOpenAICapabilities(t *testing.T) {
+	account := service.Account{
+		ID:       15,
+		Platform: service.PlatformOpenAI,
+		Type:     service.AccountTypeAPIKey,
+		Credentials: map[string]any{
+			"api_key":             "sk-4001",
+			"base_url":            "http://127.0.0.1:18082/ark",
+			"openai_capabilities": []any{"seedance"},
+		},
+	}
+
+	metadata := buildSchedulerMetadataAccount(account)
+
+	require.True(t, metadata.SupportsOpenAIEndpointCapability(service.OpenAIEndpointCapabilitySeedance))
+}
+
 func TestSchedulerMetadataAccountKeepsOpenAISubscriptionIdentity(t *testing.T) {
 	account := service.Account{
 		ID:       24,

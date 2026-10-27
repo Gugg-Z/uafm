@@ -73,7 +73,7 @@ func (s *OpenAIGatewayService) StopVideoTasks() {
 	}
 }
 
-func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey, sub *UserSubscription, endpoint GrokMediaEndpoint, model, resolution, mode string) (*VideoTask, error) {
+func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey, sub *UserSubscription, endpoint GrokMediaEndpoint, model, resolution, mode, inboundEndpoint, upstreamEndpoint string) (*VideoTask, error) {
 	if !s.VideoTasksEnabled() {
 		return nil, nil
 	}
@@ -82,7 +82,7 @@ func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey
 		limit = key.Group.VideoMaxPendingTasks
 	}
 	now := time.Now()
-	t := &VideoTask{ID: uuid.NewString(), UserID: key.User.ID, APIKeyID: key.ID, GroupID: *key.GroupID, Mode: mode, Model: model, Resolution: resolution, CreatedAt: now, NextPollAt: now.Add(2 * time.Minute), Status: "submitting", Subscription: sub}
+	t := &VideoTask{ID: uuid.NewString(), UserID: key.User.ID, APIKeyID: key.ID, GroupID: *key.GroupID, Mode: mode, Model: model, Resolution: resolution, CreatedAt: now, NextPollAt: now.Add(2 * time.Minute), Status: "submitting", Subscription: sub, InboundEndpoint: inboundEndpoint, UpstreamEndpoint: upstreamEndpoint}
 	if timeout > 0 {
 		t.Deadline = now.Add(time.Duration(timeout) * time.Hour)
 	}
@@ -427,7 +427,7 @@ func (s *OpenAIGatewayService) PollVideoTask(parent context.Context, id string) 
 	if s.videoTaskAPIKeys != nil {
 		keyUpdater = s.videoTaskAPIKeys
 	}
-	if err = s.RecordUsage(ctx, &OpenAIRecordUsageInput{Result: t.Result, User: user, APIKey: &key, Account: account, Subscription: t.Subscription, APIKeyService: keyUpdater, QuotaPlatform: t.Group.Platform, RequestPayloadHash: HashUsageRequestPayload([]byte(t.ID)), VideoTask: t}); err != nil {
+	if err = s.RecordUsage(ctx, &OpenAIRecordUsageInput{Result: t.Result, User: user, APIKey: &key, Account: account, Subscription: t.Subscription, APIKeyService: keyUpdater, QuotaPlatform: t.Group.Platform, RequestPayloadHash: HashUsageRequestPayload([]byte(t.ID)), InboundEndpoint: t.InboundEndpoint, UpstreamEndpoint: t.UpstreamEndpoint, VideoTask: t}); err != nil {
 		t.LastError = "settlement failed"
 		return t, err
 	}

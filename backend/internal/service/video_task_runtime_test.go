@@ -85,7 +85,7 @@ type videoTaskUsers struct{ UserRepository }
 
 func (videoTaskUsers) GetByID(context.Context, int64) (*User, error) { return &User{ID: 1}, nil }
 
-func videoTaskTestService(t *testing.T) (*OpenAIGatewayService, *memoryVideoTasks, *openAIRecordUsageBillingRepoStub) {
+func videoTaskTestService(t *testing.T) (*OpenAIGatewayService, *memoryVideoTasks, *openAIRecordUsageBillingRepoStub, *openAIRecordUsageLogRepoStub) {
 	t.Helper()
 	logs := &openAIRecordUsageLogRepoStub{inserted: true}
 	s := newOpenAIRecordUsageServiceForTest(logs, videoTaskUsers{}, nil, nil)
@@ -99,11 +99,27 @@ func videoTaskTestService(t *testing.T) (*OpenAIGatewayService, *memoryVideoTask
 	task := &VideoTask{ID: "local-1", UserID: 1, APIKeyID: 2, GroupID: 3, AccountID: account.ID, Provider: "seedance", Mode: string(BillingModeVideo), Model: "custom-video", Resolution: "720p", UpstreamID: "seedance:task-1", UnitPrice: &price, Prices: map[string]float64{"720p": price}, Multiplier: 2, Group: group, Key: &APIKey{ID: 2, UserID: 1, GroupID: &gid}, CreatedAt: time.Now(), Deadline: time.Now().Add(time.Hour)}
 	store := &memoryVideoTasks{task: task}
 	s.ConfigureVideoTasks(store)
-	return s, store, b
+	return s, store, b, logs
 }
 
-func TestVideoTaskBackgroundSettlementWithoutClient(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+func TestVideoTaskSettlementRecordsRequestEndpoints(t *testing.T) {
+	s, store, _, logs := videoTaskTestService(t)
+	store.task.InboundEndpoint = "/api/v3/contents/generations/tasks"
+	store.task.UpstreamEndpoint = "/api/v3/contents/generations/tasks"
+	up := &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-1","status":"succeeded","actualDuration":5,"resolution":"720p","usage":{"completion_tokens":999}}`)}
+	s.httpUpstream = up
+
+	_, err := s.PollVideoTask(context.Background(), store.task.ID)
+
+	require.NoError(t, err)
+	require.Equal(t, 1, logs.calls)
+	require.NotNil(t, logs.lastLog.InboundEndpoint)
+	require.Equal(t, "/api/v3/contents/generations/tasks", *logs.lastLog.InboundEndpoint)
+	require.NotNil(t, logs.lastLog.UpstreamEndpoint)
+	require.Equal(t, "/api/v3/contents/generations/tasks", *logs.lastLog.UpstreamEndpoint)
+}
+
+func TestVideoTaskBackgroundSettlementWithoutClient(t *testing.T) {	s, store, b, _ := videoTaskTestService(t)
 	up := &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-1","status":"succeeded","actualDuration":16.5,"resolution":"720p","usage":{"completion_tokens":999}}`)}
 	s.httpUpstream = up
 	result, err := s.PollVideoTask(context.Background(), store.task.ID)
@@ -117,7 +133,7 @@ func TestVideoTaskBackgroundSettlementWithoutClient(t *testing.T) {
 	require.Equal(t, 1, b.calls)
 }
 func TestVideoTaskSettlementRetryDoesNotQueryUpstream(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+	s, store, b, _ := videoTaskTestService(t)
 	up := &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-1","status":"succeeded","actualDuration":5,"resolution":"720p"}`)}
 	s.httpUpstream = up
 	b.err = errors.New("database offline")
@@ -137,7 +153,7 @@ func TestVideoTaskSettlementRetryDoesNotQueryUpstream(t *testing.T) {
 	require.Equal(t, 2, b.calls)
 }
 func TestVideoTaskTimeoutStopsUpstreamQueries(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+	s, store, b, _ := videoTaskTestService(t)
 	store.task.Deadline = time.Now().Add(-time.Second)
 	cache := newMemInflightCache(10)
 	s.billingCacheService = &BillingCacheService{cache: cache}
@@ -173,7 +189,7 @@ func (u *blockingVideoUpstream) DoWithTLS(req *http.Request, p string, id int64,
 	return u.Do(req, p, id, n)
 }
 func TestVideoTaskConcurrentClientAndWorkerShareQuery(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+	s, store, b, _ := videoTaskTestService(t)
 	up := &blockingVideoUpstream{started: make(chan struct{}), finish: make(chan struct{})}
 	s.httpUpstream = up
 	first := make(chan error, 1)
@@ -190,7 +206,7 @@ func TestVideoTaskConcurrentClientAndWorkerShareQuery(t *testing.T) {
 	require.Equal(t, 1, b.calls)
 }
 func TestVideoTaskMissingActualDurationNeverBills(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+	s, store, b, _ := videoTaskTestService(t)
 	s.httpUpstream = &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-1","status":"succeeded","duration":15,"resolution":"720p"}`)}
 	result, err := s.PollVideoTask(context.Background(), store.task.ID)
 	require.NoError(t, err)
@@ -201,7 +217,7 @@ func TestVideoTaskMissingActualDurationNeverBills(t *testing.T) {
 }
 
 func TestVideoTaskNeverTimeoutStillPollsAndSettles(t *testing.T) {
-	s, store, b := videoTaskTestService(t)
+	s, store, b, _ := videoTaskTestService(t)
 	store.task.CreatedAt = time.Now().Add(-30 * 24 * time.Hour)
 	store.task.Deadline = time.Time{}
 	s.httpUpstream = &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-1","status":"succeeded","actualDuration":10,"resolution":"720p"}`)}
@@ -212,7 +228,7 @@ func TestVideoTaskNeverTimeoutStillPollsAndSettles(t *testing.T) {
 }
 
 func TestVideoTaskUnknownSubmissionWithoutTimeoutRenewsLater(t *testing.T) {
-	s, store, _ := videoTaskTestService(t)
+	s, store, _, _ := videoTaskTestService(t)
 	store.task.UpstreamID = ""
 	store.task.Deadline = time.Time{}
 	result, err := s.PollVideoTask(context.Background(), store.task.ID)
@@ -232,11 +248,11 @@ func (u videoLimitUsers) GetByID(context.Context, int64) (*User, error) {
 }
 func TestVideoTaskAdmissionPrefersFreshUserLimit(t *testing.T) {
 	for _, limit := range []int{0, 2, 12} {
-		s, store, _ := videoTaskTestService(t)
+		s, store, _, _ := videoTaskTestService(t)
 		s.userRepo = videoLimitUsers{limit: limit}
 		gid := int64(3)
 		key := &APIKey{ID: 2, User: &User{ID: 1, VideoMaxPendingTasks: 99}, GroupID: &gid, Group: &Group{ID: gid, VideoMaxPendingTasks: 5, VideoTaskTimeoutHours: 24}}
-		task, err := s.PrepareVideoTask(context.Background(), key, nil, SeedanceEndpointCreate, "seedance-2.0", "720p", "")
+		task, err := s.PrepareVideoTask(context.Background(), key, nil, SeedanceEndpointCreate, "seedance-2.0", "720p", "", "", "")
 		require.NoError(t, err)
 		want := limit
 		if want == 0 {
