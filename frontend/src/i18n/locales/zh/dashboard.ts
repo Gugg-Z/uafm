@@ -702,6 +702,8 @@ export default {
       timePricingRateHint: '生效倍率 {rate} × 时段倍率 {multiplier}',
       paidPrice: '实付价格(折后)',
       officialPrice: '官方价格',
+      discountHint: '网关实际价格相对于官方价格的优惠折扣',
+      discountBadge: '较官方优惠 {percent}%',
       rate: '折扣倍率',
       unitPerMillion: '$ / 1M token',
       perUnitRequest: '/ 次',

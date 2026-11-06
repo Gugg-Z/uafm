@@ -298,6 +298,11 @@
               <span class="font-bold text-primary-600 dark:text-primary-400">{{ effectiveRate }}x</span>
             </template>
             <span v-else class="font-bold text-gray-700 dark:text-gray-300">{{ effectiveRate }}x</span>
+            <span
+              v-if="discountLabel(m)"
+              class="ml-1.5 inline-flex rounded-full bg-emerald-50 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-300"
+              :title="t('modelPlaza.table.discountHint')"
+            >{{ discountLabel(m) }}</span>
           </td>
         </tr>
       </tbody>
@@ -455,6 +460,18 @@ function paidRequestPrice(m: PlazaModel, value: number | null | undefined): stri
 function official(value: number | null | undefined): string {
   if (value == null) return '-'
   return formatScaled(value, PER_MILLION, MIN_DECIMALS)
+}
+
+/** 官方输入价与网关实际输入价的折扣，按模型首档展示。 */
+function discountLabel(m: PlazaModel): string {
+  if (billingMode(m) !== BILLING_MODE_TOKEN) return ''
+  const officialPrice = m.official_pricing?.input_price
+  const paidPrice = m.pricing?.input_price
+  if (officialPrice == null || paidPrice == null || officialPrice <= 0) return ''
+  const rate = effectiveRate.value
+  const discount = (paidPrice * rate) / officialPrice
+  if (!Number.isFinite(discount) || discount >= 0.999) return ''
+  return `${Math.round((1 - discount) * 100)}% OFF`
 }
 
 /** 非 token 计费的单位后缀:按图片 → “/ 张”,按次 → “/ 次”。 */

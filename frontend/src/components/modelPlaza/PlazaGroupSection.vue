@@ -52,20 +52,18 @@
     </header>
 
     <!-- 模型价格表:整行(含 hover 底色/分区底色)顶到卡片边缘,左右留白由表格首列/末列的 padding 提供 -->
-    <div>
-      <PlazaModelPricingTable
-        v-if="group.models.length > 0"
-        :models="group.models"
-        :platform="group.platform"
-        :rate-multiplier="group.rate_multiplier"
-        :user-rate-multiplier="group.user_rate_multiplier ?? null"
-        :image-rate-independent="group.image_rate_independent"
-        :image-rate-multiplier="group.image_rate_multiplier"
-        :video-rate-independent="group.video_rate_independent"
-        :video-rate-multiplier="group.video_rate_multiplier"
-        :peak-window="peakWindow"
-        :peak-rate-multiplier="group.peak_rate_multiplier"
-      />
+    <div class="p-4 sm:p-5">
+      <div v-if="group.models.length > 0" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <PlazaModelCard
+          v-for="model in group.models"
+          :key="`${model.platform}:${model.name}`"
+          :model="model"
+          :rate-multiplier="group.rate_multiplier"
+          :user-rate-multiplier="group.user_rate_multiplier ?? null"
+          :image-rate-independent="group.image_rate_independent"
+          :image-rate-multiplier="group.image_rate_multiplier"
+        />
+      </div>
       <p v-else class="px-5 py-4 text-center text-sm text-gray-400 dark:text-dark-500">
         {{ t('modelPlaza.detail.noModels') }}
       </p>
@@ -78,7 +76,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
-import PlazaModelPricingTable from './PlazaModelPricingTable.vue'
+import PlazaModelCard from './PlazaModelCard.vue'
 import type { ModelPlazaGroup } from '@/api/modelPlaza'
 import type { GroupPlatform, SubscriptionType } from '@/types'
 import { platformBorderStrongClass } from '@/utils/platformColors'

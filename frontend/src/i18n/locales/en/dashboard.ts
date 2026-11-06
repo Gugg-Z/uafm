@@ -698,6 +698,8 @@ export default {
       timePricingRateHint: 'Effective rate {rate} × period multiplier {multiplier}',
       paidPrice: 'Your Price (Discounted)',
       officialPrice: 'Official Price',
+      discountHint: 'Gateway price discount compared with the official price',
+      discountBadge: '{percent}% below official',
       rate: 'Rate',
       unitPerMillion: '$ / 1M tokens',
       perUnitRequest: '/ request',

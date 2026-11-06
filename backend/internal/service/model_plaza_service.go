@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 )
 
 // PlazaOfficialPricing 模型广场展示用的官方参考价（USD per token），与计费同源：
@@ -68,6 +70,7 @@ type PlazaGroup struct {
 type ModelPlazaService struct {
 	channelRepo    ChannelRepository
 	groupRepo      GroupRepository
+	accountRepo    AccountRepository
 	pricingService *PricingService
 	billingService *BillingService
 	resolver       *ModelPricingResolver
@@ -80,10 +83,16 @@ func NewModelPlazaService(
 	pricingService *PricingService,
 	billingService *BillingService,
 	resolver *ModelPricingResolver,
+	accountRepos ...AccountRepository,
 ) *ModelPlazaService {
+	var accountRepo AccountRepository
+	if len(accountRepos) > 0 {
+		accountRepo = accountRepos[0]
+	}
 	return &ModelPlazaService{
 		channelRepo:    channelRepo,
 		groupRepo:      groupRepo,
+		accountRepo:    accountRepo,
 		pricingService: pricingService,
 		billingService: billingService,
 		resolver:       resolver,
@@ -193,6 +202,83 @@ func (s *ModelPlazaService) ListGroups(ctx context.Context) ([]PlazaGroup, error
 					Platform: m.Platform,
 					Pricing:  m.Pricing,
 				})
+			}
+		}
+	}
+
+	// 网关创建的分组可以直接通过模型白名单声明可用模型，而不一定绑定
+	// 渠道定价条目。将这些精确模型补入模型广场，后续仍由分组价卡、渠道价
+	// 和官方目录统一解析；通配符无法安全展开时交给渠道枚举处理。
+	for i := range groups {
+		g := &groups[i]
+		pg, ok := byGroup[g.ID]
+		if !ok || !g.ModelAllowlist.Enabled {
+			continue
+		}
+		idx := modelIdx[g.ID]
+		if idx == nil {
+			idx = make(map[modelKey]int, len(g.ModelAllowlist.Models))
+			modelIdx[g.ID] = idx
+		}
+		for _, name := range g.ModelAllowlist.Models {
+			name = strings.TrimSpace(name)
+			if name == "" || strings.ContainsAny(name, "*?") {
+				continue
+			}
+			key := modelKey{platform: g.Platform, name: name}
+			if _, exists := idx[key]; exists {
+				continue
+			}
+			idx[key] = len(pg.Models)
+			pg.Models = append(pg.Models, PlazaModel{Name: name, Platform: g.Platform})
+		}
+	}
+
+	// 网关分组的实际模型来源还包括分组账号的 model_mapping。部分网关分组
+	// 没有对应渠道条目，但请求仍可通过账号映射正常路由；将这些模型纳入广场。
+	if s.accountRepo != nil {
+		for i := range groups {
+			g := &groups[i]
+			pg := byGroup[g.ID]
+			if pg == nil {
+				continue
+			}
+			accounts, err := s.accountRepo.ListSchedulableByGroupID(ctx, g.ID)
+			if err != nil {
+				continue
+			}
+			idx := modelIdx[g.ID]
+			if idx == nil {
+				idx = make(map[modelKey]int)
+				modelIdx[g.ID] = idx
+			}
+			for j := range accounts {
+				account := &accounts[j]
+				platform := g.Platform
+				if platform == PlatformComposite {
+					platform = account.Platform
+				}
+				mapping := account.GetModelMapping()
+				if account.Platform == PlatformOpenAI && (account.IsOpenAIPassthroughEnabled() || len(mapping) == 0) {
+					if mapping == nil {
+						mapping = make(map[string]string)
+					}
+					for _, name := range openai.DefaultModelIDs() {
+						mapping[name] = name
+					}
+				}
+				for name := range mapping {
+					name = strings.TrimSpace(name)
+					if name == "" || strings.ContainsAny(name, "*?") {
+						continue
+					}
+					key := modelKey{platform: platform, name: name}
+					if _, exists := idx[key]; exists {
+						continue
+					}
+					idx[key] = len(pg.Models)
+					pg.Models = append(pg.Models, PlazaModel{Name: name, Platform: platform})
+				}
 			}
 		}
 	}

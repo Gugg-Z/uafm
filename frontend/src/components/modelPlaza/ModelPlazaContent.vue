@@ -104,7 +104,7 @@ function effectiveRate(g: ModelPlazaGroup): number {
 }
 
 const platforms = computed(() =>
-  [...new Set((props.response?.groups ?? []).map((g) => g.platform).filter(Boolean))].sort()
+  [...new Set((props.response?.groups ?? []).flatMap((g) => [g.platform, ...g.models.map((m) => m.platform)]).filter(Boolean))].sort()
 )
 
 const groupOptions = computed(() =>
@@ -112,6 +112,7 @@ const groupOptions = computed(() =>
     id: g.id,
     name: g.name,
     platform: g.platform,
+    models: [...new Set(g.models.map((m) => m.platform))],
     rate: effectiveRate(g)
   }))
 )
@@ -131,10 +132,22 @@ watch(rates, (list) => {
 const filteredGroups = computed(() => {
   let groups = props.response?.groups ?? []
   if (selectedPlatform.value !== 'all') {
-    groups = groups.filter((g) => g.platform === selectedPlatform.value)
+    groups = groups.filter(
+      (g) => g.platform === selectedPlatform.value || g.models.some((m) => m.platform === selectedPlatform.value)
+    )
   }
   if (selectedGroupId.value !== 'all') {
     groups = groups.filter((g) => g.id === selectedGroupId.value)
+  }
+  if (selectedPlatform.value !== 'all') {
+    groups = groups
+      .map((g) => ({
+        ...g,
+        models: g.platform === selectedPlatform.value
+          ? g.models
+          : g.models.filter((m) => m.platform === selectedPlatform.value)
+      }))
+      .filter((g) => g.models.length > 0)
   }
   if (selectedRate.value !== 'all') {
     groups = groups.filter((g) => effectiveRate(g) === selectedRate.value)
