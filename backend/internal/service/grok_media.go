@@ -58,20 +58,21 @@ func (e GrokMediaEndpoint) IsGenerationRequest() bool {
 }
 
 type GrokMediaRequestInfo struct {
-	Model           string
-	Prompt          string
-	N               int
-	Size            string
-	SizeTier        string
-	AspectRatio     string
-	ImageResolution string
-	Resolution      string
-	DurationSeconds int
-	GenerateAudio   bool
-	InputImageURLs  []string
-	MaskImageURL    string
-	Uploads         []OpenAIImagesUpload
-	MaskUpload      *OpenAIImagesUpload
+	Model               string
+	Prompt              string
+	N                   int
+	Size                string
+	SizeTier            string
+	AspectRatio         string
+	ImageResolution     string
+	Resolution          string
+	DurationSeconds     int
+	GenerateAudio       bool
+	SeedanceHasMaterial bool
+	InputImageURLs      []string
+	MaskImageURL        string
+	Uploads             []OpenAIImagesUpload
+	MaskUpload          *OpenAIImagesUpload
 }
 
 func (r GrokMediaRequestInfo) ModerationBody() []byte {

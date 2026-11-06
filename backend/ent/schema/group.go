@@ -159,6 +159,10 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Comment("按模型族和分辨率覆盖视频每秒价格"),
+		field.JSON("seedance_video_prices", map[string]map[string]map[string]map[string]float64{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("Seedance 按计费方式、分辨率和素材类型定价"),
 		field.Int("video_max_pending_tasks").
 			Default(5).
 			Comment("每个用户允许的待完成视频任务数"),

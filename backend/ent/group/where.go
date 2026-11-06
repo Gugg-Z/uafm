@@ -1825,6 +1825,16 @@ func VideoModelPricesNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldVideoModelPrices))
 }
 
+// SeedanceVideoPricesIsNil applies the IsNil predicate on the "seedance_video_prices" field.
+func SeedanceVideoPricesIsNil() predicate.Group {
+	return predicate.Group(sql.FieldIsNull(FieldSeedanceVideoPrices))
+}
+
+// SeedanceVideoPricesNotNil applies the NotNil predicate on the "seedance_video_prices" field.
+func SeedanceVideoPricesNotNil() predicate.Group {
+	return predicate.Group(sql.FieldNotNull(FieldSeedanceVideoPrices))
+}
+
 // VideoMaxPendingTasksEQ applies the EQ predicate on the "video_max_pending_tasks" field.
 func VideoMaxPendingTasksEQ(v int) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldVideoMaxPendingTasks, v))

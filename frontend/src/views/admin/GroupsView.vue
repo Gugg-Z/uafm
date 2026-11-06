@@ -1062,8 +1062,9 @@
             </label>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t(videoPricingI18nKey("description")) }}
+            {{ t("admin.groups.seedancePricing.description") }}
           </p>
+
           <div class="mb-4">
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
@@ -1090,6 +1091,9 @@
               placeholder="1"
             />
           </div>
+          <SeedancePricingEditor v-if="createForm.platform === 'openai' || createForm.platform === 'composite'" v-model="createForm.seedance_video_prices" />
+          <div v-if="createForm.platform === 'grok' || createForm.platform === 'composite'" class="mt-4">
+          <p class="mb-3 font-medium">{{ t("admin.groups.seedancePricing.grok") }}</p>
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="input-label">480p ($/s)</label>
@@ -1186,6 +1190,7 @@
                 {{ item.label }}: {{ item.value }}
               </div>
             </div>
+          </div>
           </div>
         </div>
 
@@ -2719,8 +2724,9 @@
             </label>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t(videoPricingI18nKey("description")) }}
+            {{ t("admin.groups.seedancePricing.description") }}
           </p>
+
           <div class="mb-4">
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
@@ -2747,6 +2753,9 @@
               placeholder="1"
             />
           </div>
+          <SeedancePricingEditor v-if="editForm.platform === 'openai' || editForm.platform === 'composite'" v-model="editForm.seedance_video_prices" />
+          <div v-if="editForm.platform === 'grok' || editForm.platform === 'composite'" class="mt-4">
+          <p class="mb-3 font-medium">{{ t("admin.groups.seedancePricing.grok") }}</p>
           <div class="grid grid-cols-3 gap-3">
             <div>
               <label class="input-label">480p ($/s)</label>
@@ -2843,6 +2852,7 @@
                 {{ item.label }}: {{ item.value }}
               </div>
             </div>
+          </div>
           </div>
         </div>
 
@@ -4408,6 +4418,8 @@ import {
   supportsVideoPricingPlatform,
   videoPricingI18nKey,
 } from "./groupsImagePricing";
+import SeedancePricingEditor from "./SeedancePricingEditor.vue";
+import type { SeedanceVideoPrices } from "@/types";
 import {
   createVideoModelPricesForm,
   grokVideoPriceResolutions,
@@ -4415,6 +4427,22 @@ import {
   videoModelPriceFamilyRows,
   addVideoModelPriceRow,
 } from "./groupsVideoModelPricing";
+
+function serializeSeedanceVideoPrices(prices: SeedanceVideoPrices): SeedanceVideoPrices {
+  const output: SeedanceVideoPrices = {};
+  for (const [model, modes] of Object.entries(prices ?? {})) {
+    const mode = Object.keys(modes)[0];
+    if (!mode) continue;
+    const tiers = modes[mode];
+    const cleanTiers: Record<string, Record<string, number>> = {};
+    for (const [resolution, materials] of Object.entries(tiers)) {
+      const cleanMaterials = Object.fromEntries(Object.entries(materials).filter((entry): entry is [string, number] => typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0));
+      if (Object.keys(cleanMaterials).length) cleanTiers[resolution] = cleanMaterials;
+    }
+    if (Object.keys(cleanTiers).length) output[model] = { [mode]: cleanTiers };
+  }
+  return output;
+}
 
 const createCustomVideoModel = ref("");
 const editCustomVideoModel = ref("");
@@ -5016,6 +5044,7 @@ const createForm = reactive({
   video_price_720p: null as number | null,
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
+  seedance_video_prices: {} as SeedanceVideoPrices,
   video_max_pending_tasks: 5,
   video_task_timeout_hours: 24,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
@@ -5384,6 +5413,7 @@ const editForm = reactive({
   video_price_720p: null as number | null,
   video_price_1080p: null as number | null,
   video_model_prices: createVideoModelPricesForm(),
+  seedance_video_prices: {} as SeedanceVideoPrices,
   video_max_pending_tasks: 5,
   video_task_timeout_hours: 24,
   // Codex 网页搜索按次计费（仅 openai 平台使用）；null = 使用默认价 0.01
@@ -5843,6 +5873,7 @@ const closeCreateModal = () => {
   createForm.video_price_720p = null;
   createForm.video_price_1080p = null;
   createForm.video_model_prices = createVideoModelPricesForm();
+  createForm.seedance_video_prices = {};
   createForm.video_max_pending_tasks = 5;
   createForm.video_task_timeout_hours = 24;
   createCustomVideoModel.value = "";
@@ -5994,6 +6025,7 @@ const handleCreateGroup = async () => {
       ...(Object.keys(videoModelPrices).length > 0
         ? { video_model_prices: videoModelPrices }
         : {}),
+      seedance_video_prices: serializeSeedanceVideoPrices(createForm.seedance_video_prices),
       video_max_pending_tasks: createForm.video_max_pending_tasks,
       video_task_timeout_hours: createForm.video_task_timeout_hours,
       model_routing: convertRoutingRulesToApiFormat(
@@ -6105,7 +6137,11 @@ const handleCreateGroup = async () => {
 };
 
 const handleEdit = async (group: AdminGroup) => {
-  editingGroup.value = group;
+  // Fetch the complete group before opening the editor. The paginated list may
+  // contain a lightweight/stale representation after an update.
+  const freshGroup = await adminAPI.groups.getById(group.id);
+  editingGroup.value = freshGroup;
+  group = freshGroup;
   editForm.name = group.name;
   editForm.description = group.description || "";
   editForm.i18n = Object.fromEntries(
@@ -6143,6 +6179,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.video_price_480p = group.video_price_480p;
   editForm.video_price_720p = group.video_price_720p;
   editForm.video_price_1080p = group.video_price_1080p;
+  editForm.seedance_video_prices = JSON.parse(JSON.stringify(group.seedance_video_prices ?? {}));
   editForm.video_model_prices = createVideoModelPricesForm(
     group.video_model_prices,
   );
@@ -6259,6 +6296,7 @@ const closeEditModal = () => {
   editForm.video_price_720p = null;
   editForm.video_price_1080p = null;
   editForm.video_model_prices = createVideoModelPricesForm();
+  editForm.seedance_video_prices = {};
   editForm.video_max_pending_tasks = 5;
   editForm.video_task_timeout_hours = 24;
   editCustomVideoModel.value = "";
@@ -6344,6 +6382,7 @@ const handleUpdateGroup = async () => {
       video_model_prices: serializeVideoModelPrices(
         editForm.video_model_prices,
       ),
+      seedance_video_prices: serializeSeedanceVideoPrices(editForm.seedance_video_prices),
       video_max_pending_tasks: editForm.video_max_pending_tasks,
       video_task_timeout_hours: editForm.video_task_timeout_hours,
       fallback_group_id:

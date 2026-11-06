@@ -145,6 +145,16 @@ func (h *OpenAIGatewayHandler) handleGrokMedia(c *gin.Context, endpoint service.
 		}
 	}
 	requestModel := requestInfo.Model
+	// Group pricing applies to both native and OpenAI-compatible Seedance endpoints.
+	if endpoint == service.SeedanceEndpointCreate && h.gatewayService != nil {
+		if _, configured := apiKey.Group.SeedanceVideoPrices[requestModel]; configured && !h.gatewayService.VideoTasksEnabled() {
+			h.errorResponse(c, http.StatusServiceUnavailable, "billing_unavailable", "Seedance pricing requires durable video task tracking")
+			return
+		}
+		if _, configured := apiKey.Group.SeedanceVideoPrices[requestModel]; configured {
+			c.Set("seedance_billing_mode", h.gatewayService.ResolveSeedanceBillingMode(c.Request.Context(), apiKey, requestModel))
+		}
+	}
 	routingModel := service.NormalizeGrokMediaModelForEndpoint(endpoint, requestModel, requestInfo.HasInputImage())
 	if endpoint.IsGenerationRequest() && strings.TrimSpace(requestModel) == "" {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "model is required")
@@ -218,7 +228,7 @@ func (h *OpenAIGatewayHandler) handleGrokMedia(c *gin.Context, endpoint service.
 			h.errorResponse(c, 400, "invalid_request_error", "Video duration must not exceed 15 seconds")
 			return
 		}
-		durableTask, err = h.gatewayService.PrepareVideoTask(c.Request.Context(), apiKey, subscription, endpoint, requestModel, requestInfo.Resolution, mode, GetInboundEndpoint(c), GetUpstreamEndpoint(c, platform))
+		durableTask, err = h.gatewayService.PrepareVideoTask(c.Request.Context(), apiKey, subscription, endpoint, requestModel, requestInfo.Resolution, mode, GetInboundEndpoint(c), GetUpstreamEndpoint(c, platform), requestInfo.SeedanceHasMaterial)
 		if err != nil {
 			code := http.StatusBadRequest
 			if errors.Is(err, service.ErrVideoTaskLimit) {

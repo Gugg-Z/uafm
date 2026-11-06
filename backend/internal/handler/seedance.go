@@ -61,7 +61,14 @@ func (h *OpenAIGatewayHandler) seedanceTaskRequest(c *gin.Context) {
 		return
 	}
 	endpoint := service.SeedanceEndpointCreate
-	setActualUpstreamEndpoint(c, EndpointSeedanceTasks)
+	// Seedance is a pass-through protocol: preserve the client's endpoint for
+	// the upstream request. Other gateway handlers retain their existing
+	// protocol-conversion behavior.
+	upstreamPath := GetInboundEndpoint(c)
+	// ForwardSeedance reads the service-level runtime endpoint. Keep the
+	// handler-level value too because usage/error logging uses that context.
+	setActualUpstreamEndpoint(c, upstreamPath)
+	service.SetActualOpenAIUpstreamEndpoint(c, upstreamPath)
 	taskID := ""
 	if c.Request.Method != http.MethodPost {
 		rawTaskID := c.Param("task_id")
@@ -113,7 +120,7 @@ func prepareSeedanceCompletionBilling(ctx context.Context, h *OpenAIGatewayHandl
 	if pending.BillingMode != "" {
 		merged.BillingModeOverride = pending.BillingMode
 	}
-	if merged.BillingModeOverride == string(service.BillingModeVideo) {
+	if merged.BillingModeOverride == string(service.BillingModeVideo) || merged.BillingModeOverride == string(service.BillingModePerRequest) {
 		merged.VideoCount = 1
 		if strings.TrimSpace(merged.VideoResolution) == "" {
 			merged.VideoResolution = pending.VideoResolution

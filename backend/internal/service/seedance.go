@@ -70,7 +70,14 @@ func ParseSeedanceRequest(body []byte) (GrokMediaRequestInfo, error) {
 	content := gjson.GetBytes(body, "content")
 	if !content.IsArray() || len(content.Array()) == 0 {
 		prompt := strings.TrimSpace(gjson.GetBytes(body, "prompt").String())
-		if prompt == "" {
+		hasTopLevelMaterial := false
+		for _, field := range []string{"image_url", "images", "reference_images", "first_image", "first_image_url", "last_image", "last_image_url", "video_url", "reference_videos", "audio_url", "reference_audios"} {
+			if gjson.GetBytes(body, field).Exists() {
+				hasTopLevelMaterial = true
+				break
+			}
+		}
+		if prompt == "" && !hasTopLevelMaterial {
 			return info, fmt.Errorf("content or prompt is required")
 		}
 		info.Prompt = prompt
@@ -79,9 +86,49 @@ func ParseSeedanceRequest(body []byte) (GrokMediaRequestInfo, error) {
 			switch item.Get("type").String() {
 			case "text":
 				info.Prompt = strings.TrimSpace(info.Prompt + "\n" + item.Get("text").String())
-			case "image_url":
-				info.InputImageURLs = append(info.InputImageURLs, item.Get("image_url.url").String())
+			case "image_url", "video_url", "audio_url":
+				kind := item.Get("type").String()
+				raw := item.Get(kind + ".url")
+				if raw.Type != gjson.String || strings.TrimSpace(raw.String()) == "" {
+					return info, fmt.Errorf("%s.url is required", kind)
+				}
+				info.SeedanceHasMaterial = true
+				if kind == "image_url" {
+					info.InputImageURLs = append(info.InputImageURLs, raw.String())
+				}
 			}
+		}
+	}
+	// Seedance's documented request shape also permits media at the top level.
+	// Keep the original payload intact for forwarding; this pass only determines
+	// the billing/material classification and moderation inputs.
+	for _, field := range []struct {
+		name string
+		kind string
+	}{
+		{name: "image_url", kind: "image"},
+		{name: "image", kind: "image"},
+		{name: "images", kind: "image"},
+		{name: "reference_images", kind: "image"},
+		{name: "first_image", kind: "image"},
+		{name: "first_image_url", kind: "image"},
+		{name: "last_image", kind: "image"},
+		{name: "last_image_url", kind: "image"},
+		{name: "video_url", kind: "video"},
+		{name: "reference_videos", kind: "video"},
+		{name: "audio_url", kind: "audio"},
+		{name: "reference_audios", kind: "audio"},
+	} {
+		values, present, err := seedanceTopLevelMediaURLs(gjson.GetBytes(body, field.name))
+		if err != nil {
+			return info, fmt.Errorf("%s: %w", field.name, err)
+		}
+		if !present {
+			continue
+		}
+		info.SeedanceHasMaterial = true
+		if field.kind == "image" {
+			info.InputImageURLs = append(info.InputImageURLs, values...)
 		}
 	}
 	if d := gjson.GetBytes(body, "duration"); d.Exists() && d.Type == gjson.Number {
@@ -97,8 +144,62 @@ func ParseSeedanceRequest(body []byte) (GrokMediaRequestInfo, error) {
 			}
 		}
 	}
-	info.Resolution = NormalizeVideoBillingResolutionOrDefault(gjson.GetBytes(body, "resolution").String())
+	rawResolution := strings.TrimSpace(gjson.GetBytes(body, "resolution").String())
+	if rawResolution == "" {
+		rawResolution = "480p"
+	}
+	if len([]rune(rawResolution)) > 32 {
+		return info, fmt.Errorf("resolution is too long")
+	}
+	info.Resolution = rawResolution
 	return info, nil
+}
+
+func seedanceTopLevelMediaURLs(value gjson.Result) ([]string, bool, error) {
+	if !value.Exists() {
+		return nil, false, nil
+	}
+	if value.IsArray() && len(value.Array()) == 0 {
+		return nil, true, fmt.Errorf("must not be empty")
+	}
+	urls := make([]string, 0, 2)
+	if err := collectSeedanceMediaURLs(value, &urls); err != nil {
+		return nil, true, err
+	}
+	return urls, true, nil
+}
+
+func collectSeedanceMediaURLs(value gjson.Result, urls *[]string) error {
+	switch {
+	case value.Type == gjson.String:
+		if strings.TrimSpace(value.String()) == "" {
+			return fmt.Errorf("url is required")
+		}
+		*urls = append(*urls, strings.TrimSpace(value.String()))
+	case value.IsArray():
+		for _, item := range value.Array() {
+			if err := collectSeedanceMediaURLs(item, urls); err != nil {
+				return err
+			}
+		}
+	case value.IsObject():
+		if raw := value.Get("url"); raw.Exists() {
+			return collectSeedanceMediaURLs(raw, urls)
+		}
+		if raw := value.Get("image_url"); raw.Exists() {
+			return collectSeedanceMediaURLs(raw, urls)
+		}
+		if raw := value.Get("video_url"); raw.Exists() {
+			return collectSeedanceMediaURLs(raw, urls)
+		}
+		if raw := value.Get("audio_url"); raw.Exists() {
+			return collectSeedanceMediaURLs(raw, urls)
+		}
+		return fmt.Errorf("must be a URL string or object with url")
+	default:
+		return fmt.Errorf("must be a URL string or object with url")
+	}
+	return nil
 }
 
 func buildSeedanceURL(base string, endpoint GrokMediaEndpoint, taskID string) (string, error) {
@@ -117,6 +218,23 @@ func buildSeedanceURL(base string, endpoint GrokMediaEndpoint, taskID string) (s
 	return base, nil
 }
 
+func buildSeedanceURLForEndpoint(base, upstreamEndpoint string, endpoint GrokMediaEndpoint, taskID string) (string, error) {
+	if strings.TrimSpace(upstreamEndpoint) == "" || upstreamEndpoint == "/api/v3/contents/generations/tasks" {
+		return buildSeedanceURL(base, endpoint, taskID)
+	}
+	base = strings.TrimRight(base, "/")
+	base = strings.TrimSuffix(base, "/api/v3")
+	base = strings.TrimSuffix(base, "/v3")
+	path := "/" + strings.Trim(upstreamEndpoint, "/")
+	if endpoint != SeedanceEndpointCreate {
+		if err := validateUpstreamPathSegment("Seedance task ID", taskID); err != nil || strings.TrimSpace(taskID) == "" {
+			return "", fmt.Errorf("invalid Seedance task ID")
+		}
+		path += "/" + taskID
+	}
+	return base + path, nil
+}
+
 // ForwardSeedance preserves the Ark protocol, including multimodal content and
 // future fields. Only model is rewritten using the account's configured mapping.
 func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Context, account *Account, endpoint GrokMediaEndpoint, taskID string, body []byte) (*OpenAIForwardResult, error) {
@@ -130,7 +248,8 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 	if err != nil {
 		return nil, err
 	}
-	target, err := buildSeedanceURL(base, endpoint, strings.TrimPrefix(taskID, "seedance:"))
+	upstreamEndpoint := GetActualOpenAIUpstreamEndpoint(c)
+	target, err := buildSeedanceURLForEndpoint(base, upstreamEndpoint, endpoint, strings.TrimPrefix(taskID, "seedance:"))
 	if err != nil {
 		return nil, err
 	}
@@ -202,10 +321,12 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 	result := &OpenAIForwardResult{Model: model, BillingModel: model, UpstreamModel: upstreamModel, Duration: time.Since(started), ResponseHeaders: resp.Header.Clone(), VideoResolution: createInfo.Resolution, VideoDurationSeconds: createInfo.DurationSeconds}
 	result.VideoTaskBody = append([]byte(nil), responseBody...)
 	// Billing mode is decided at task creation and carried through status polls.
-	// Native Ark tasks use token billing; /videos explicitly uses per-second billing.
+	// The authenticated group selects the mode for either creation endpoint.
 	result.BillingModeOverride = string(BillingModeToken)
-	if mode, ok := c.Get("seedance_billing_mode"); ok && mode == string(BillingModeVideo) {
-		result.BillingModeOverride = string(BillingModeVideo)
+	if mode, ok := c.Get("seedance_billing_mode"); ok {
+		if m, valid := mode.(string); valid && (m == string(BillingModeVideo) || m == string(BillingModePerRequest)) {
+			result.BillingModeOverride = m
+		}
 	}
 	if endpoint == SeedanceEndpointCreate {
 		id := strings.TrimSpace(gjson.GetBytes(responseBody, "id").String())
@@ -227,8 +348,8 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 			return result, nil
 		}
 		if result.Status == "succeeded" || result.Status == "completed" {
-			result.Usage.OutputTokens = max(0, int(gjson.GetBytes(responseBody, "usage.completion_tokens").Int()))
-			if result.BillingModeOverride == string(BillingModeVideo) {
+			result.Usage.OutputTokens = seedanceOutputTokens(responseBody)
+			if result.BillingModeOverride == string(BillingModeVideo) || result.BillingModeOverride == string(BillingModePerRequest) {
 				result.VideoCount = 1
 			}
 			// Seedance's billing contract uses the upstream-confirmed actualDuration.
@@ -251,7 +372,7 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 				result.VideoDurationActual = true
 			}
 			if resolution := strings.TrimSpace(gjson.GetBytes(responseBody, "resolution").String()); resolution != "" {
-				result.VideoResolution = NormalizeVideoBillingResolutionOrDefault(resolution)
+				result.VideoResolution = resolution
 			}
 		}
 	}
@@ -271,6 +392,19 @@ func (s *OpenAIGatewayService) ForwardSeedance(ctx context.Context, c *gin.Conte
 	return result, nil
 }
 
+// seedanceOutputTokens accepts both Seedance response contracts. Ark uses the
+// legacy completion_tokens name, while the videos contract uses output_tokens;
+// total_tokens is the final compatibility fallback documented by the provider.
+func seedanceOutputTokens(body []byte) int {
+	for _, path := range []string{"usage.completion_tokens", "usage.output_tokens", "usage.total_tokens"} {
+		value := gjson.GetBytes(body, path)
+		if value.Exists() && value.Type == gjson.Number && value.Int() > 0 {
+			return int(value.Int())
+		}
+	}
+	return 0
+}
+
 // forwardSeedanceVideoContent relays the finished asset through the gateway. The
 // upstream asset is fetched with the platform account's key, so clients never
 // need (and never receive) a URL that only the task creator can open.
@@ -280,7 +414,8 @@ func (s *OpenAIGatewayService) forwardSeedanceVideoContent(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	statusURL, err := buildSeedanceURL(base, SeedanceEndpointStatus, rawID)
+	upstreamEndpoint := GetActualOpenAIUpstreamEndpoint(c)
+	statusURL, err := buildSeedanceURLForEndpoint(base, upstreamEndpoint, SeedanceEndpointStatus, rawID)
 	if err != nil {
 		return nil, err
 	}

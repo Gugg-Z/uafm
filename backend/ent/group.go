@@ -90,6 +90,8 @@ type Group struct {
 	VideoPrice1080p *float64 `json:"video_price_1080p,omitempty"`
 	// 按模型族和分辨率覆盖视频每秒价格
 	VideoModelPrices map[string]map[string]float64 `json:"video_model_prices,omitempty"`
+	// Seedance 按计费方式、分辨率和素材类型定价
+	SeedanceVideoPrices map[string]map[string]map[string]map[string]float64 `json:"seedance_video_prices,omitempty"`
 	// 每个用户允许的待完成视频任务数
 	VideoMaxPendingTasks int `json:"video_max_pending_tasks,omitempty"`
 	// 视频任务未确认结果的最长等待小时数
@@ -264,7 +266,7 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldI18n, group.FieldVideoModelPrices, group.FieldModelPricing, group.FieldModelRouting, group.FieldSupportedModelScopes, group.FieldMessagesDispatchModelConfig, group.FieldModelAllowlist, group.FieldCodexModelsManifestConfig, group.FieldReasoningEffortMappings:
+		case group.FieldI18n, group.FieldVideoModelPrices, group.FieldSeedanceVideoPrices, group.FieldModelPricing, group.FieldModelRouting, group.FieldSupportedModelScopes, group.FieldMessagesDispatchModelConfig, group.FieldModelAllowlist, group.FieldCodexModelsManifestConfig, group.FieldReasoningEffortMappings:
 			values[i] = new([]byte)
 		case group.FieldPeakRateEnabled, group.FieldIsExclusive, group.FieldAllowImageGeneration, group.FieldAllowBatchImageGeneration, group.FieldImageRateIndependent, group.FieldVideoRateIndependent, group.FieldLongContextPricingEnabled, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldMcpXMLInject, group.FieldAllowMessagesDispatch, group.FieldAllowLive, group.FieldForceOpenaiFast, group.FieldFreeOpenaiFast, group.FieldRequireOauthOnly, group.FieldRequirePrivacySet, group.FieldProfitControlEnabled:
 			values[i] = new(sql.NullBool)
@@ -521,6 +523,14 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.VideoModelPrices); err != nil {
 					return fmt.Errorf("unmarshal field video_model_prices: %w", err)
+				}
+			}
+		case group.FieldSeedanceVideoPrices:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field seedance_video_prices", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.SeedanceVideoPrices); err != nil {
+					return fmt.Errorf("unmarshal field seedance_video_prices: %w", err)
 				}
 			}
 		case group.FieldVideoMaxPendingTasks:
@@ -952,6 +962,9 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("video_model_prices=")
 	builder.WriteString(fmt.Sprintf("%v", _m.VideoModelPrices))
+	builder.WriteString(", ")
+	builder.WriteString("seedance_video_prices=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SeedanceVideoPrices))
 	builder.WriteString(", ")
 	builder.WriteString("video_max_pending_tasks=")
 	builder.WriteString(fmt.Sprintf("%v", _m.VideoMaxPendingTasks))

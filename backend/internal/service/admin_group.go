@@ -587,6 +587,9 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		return nil, err
 	}
 
+	if err := ValidateSeedanceVideoPrices(input.SeedanceVideoPrices); err != nil {
+		return nil, err
+	}
 	group := &Group{
 		Name:                            input.Name,
 		Description:                     input.Description,
@@ -623,6 +626,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		VideoPrice720P:                  videoPrice720P,
 		VideoPrice1080P:                 videoPrice1080P,
 		VideoModelPrices:                NormalizeVideoModelPrices(input.VideoModelPrices),
+		SeedanceVideoPrices:             CloneSeedanceVideoPrices(input.SeedanceVideoPrices),
 		VideoMaxPendingTasks:            videoMaxPendingTasks,
 		VideoTaskTimeoutHours:           videoTaskTimeoutHours,
 		WebSearchPricePerCall:           webSearchPricePerCall,
@@ -961,7 +965,12 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	if input.VideoPrice1080P != nil {
 		group.VideoPrice1080P = normalizePrice(input.VideoPrice1080P)
 	}
-	// nil = leave unchanged; empty map = clear per-model prices.
+	if input.SeedanceVideoPrices != nil {
+		if err := ValidateSeedanceVideoPrices(input.SeedanceVideoPrices); err != nil {
+			return nil, err
+		}
+		group.SeedanceVideoPrices = CloneSeedanceVideoPrices(input.SeedanceVideoPrices)
+	}
 	if input.VideoModelPrices != nil {
 		group.VideoModelPrices = NormalizeVideoModelPrices(input.VideoModelPrices)
 	}

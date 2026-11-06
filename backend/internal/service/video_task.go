@@ -23,6 +23,8 @@ type VideoTask struct {
 	Group                                *Group
 	Key                                  *APIKey
 	Subscription                         *UserSubscription
+	SeedanceMatrix                       bool
+	HasMaterial                          bool
 	UnitPrice                            *float64
 	TokenPricing                         *ResolvedPricing
 	Prices                               map[string]float64

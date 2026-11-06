@@ -86,6 +86,8 @@ const (
 	FieldVideoPrice1080p = "video_price_1080p"
 	// FieldVideoModelPrices holds the string denoting the video_model_prices field in the database.
 	FieldVideoModelPrices = "video_model_prices"
+	// FieldSeedanceVideoPrices holds the string denoting the seedance_video_prices field in the database.
+	FieldSeedanceVideoPrices = "seedance_video_prices"
 	// FieldVideoMaxPendingTasks holds the string denoting the video_max_pending_tasks field in the database.
 	FieldVideoMaxPendingTasks = "video_max_pending_tasks"
 	// FieldVideoTaskTimeoutHours holds the string denoting the video_task_timeout_hours field in the database.
@@ -264,6 +266,7 @@ var Columns = []string{
 	FieldVideoPrice720p,
 	FieldVideoPrice1080p,
 	FieldVideoModelPrices,
+	FieldSeedanceVideoPrices,
 	FieldVideoMaxPendingTasks,
 	FieldVideoTaskTimeoutHours,
 	FieldWebSearchPricePerCall,

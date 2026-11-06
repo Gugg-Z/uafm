@@ -20,6 +20,34 @@ import (
 // ConfigureVideoTasks is called at application assembly, before requests are served.
 func (s *OpenAIGatewayService) ConfigureVideoTasks(repo VideoTaskRepository) { s.videoTasks = repo }
 func (s *OpenAIGatewayService) VideoTasksEnabled() bool                      { return s != nil && s.videoTasks != nil }
+
+// ResolveSeedanceBillingMode resolves the mode from the authenticated API
+// key's group/model pricing. It is intentionally Seedance-specific; Grok keeps
+// its existing video tariff path. An unconfigured model falls back to token
+// billing for the native Seedance protocol.
+func (s *OpenAIGatewayService) ResolveSeedanceBillingMode(ctx context.Context, key *APIKey, model string) string {
+	if key != nil && key.Group != nil {
+		if modes, ok := key.Group.SeedanceVideoPrices[model]; ok && len(modes) == 1 {
+			for mode := range modes {
+				return mode
+			}
+		}
+	}
+	if s == nil || key == nil || key.Group == nil || s.resolver == nil {
+		return string(BillingModeToken)
+	}
+	gid := key.Group.ID
+	resolved := s.resolver.Resolve(ctx, PricingInput{Model: model, GroupID: &gid, Group: key.Group})
+	if resolved == nil {
+		return string(BillingModeToken)
+	}
+	switch resolved.Mode {
+	case BillingModeToken, BillingModePerRequest, BillingModeVideo:
+		return string(resolved.Mode)
+	default:
+		return string(BillingModeToken)
+	}
+}
 func (s *OpenAIGatewayService) StartVideoTasks() {
 	if !s.VideoTasksEnabled() {
 		return
@@ -73,7 +101,7 @@ func (s *OpenAIGatewayService) StopVideoTasks() {
 	}
 }
 
-func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey, sub *UserSubscription, endpoint GrokMediaEndpoint, model, resolution, mode, inboundEndpoint, upstreamEndpoint string) (*VideoTask, error) {
+func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey, sub *UserSubscription, endpoint GrokMediaEndpoint, model, resolution, mode, inboundEndpoint, upstreamEndpoint string, hasMaterial ...bool) (*VideoTask, error) {
 	if !s.VideoTasksEnabled() {
 		return nil, nil
 	}
@@ -109,13 +137,49 @@ func (s *OpenAIGatewayService) PrepareVideoTask(ctx context.Context, key *APIKey
 	}
 	base := s.ResolveUserGroupRateMultiplier(ctx, t.UserID, t.GroupID, key.Group.RateMultiplier)
 	t.Multiplier = resolveVideoRateMultiplier(key, base)
-	if mode == string(BillingModeToken) && s.resolver != nil {
+	if endpoint.IsSeedance() {
+		material := len(hasMaterial) > 0 && hasMaterial[0]
+		selected, prices, configured, err := seedancePriceSnapshot(key.Group, model, resolution, material)
+		if err != nil {
+			return nil, err
+		}
+		if configured {
+			t.SeedanceMatrix = true
+			t.HasMaterial = material
+			t.Mode = selected
+			mode = selected
+			t.Prices = prices
+			price := prices[resolution]
+			t.UnitPrice = &price
+			if mode == string(BillingModeVideo) {
+				t.HoldAmount = price * 15 * t.Multiplier
+			}
+			if mode == string(BillingModePerRequest) {
+				t.HoldAmount = price * t.Multiplier
+			}
+		}
+	}
+	if !t.SeedanceMatrix && (mode == string(BillingModeToken) || mode == string(BillingModePerRequest)) && s.resolver != nil {
 		t.TokenPricing = s.resolver.Resolve(ctx, PricingInput{Model: model, GroupID: key.GroupID, Group: key.Group})
-		if t.TokenPricing == nil || t.TokenPricing.Mode != BillingModeToken || t.TokenPricing.BasePricing == nil {
+		if t.TokenPricing == nil || t.TokenPricing.Mode != BillingModeToken && t.TokenPricing.Mode != BillingModePerRequest {
 			return nil, fmt.Errorf("token price not configured for video model")
 		}
 	}
-	if mode == string(BillingModeVideo) {
+	if !t.SeedanceMatrix && mode == string(BillingModePerRequest) {
+		if s.resolver == nil || t.TokenPricing == nil {
+			return nil, fmt.Errorf("missing per-request pricing")
+		}
+		price := s.resolver.GetRequestTierPrice(t.TokenPricing, resolution)
+		if price <= 0 {
+			price = t.TokenPricing.DefaultPerRequestPrice
+		}
+		if price <= 0 {
+			return nil, fmt.Errorf("per-request price is not configured for video model %s", model)
+		}
+		t.UnitPrice = &price
+		t.HoldAmount = price * t.Multiplier
+	}
+	if !t.SeedanceMatrix && mode == string(BillingModeVideo) {
 		t.Prices = make(map[string]float64)
 		for _, tier := range []string{"480p", "720p", "1080p"} {
 			p := key.Group.GetVideoPriceForModel(model, tier)
@@ -338,7 +402,13 @@ func (s *OpenAIGatewayService) PollVideoTask(parent context.Context, id string) 
 		t.LastPolledAt = time.Now()
 		recorder := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(recorder)
-		c.Request, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost/v1/videos/"+strings.TrimPrefix(t.UpstreamID, "seedance:"), nil)
+		pollPath := strings.TrimSpace(t.UpstreamEndpoint)
+		if pollPath == "" {
+			pollPath = "/v1/videos/generations"
+		}
+		pollPath = strings.TrimRight(pollPath, "/") + "/" + strings.TrimPrefix(t.UpstreamID, "seedance:")
+		c.Request, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost"+pollPath, nil)
+		SetActualOpenAIUpstreamEndpoint(c, t.UpstreamEndpoint)
 		c.Set("seedance_billing_mode", t.Mode)
 		var result *OpenAIForwardResult
 		if t.Provider == "seedance" {
@@ -383,7 +453,10 @@ func (s *OpenAIGatewayService) PollVideoTask(parent context.Context, id string) 
 		if t.Provider == "grok" || result.VideoResolution == "" {
 			result.VideoResolution = t.Resolution
 		}
-		if t.Mode == string(BillingModeVideo) {
+		if t.SeedanceMatrix {
+			result.VideoResolution = t.Resolution
+		}
+		if t.Mode == string(BillingModeVideo) && !t.SeedanceMatrix {
 			if p, ok := t.Prices[result.VideoResolution]; ok {
 				t.UnitPrice = &p
 			} else {
@@ -391,13 +464,16 @@ func (s *OpenAIGatewayService) PollVideoTask(parent context.Context, id string) 
 				return t, nil
 			}
 		}
-		if t.Mode == string(BillingModeVideo) {
+		if t.SeedanceMatrix {
 			result.VideoCount = 1
-			if t.Provider == "grok" && result.VideoDurationSeconds <= 0 {
+		}
+		if t.Mode == string(BillingModeVideo) || t.Mode == string(BillingModePerRequest) {
+			result.VideoCount = 1
+			if t.Mode == string(BillingModeVideo) && t.Provider == "grok" && result.VideoDurationSeconds <= 0 {
 				t.LastError = "missing video duration"
 				return t, nil
 			}
-			if t.Provider == "seedance" && !result.VideoDurationActual {
+			if t.Mode == string(BillingModeVideo) && t.Provider == "seedance" && !result.VideoDurationActual {
 				t.LastError = "missing actualDuration"
 				return t, nil
 			}
@@ -448,6 +524,22 @@ func videoTaskSucceeded(provider, status string, body []byte) bool {
 	return status == "succeeded" || status == "completed"
 }
 func videoTaskCost(t *VideoTask, r *OpenAIForwardResult) (*CostBreakdown, error) {
+	if t.UnitPrice != nil && (*t.UnitPrice < 0 || math.IsNaN(*t.UnitPrice) || math.IsInf(*t.UnitPrice, 0)) {
+		return nil, fmt.Errorf("invalid video unit price")
+	}
+	if t.SeedanceMatrix && t.Mode == string(BillingModeToken) {
+		if t.UnitPrice == nil || r.Usage.OutputTokens <= 0 {
+			return nil, fmt.Errorf("missing Seedance output tokens or price")
+		}
+		total := float64(r.Usage.OutputTokens) / 1e6 * *t.UnitPrice
+		return &CostBreakdown{OutputCost: total, TotalCost: total, ActualCost: total * t.Multiplier, BillingMode: string(BillingModeToken)}, nil
+	}
+	if t.Mode == string(BillingModePerRequest) {
+		if t.UnitPrice == nil {
+			return nil, fmt.Errorf("missing per-request video price")
+		}
+		return &CostBreakdown{TotalCost: *t.UnitPrice, ActualCost: *t.UnitPrice * t.Multiplier, BillingMode: string(BillingModePerRequest)}, nil
+	}
 	if t.UnitPrice == nil || !r.VideoDurationActual && t.Provider == "seedance" {
 		return nil, fmt.Errorf("missing video price or actualDuration")
 	}

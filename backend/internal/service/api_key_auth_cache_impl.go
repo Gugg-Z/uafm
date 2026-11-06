@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 24 // v24: group model_allowlist field (renamed from models_list_config, enforcing semantics)
+const apiKeyAuthSnapshotVersion = 25 // v25: Seedance group pricing matrix
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -402,6 +402,7 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 			VideoPrice720P:                  apiKey.Group.VideoPrice720P,
 			VideoPrice1080P:                 apiKey.Group.VideoPrice1080P,
 			VideoModelPrices:                NormalizeVideoModelPrices(apiKey.Group.VideoModelPrices),
+			SeedanceVideoPrices:             CloneSeedanceVideoPrices(apiKey.Group.SeedanceVideoPrices),
 			VideoMaxPendingTasks:            apiKey.Group.VideoMaxPendingTasks,
 			VideoTaskTimeoutHours:           apiKey.Group.VideoTaskTimeoutHours,
 			WebSearchPricePerCall:           apiKey.Group.WebSearchPricePerCall,
@@ -506,6 +507,7 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			VideoPrice720P:                  snapshot.Group.VideoPrice720P,
 			VideoPrice1080P:                 snapshot.Group.VideoPrice1080P,
 			VideoModelPrices:                NormalizeVideoModelPrices(snapshot.Group.VideoModelPrices),
+			SeedanceVideoPrices:             CloneSeedanceVideoPrices(snapshot.Group.SeedanceVideoPrices),
 			VideoMaxPendingTasks:            snapshot.Group.VideoMaxPendingTasks,
 			VideoTaskTimeoutHours:           snapshot.Group.VideoTaskTimeoutHours,
 			WebSearchPricePerCall:           snapshot.Group.WebSearchPricePerCall,

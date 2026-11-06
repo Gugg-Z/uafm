@@ -938,6 +938,7 @@ var (
 		{Name: "video_price_720p", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "video_price_1080p", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "video_model_prices", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "seedance_video_prices", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "video_max_pending_tasks", Type: field.TypeInt, Default: 5},
 		{Name: "video_task_timeout_hours", Type: field.TypeInt, Default: 24},
 		{Name: "web_search_price_per_call", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
@@ -1007,7 +1008,7 @@ var (
 			{
 				Name:    "group_sort_order",
 				Unique:  false,
-				Columns: []*schema.Column{GroupsColumns[52]},
+				Columns: []*schema.Column{GroupsColumns[53]},
 			},
 			{
 				Name:    "idx_groups_duplicate_operation_id_active",

@@ -240,9 +240,10 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	}
 	longContextBillingGate := openAILongContextBillingGate(billingAccount)
 	modelLongContextExempt := openAISubscriptionLongContextExempt(billingAccount, result)
-	if input.VideoTask != nil && input.VideoTask.Mode == string(BillingModeVideo) {
+	if input.VideoTask != nil && (input.VideoTask.SeedanceMatrix || input.VideoTask.Mode == string(BillingModeVideo) || input.VideoTask.Mode == string(BillingModePerRequest)) {
 		cost, err = videoTaskCost(input.VideoTask, result)
 		videoMultiplier = input.VideoTask.Multiplier
+		multiplier = input.VideoTask.Multiplier
 	} else if input.VideoTask != nil && input.VideoTask.TokenPricing != nil {
 		cost, err = s.billingService.CalculateCostUnified(CostInput{Ctx: ctx, Model: billingModel, Group: apiKey.Group, Tokens: tokens, RequestCount: 1, RateMultiplier: input.VideoTask.Multiplier, Resolver: s.resolver, Resolved: input.VideoTask.TokenPricing})
 	} else {
@@ -288,7 +289,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		result.UpstreamResponseModelConflict,
 		result.ImageCount > 0 || result.VideoCount > 0 || result.WebSearchCalls > 0 ||
 			result.AudioUsage != nil || result.SearchCount > 0,
-	); responseModel != "" && !strings.EqualFold(responseModel, baselineBillingModel) {
+	); input.VideoTask == nil && responseModel != "" && !strings.EqualFold(responseModel, baselineBillingModel) {
 		if identified, responseChannelPriced := s.hasIdentifiedOpenAIResponsePricing(ctx, responseModel, apiKey); identified {
 			responseModels := s.filterCNProviderBillingModelCandidates(ctx, account, apiKey, usageBillingModelCandidates(responseModel))
 			responseCost, responseErr := s.calculateOpenAIRecordUsageCost(
@@ -311,7 +312,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	// Free Fast changes only the customer charge. Keep priority TotalCost and
 	// service_tier for upstream accounting, but evaluate ActualCost once more at
 	// the Standard tier using the same channel, peak, and long-context policy.
-	if groupBillsOpenAIFastAtStandard(apiKey, billingAccount, serviceTier) {
+	if input.VideoTask == nil && groupBillsOpenAIFastAtStandard(apiKey, billingAccount, serviceTier) {
 		standardCost, standardErr := s.calculateOpenAIRecordUsageCost(
 			ctx,
 			result,

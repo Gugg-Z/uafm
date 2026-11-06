@@ -659,6 +659,18 @@ func (_u *GroupUpdate) ClearVideoModelPrices() *GroupUpdate {
 	return _u
 }
 
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (_u *GroupUpdate) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupUpdate {
+	_u.mutation.SetSeedanceVideoPrices(v)
+	return _u
+}
+
+// ClearSeedanceVideoPrices clears the value of the "seedance_video_prices" field.
+func (_u *GroupUpdate) ClearSeedanceVideoPrices() *GroupUpdate {
+	_u.mutation.ClearSeedanceVideoPrices()
+	return _u
+}
+
 // SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
 func (_u *GroupUpdate) SetVideoMaxPendingTasks(v int) *GroupUpdate {
 	_u.mutation.ResetVideoMaxPendingTasks()
@@ -1797,6 +1809,12 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.VideoModelPricesCleared() {
 		_spec.ClearField(group.FieldVideoModelPrices, field.TypeJSON)
 	}
+	if value, ok := _u.mutation.SeedanceVideoPrices(); ok {
+		_spec.SetField(group.FieldSeedanceVideoPrices, field.TypeJSON, value)
+	}
+	if _u.mutation.SeedanceVideoPricesCleared() {
+		_spec.ClearField(group.FieldSeedanceVideoPrices, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
 		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
 	}
@@ -2913,6 +2931,18 @@ func (_u *GroupUpdateOne) SetVideoModelPrices(v map[string]map[string]float64) *
 // ClearVideoModelPrices clears the value of the "video_model_prices" field.
 func (_u *GroupUpdateOne) ClearVideoModelPrices() *GroupUpdateOne {
 	_u.mutation.ClearVideoModelPrices()
+	return _u
+}
+
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (_u *GroupUpdateOne) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupUpdateOne {
+	_u.mutation.SetSeedanceVideoPrices(v)
+	return _u
+}
+
+// ClearSeedanceVideoPrices clears the value of the "seedance_video_prices" field.
+func (_u *GroupUpdateOne) ClearSeedanceVideoPrices() *GroupUpdateOne {
+	_u.mutation.ClearSeedanceVideoPrices()
 	return _u
 }
 
@@ -4083,6 +4113,12 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.VideoModelPricesCleared() {
 		_spec.ClearField(group.FieldVideoModelPrices, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.SeedanceVideoPrices(); ok {
+		_spec.SetField(group.FieldSeedanceVideoPrices, field.TypeJSON, value)
+	}
+	if _u.mutation.SeedanceVideoPricesCleared() {
+		_spec.ClearField(group.FieldSeedanceVideoPrices, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.VideoMaxPendingTasks(); ok {
 		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)

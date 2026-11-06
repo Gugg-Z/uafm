@@ -7,28 +7,28 @@ import {
   videoModelPriceFamilyRows
 } from '../groupsVideoModelPricing'
 
-describe('Seedance video model pricing form', () => {
-  it('provides editable rows for both canonical Seedance video families', () => {
+describe('Grok video model pricing form', () => {
+  it('provides editable rows for both canonical Grok video families', () => {
     const form = createVideoModelPricesForm()
 
     expect(videoModelPriceFamilyRows(form).map(({ key }) => key)).toEqual([
-      'seedance-2.0',
-      'seedance-2.5'
+      'grok-imagine-video',
+      'grok-imagine-video-1.5'
     ])
-    expect(form['seedance-2.0']['480p']).toBeNull()
-    expect(form['seedance-2.5']['1080p']).toBeNull()
+    expect(form['grok-imagine-video']['480p']).toBeNull()
+    expect(form['grok-imagine-video-1.5']['1080p']).toBeNull()
   })
 
   it('serializes only finite non-negative prices and preserves future families', () => {
     const form = createVideoModelPricesForm({
       'custom-video': { '1080p': 0.4 }
     })
-    form['seedance-2.0']['480p'] = 0.05
-    form['seedance-2.0']['720p'] = ''
-    form['seedance-2.5']['1080p'] = -1
+    form['grok-imagine-video']['480p'] = 0.05
+    form['grok-imagine-video']['720p'] = ''
+    form['grok-imagine-video-1.5']['1080p'] = -1
 
     expect(serializeVideoModelPrices(form)).toEqual({
-      'seedance-2.0': { '480p': 0.05 },
+      'grok-imagine-video': { '480p': 0.05 },
       'custom-video': { '1080p': 0.4 }
     })
   })

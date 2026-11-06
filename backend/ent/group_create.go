@@ -496,6 +496,12 @@ func (_c *GroupCreate) SetVideoModelPrices(v map[string]map[string]float64) *Gro
 	return _c
 }
 
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (_c *GroupCreate) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupCreate {
+	_c.mutation.SetSeedanceVideoPrices(v)
+	return _c
+}
+
 // SetVideoMaxPendingTasks sets the "video_max_pending_tasks" field.
 func (_c *GroupCreate) SetVideoMaxPendingTasks(v int) *GroupCreate {
 	_c.mutation.SetVideoMaxPendingTasks(v)
@@ -1640,6 +1646,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		_spec.SetField(group.FieldVideoModelPrices, field.TypeJSON, value)
 		_node.VideoModelPrices = value
 	}
+	if value, ok := _c.mutation.SeedanceVideoPrices(); ok {
+		_spec.SetField(group.FieldSeedanceVideoPrices, field.TypeJSON, value)
+		_node.SeedanceVideoPrices = value
+	}
 	if value, ok := _c.mutation.VideoMaxPendingTasks(); ok {
 		_spec.SetField(group.FieldVideoMaxPendingTasks, field.TypeInt, value)
 		_node.VideoMaxPendingTasks = value
@@ -2493,6 +2503,24 @@ func (u *GroupUpsert) UpdateVideoModelPrices() *GroupUpsert {
 // ClearVideoModelPrices clears the value of the "video_model_prices" field.
 func (u *GroupUpsert) ClearVideoModelPrices() *GroupUpsert {
 	u.SetNull(group.FieldVideoModelPrices)
+	return u
+}
+
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (u *GroupUpsert) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupUpsert {
+	u.Set(group.FieldSeedanceVideoPrices, v)
+	return u
+}
+
+// UpdateSeedanceVideoPrices sets the "seedance_video_prices" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSeedanceVideoPrices() *GroupUpsert {
+	u.SetExcluded(group.FieldSeedanceVideoPrices)
+	return u
+}
+
+// ClearSeedanceVideoPrices clears the value of the "seedance_video_prices" field.
+func (u *GroupUpsert) ClearSeedanceVideoPrices() *GroupUpsert {
+	u.SetNull(group.FieldSeedanceVideoPrices)
 	return u
 }
 
@@ -3739,6 +3767,27 @@ func (u *GroupUpsertOne) UpdateVideoModelPrices() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearVideoModelPrices() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearVideoModelPrices()
+	})
+}
+
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (u *GroupUpsertOne) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSeedanceVideoPrices(v)
+	})
+}
+
+// UpdateSeedanceVideoPrices sets the "seedance_video_prices" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSeedanceVideoPrices() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSeedanceVideoPrices()
+	})
+}
+
+// ClearSeedanceVideoPrices clears the value of the "seedance_video_prices" field.
+func (u *GroupUpsertOne) ClearSeedanceVideoPrices() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearSeedanceVideoPrices()
 	})
 }
 
@@ -5241,6 +5290,27 @@ func (u *GroupUpsertBulk) UpdateVideoModelPrices() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearVideoModelPrices() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearVideoModelPrices()
+	})
+}
+
+// SetSeedanceVideoPrices sets the "seedance_video_prices" field.
+func (u *GroupUpsertBulk) SetSeedanceVideoPrices(v map[string]map[string]map[string]map[string]float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSeedanceVideoPrices(v)
+	})
+}
+
+// UpdateSeedanceVideoPrices sets the "seedance_video_prices" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSeedanceVideoPrices() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSeedanceVideoPrices()
+	})
+}
+
+// ClearSeedanceVideoPrices clears the value of the "seedance_video_prices" field.
+func (u *GroupUpsertBulk) ClearSeedanceVideoPrices() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearSeedanceVideoPrices()
 	})
 }
 

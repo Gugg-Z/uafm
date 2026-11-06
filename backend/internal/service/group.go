@@ -60,6 +60,9 @@ type Group struct {
 	// (groups.video_model_prices JSONB). Shape: family → resolution → USD/s.
 	// When set for a model, overrides VideoPrice* for that model only.
 	VideoModelPrices map[string]map[string]float64
+	// SeedanceVideoPrices: model -> billing mode -> resolution -> material type
+	// ("none" or "input") -> USD unit price.
+	SeedanceVideoPrices map[string]map[string]map[string]map[string]float64
 	// VideoMaxPendingTasks limits unfinished video tasks per user in this group.
 	VideoMaxPendingTasks int
 	// VideoTaskTimeoutHours controls how long an unconfirmed task remains tracked.

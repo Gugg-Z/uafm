@@ -121,6 +121,7 @@ func createGroupRecord(ctx context.Context, client *dbent.Client, groupIn *servi
 		SetNillableVideoPrice720p(groupIn.VideoPrice720P).
 		SetNillableVideoPrice1080p(groupIn.VideoPrice1080P).
 		SetVideoModelPrices(service.NormalizeVideoModelPrices(groupIn.VideoModelPrices)).
+		SetSeedanceVideoPrices(groupIn.SeedanceVideoPrices).
 		SetVideoMaxPendingTasks(groupIn.VideoMaxPendingTasks).
 		SetVideoTaskTimeoutHours(groupIn.VideoTaskTimeoutHours).
 		SetNillableWebSearchPricePerCall(groupIn.WebSearchPricePerCall).
@@ -374,6 +375,13 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		builder = builder.SetImagePrice4k(*groupIn.ImagePrice4K)
 	} else {
 		builder = builder.ClearImagePrice4k()
+	}
+	if groupIn.SeedanceVideoPrices != nil {
+		if len(groupIn.SeedanceVideoPrices) == 0 {
+			builder = builder.ClearSeedanceVideoPrices()
+		} else {
+			builder = builder.SetSeedanceVideoPrices(groupIn.SeedanceVideoPrices)
+		}
 	}
 	if groupIn.VideoPrice480P != nil {
 		builder = builder.SetVideoPrice480p(*groupIn.VideoPrice480P)

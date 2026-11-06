@@ -42,6 +42,44 @@ func TestSeedanceNativeForwarding(t *testing.T) {
 	}
 }
 
+func TestSeedanceForwardingPreservesInboundEndpoint(t *testing.T) {
+	body := []byte(`{"model":"video","prompt":"waves","image_url":"https://example.com/first.png"}`)
+	upstream := &grokMediaContentUpstreamStub{response: grokMediaContentStatusResponse(`{"id":"task-v1"}`)}
+	svc := &OpenAIGatewayService{httpUpstream: upstream}
+	c, w := grokMediaContentTestContext(http.MethodPost, "/v1/videos/generations", nil)
+	SetActualOpenAIUpstreamEndpoint(c, "/v1/videos/generations")
+	result, err := svc.ForwardSeedance(context.Background(), c, seedanceTestAccount(), SeedanceEndpointCreate, "", body)
+	require.NoError(t, err)
+	require.Equal(t, "seedance:task-v1", result.ResponseID)
+	require.Equal(t, "/v1/videos/generations", upstream.request.URL.Path)
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestParseSeedanceRequestTopLevelMedia(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+	}{
+		{name: "image string", body: `{"model":"x","prompt":"waves","image_url":"https://example.com/a.png"}`},
+		{name: "video object", body: `{"model":"x","prompt":"waves","video_url":{"url":"https://example.com/a.mp4"}}`},
+		{name: "audio array", body: `{"model":"x","prompt":"waves","audio_url":["https://example.com/a.mp3"]}`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info, err := ParseSeedanceRequest([]byte(tt.body))
+			require.NoError(t, err)
+			require.True(t, info.SeedanceHasMaterial)
+		})
+	}
+	_, err := ParseSeedanceRequest([]byte(`{"model":"x","prompt":"waves","image_url":""}`))
+	require.Error(t, err)
+	for _, field := range []string{"image", "images", "reference_images", "first_image", "first_image_url", "last_image", "last_image_url", "reference_videos", "reference_audios"} {
+		info, err := ParseSeedanceRequest([]byte(`{"model":"x","prompt":"waves","` + field + `":"https://example.com/material"}`))
+		require.NoError(t, err, field)
+		require.True(t, info.SeedanceHasMaterial, field)
+	}
+}
+
 func TestSeedanceStatusAndDelete(t *testing.T) {
 	for _, status := range []string{"queued", "running", "failed", "cancelled", "expired", "succeeded"} {
 		t.Run(status, func(t *testing.T) {
@@ -69,6 +107,24 @@ func TestSeedanceStatusAndDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.MethodDelete, upstream.request.Method)
 	require.Equal(t, http.StatusNoContent, w.Code)
+}
+
+func TestSeedanceOutputTokensSupportsDocumentedUsageNames(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want int
+	}{
+		{name: "ark completion tokens", body: `{"usage":{"completion_tokens":12}}`, want: 12},
+		{name: "videos output tokens", body: `{"usage":{"output_tokens":34}}`, want: 34},
+		{name: "total tokens fallback", body: `{"usage":{"total_tokens":56}}`, want: 56},
+		{name: "preferred completion tokens", body: `{"usage":{"completion_tokens":12,"output_tokens":34,"total_tokens":56}}`, want: 12},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, seedanceOutputTokens([]byte(tt.body)))
+		})
+	}
 }
 
 func TestSeedanceValidationAndCapability(t *testing.T) {

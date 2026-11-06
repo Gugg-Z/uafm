@@ -158,6 +158,7 @@ func GroupFromServiceAdmin(g *service.Group) *AdminGroup {
 		ProfitMinMargin:             g.ProfitMinMargin,
 		ProfitSafetyBuffer:          g.ProfitSafetyBuffer,
 		ModelPricing:                g.ModelPricing,
+		SeedanceVideoPrices:         service.CloneSeedanceVideoPrices(g.SeedanceVideoPrices),
 		ModelRouting:                g.ModelRouting,
 		ModelRoutingEnabled:         g.ModelRoutingEnabled,
 		MCPXMLInject:                g.MCPXMLInject,
